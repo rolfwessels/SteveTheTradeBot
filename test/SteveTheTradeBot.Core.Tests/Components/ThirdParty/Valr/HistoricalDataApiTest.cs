@@ -5,7 +5,7 @@ using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Dal.Tests;
 
-namespace SteveTheTradeBot.Core.Tests.Components
+namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
 {
     public class HistoricalDataApiTest
     {
