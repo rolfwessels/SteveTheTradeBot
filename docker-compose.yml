@@ -29,7 +29,8 @@ services:
     environment:
       - API_URL=http://localhost:5000
     ports:
-      - 84:80
+      - 84:80
+
   src:
     depends_on:
       - redis
