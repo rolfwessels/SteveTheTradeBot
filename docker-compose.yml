@@ -1,0 +1,82 @@
+version: "3.5"
+networks:
+  dev-network:
+
+services:
+  db:
+    image: mongo:4.0
+    container_name: "db"
+    restart: unless-stopped
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    ports:
+      - 27021:27017
+    command: mongod --smallfiles --logpath=/dev/null # --quiet
+    networks:
+      - dev-network
+  redis:
+    image: redis:6.0-alpine
+    ports:
+      - 6390:6379
+    networks:
+      - dev-network
+
+  www:
+    image: rolfwessels/stevethetradebot-dashboard:alpha
+    links:
+      - src
+    environment:
+      - API_URL=http://localhost:5000
+    ports:
+      - 84:80
+  src:
+    depends_on:
+      - redis
+      - db
+    container_name: steve-the-trade-bot
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ".:/SteveTheTradeBot"
+      - "./.aws:/root/.aws"
+      #find src* | grep  '/bin$' | sed 's/^/ - SteveTheTradeBot\//'
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Api/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Api.Lambda/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Core/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Dal/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Dal.MongoDb/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Sdk/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Shared/bin
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Utilities/bin
+      - /SteveTheTradeBot/test/SteveTheTradeBot.Api.Tests/bin
+      - /SteveTheTradeBot/test/SteveTheTradeBot.Core.Tests/bin
+      - /SteveTheTradeBot/test/SteveTheTradeBot.Utilities.Tests/bin
+      #find src* | grep  '/obj$' | sed 's/^/ - /SteveTheTradeBot\//'
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Api/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Api.Lambda/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Core/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Dal/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Dal.MongoDb/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Sdk/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Shared/obj
+      - /SteveTheTradeBot/src/SteveTheTradeBot.Utilities/obj
+      - /SteveTheTradeBot/test/SteveTheTradeBot.Api.Tests/obj
+      - /SteveTheTradeBot/test/SteveTheTradeBot.Core.Tests/obj
+      - /SteveTheTradeBot/test/SteveTheTradeBot.Utilities.Tests/obj
+
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - MongoConnection=mongodb://db:27017/steve-the-trade-bot
+      - MongoDatabase=steve-the-trade-bot
+      - RedisHost=redis
+      - App__HostUrl=http://localhost:5000
+      - OpenId__Origins=http://localhost:5000,http://localhost:84,http://localhost:3000
+    ports:
+      - 5000:5000
+    entrypoint: top -b
+    logging:
+      driver: none
+    networks:
+      - dev-network

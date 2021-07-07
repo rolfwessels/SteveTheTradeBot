@@ -1,0 +1,39 @@
+version: "3"
+services:
+    db:
+        image: mongo:4.0
+        container_name: "db"
+        restart: unless-stopped
+        environment:
+            - MONGO_DATA_DIR=/data/db
+            - MONGO_LOG_DIR=/dev/null
+        ports:
+            - 27027:27017
+        command: mongod --smallfiles --logpath=/dev/null # --quiet
+    www:
+        image: rolfwessels/stevethetradebot-dashboard:alpha
+        links:
+            - api
+        ports:
+            - "3010:80"
+        environment:
+            - API_URL=http://localhost:5010
+    api:
+        build: .
+        deploy:
+        restart: unless-stopped
+        links:
+            - db
+        environment:
+            - MongoConnection=mongodb://db:27017/SteveTheTradeBot
+            - MongoDatabase=SteveTheTradeBot
+            - OpenId__Origins=http://localhost:3010,http://localhost:5010
+            - OpenId__HostUrl=http://localhost:5010
+
+        ports:
+            - 5010:5000
+        # healthcheck:
+        #     test: ["CMD", "curl", "-f", "http://localhost:5000/api/ping/hc"]
+        #     interval: 30s
+        #     timeout: 10s
+        #     retries: 3
