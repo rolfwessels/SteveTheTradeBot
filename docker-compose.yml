@@ -5,31 +5,24 @@ networks:
 services:
   db:
     image: mongo:4.0
-    container_name: "db"
-    restart: unless-stopped
     environment:
       - MONGO_DATA_DIR=/data/db
       - MONGO_LOG_DIR=/dev/null
     ports:
-      - 27021:27017
+      - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
     networks:
-      - dev-network
+      - dev-network  sql:
+    image: postgres:13.3-buster    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: GRES_password
   redis:
     image: redis:6.0-alpine
     ports:
-      - 6390:6379
+      - 6391:6379
     networks:
       - dev-network
-
-  www:
-    image: rolfwessels/stevethetradebot-dashboard:alpha
-    links:
-      - src
-    environment:
-      - API_URL=http://localhost:5000
-    ports:
-      - 84:80
 
   src:
     depends_on:
@@ -53,7 +46,6 @@ services:
       - /SteveTheTradeBot/src/SteveTheTradeBot.Utilities/bin
       - /SteveTheTradeBot/test/SteveTheTradeBot.Api.Tests/bin
       - /SteveTheTradeBot/test/SteveTheTradeBot.Core.Tests/bin
-      - /SteveTheTradeBot/test/SteveTheTradeBot.Utilities.Tests/bin
       #find src* | grep  '/obj$' | sed 's/^/ - /SteveTheTradeBot\//'
       - /SteveTheTradeBot/src/SteveTheTradeBot.Api/obj
       - /SteveTheTradeBot/src/SteveTheTradeBot.Api.Lambda/obj
@@ -65,7 +57,6 @@ services:
       - /SteveTheTradeBot/src/SteveTheTradeBot.Utilities/obj
       - /SteveTheTradeBot/test/SteveTheTradeBot.Api.Tests/obj
       - /SteveTheTradeBot/test/SteveTheTradeBot.Core.Tests/obj
-      - /SteveTheTradeBot/test/SteveTheTradeBot.Utilities.Tests/obj
 
     environment:
       - DOTNET_ENVIRONMENT=Development
@@ -75,7 +66,7 @@ services:
       - App__HostUrl=http://localhost:5000
       - OpenId__Origins=http://localhost:5000,http://localhost:84,http://localhost:3000
     ports:
-      - 5000:5000
+      - 5001:5000
     entrypoint: top -b
     logging:
       driver: none

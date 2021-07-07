@@ -1,6 +1,9 @@
 using System;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using Moq.Language.Flow;
 
 namespace SteveTheTradeBot.Dal.Tests
@@ -12,10 +15,6 @@ namespace SteveTheTradeBot.Dal.Tests
             setup.Returns(Task.FromResult(dal));
         }
 
-        public static T WaitForValue1<T>(ref T dff)
-        {
-            throw new NotImplementedException();
-        }
 
         public static T WaitForValue<T>(Func<T> func, int timeOut = 500)
         {
@@ -29,6 +28,20 @@ namespace SteveTheTradeBot.Dal.Tests
             }
 
             return waitForValue;
+        }
+
+        public static async Task TestEveryNowAndThen(Func<Task> action, [CallerMemberName] string caller = null)
+        {
+            var file = Path.Combine(Path.GetTempPath(), $"zzz_{caller}.txt");
+            if (!File.Exists(file) || DateTime.Parse(File.ReadAllText(file)) < DateTime.Now)
+            {
+                await action();
+                File.WriteAllText(file,DateTime.Now.AddMinutes(1).ToString("o"));
+            }
+            else
+            {
+                Console.Out.WriteLine($"TestEveryNowAndThen: Skipped {caller}");
+            }
         }
     }
 }
