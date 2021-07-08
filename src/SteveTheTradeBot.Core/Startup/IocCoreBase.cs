@@ -113,7 +113,7 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<StringifyJson>().As<IStringify>().SingleInstance();
             builder.RegisterType<EventStoreConnection>().As<IEventStoreConnection>();
             builder.RegisterType<UpdateHistoricalData>().As<IUpdateHistoricalData>();
-            builder.RegisterType<HistoricalDataApi>();
+            builder.RegisterType<HistoricalDataApi>().As<IHistoricalDataApi>();
             
             
             builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection)).SingleInstance();

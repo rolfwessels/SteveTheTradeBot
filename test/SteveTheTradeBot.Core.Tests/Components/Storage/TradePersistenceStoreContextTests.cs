@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Bumbershoot.Utilities.Helpers;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Storage;

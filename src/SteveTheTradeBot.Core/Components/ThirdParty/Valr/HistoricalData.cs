@@ -1,45 +1,48 @@
 ﻿using System;
 using System.Net;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
+using ComposableAsync;
+using Hangfire.Logging;
 using Newtonsoft.Json;
+using RateLimiter;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
+using Serilog;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {
-    public class HistoricalDataApi
+    public class HistoricalDataApi : IHistoricalDataApi
     {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly RestClient _client;
-
+        protected static TimeLimiter _rateLimit = TimeLimiter.GetFromMaxCountByInterval(60, TimeSpan.FromSeconds(30));
         public HistoricalDataApi(string baseUrl = "https://api.valr.com/v1/public/")
         {
             _client = new RestClient(baseUrl);
             _client.UseNewtonsoftJson();
-
         }
 
         public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,int skip = 0, int limit = 100)
         {
+            _log.Information($"GetTradeHistory {currencyPair} skip={skip} limit={limit}");
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json);
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("skip", skip.ToString());
             request.AddQueryParameter("limit", limit.ToString());
+            await _rateLimit;
             var response = await _client.ExecuteGetAsync<TradeResponseDto[]>(request);
-            
-
             return ValidateResponse(response);
         }
         public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,string beforeId, int limit = 100)
         {
+            _log.Information($"GetTradeHistory {currencyPair} beforeId={beforeId} limit={limit}");
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json);
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("beforeId", beforeId);
             request.AddQueryParameter("limit", limit.ToString());
+            await _rateLimit;
             var response = await _client.ExecuteGetAsync<TradeResponseDto[]>(request);
-                
-
             return ValidateResponse(response);
         }
 

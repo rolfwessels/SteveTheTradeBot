@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using Autofac.Extensions.DependencyInjection;
-using Bumbershoot.Utilities.Helpers;
 using Hangfire;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Api.GraphQl;
@@ -14,7 +13,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MongoDB.Driver;
 using StackExchange.Redis;
 using SteveTheTradeBot.Core.Components.ThirdParty;
 
@@ -46,7 +44,7 @@ namespace SteveTheTradeBot.Api
             services.AddHangfire(configuration =>
             {
                 configuration.UseRedisStorage(Redis);
-                RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate(), Cron.Daily);
+                RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
             });
 
             return new AutofacServiceProvider(IocApi.Instance.Container);

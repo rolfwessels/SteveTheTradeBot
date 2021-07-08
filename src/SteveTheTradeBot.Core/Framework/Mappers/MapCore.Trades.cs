@@ -11,6 +11,7 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
         public static void CreateTradesMap(IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<TradeResponseDto, HistoricalTrade>();
+            cfg.CreateMap<HistoricalTrade, TradeResponseDto>();
         }
 
         public static HistoricalTrade ToDao(this TradeResponseDto project, HistoricalTrade projectReference = null)
@@ -18,5 +19,9 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
             return GetInstance().Map(project, projectReference);
         }
 
+        public static TradeResponseDto ToDto(this HistoricalTrade project, TradeResponseDto projectReference = null)
+        {
+            return GetInstance().Map(project, projectReference);
+        }
     }
 }
