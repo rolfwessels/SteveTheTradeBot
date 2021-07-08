@@ -34,8 +34,8 @@ namespace SteveTheTradeBot.Api
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             IocApi.Populate(services);
-            services.AddGraphQl();
             services.AddCors();
+            services.AddGraphQl();
             services.UseIdentityService(Configuration);
             services.AddBearerAuthentication();
             services.AddMvc(config => { config.Filters.Add(new CaptureExceptionFilter()); });
@@ -46,12 +46,12 @@ namespace SteveTheTradeBot.Api
                 configuration.UseRedisStorage(Redis);
                 RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
             });
-
             return new AutofacServiceProvider(IocApi.Instance.Container);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            
             app.UseStaticFiles();
             app.UseRouting();
             var openIdSettings = new OpenIdSettings(Configuration);
