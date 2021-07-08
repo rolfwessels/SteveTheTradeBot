@@ -7,14 +7,16 @@ Steve is a crypto trading bot. Well he is trying to be!
 
 ## Todo
  
-- Read historical data for back testing
-- Integrate a broker (Valr for now)
-- Create dummy broker
-- Create simple agorythm and do some back testing
-- Integrate with grafana
-- Deploy to AWS or Digital Ocean
-- Add UI
-- Move to using only OpenId
+- [x] Read historical data for back testing
+- [ ] Create dummy broker
+- [ ] Create simple agorythm
+- [ ] Add a way do some back testing
+- [ ] Integrate a broker to get real time data
+- [ ] Integrate a broker (Valr for now)
+- [ ] Integrate with grafana
+- [ ] Deploy to AWS or Digital Ocean
+- [ ] Add UI
+- [ ] Move to using only OpenId
 
 ## Getting started with dev
 
