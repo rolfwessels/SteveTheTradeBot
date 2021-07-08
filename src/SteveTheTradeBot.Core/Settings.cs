@@ -19,11 +19,11 @@ namespace SteveTheTradeBot.Core
 
         #endregion
 
-        public string MongoConnection => ReadConfigValue("MongoConnection", "mongodb://localhost/");
+        public string MongoConnection => ReadConfigValue("MongoConnection", "mongodb://localhost:27022/");
         public string MongoDatabase => ReadConfigValue("MongoDatabase", "SteveTheTradeBotSample");
         public string NpgsqlConnection => ReadConfigValue("NpgsqlConnection", "Host=localhost;Database=SteveTheTradeBotSample;Username=postgres;Password=GRES_password");
         public string WebBasePath => ReadConfigValue("WebBasePath",null);
-        public string RedisHost => ReadConfigValue("RedisHost", "localhost:6390");
+        public string RedisHost => ReadConfigValue("RedisHost", "localhost:6391");
 
         public static void Initialize(IConfiguration configuration)
         {

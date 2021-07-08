@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {

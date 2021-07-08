@@ -1,9 +1,13 @@
 using AutoMapper;
 using SteveTheTradeBot.Core.Components.Projects;
+using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Dal.Models.Projects;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Framework.Mappers
 {
+ 
+
     public static partial class MapCore
     {
         public static void CreateProjectMap(IMapperConfigurationExpression cfg)

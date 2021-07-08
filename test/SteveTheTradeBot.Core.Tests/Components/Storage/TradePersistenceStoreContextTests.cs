@@ -4,6 +4,7 @@ using Bumbershoot.Utilities.Helpers;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Storage
 {
@@ -17,9 +18,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         public void Setup()
         {
-            var connection = "Host=localhost;Database=SteveTheTradeBotTestDb;Username=postgres;Password=GRES_password";
-            _tradePersistenceStoreContext = new TradePersistenceStoreContext(connection);
-            _tradePersistenceStoreContext.Database.EnsureCreated().Dump("sad");
+            _tradePersistenceStoreContext = TestTradePersistenceFactory.Instance.GetTradePersistence().Result;
         }
 
         #endregion

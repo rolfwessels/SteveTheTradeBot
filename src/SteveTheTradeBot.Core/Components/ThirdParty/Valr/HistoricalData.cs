@@ -20,24 +20,24 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         }
 
-        public async Task<TradeResponse[]> GetTradeHistory(string currencyPair,int skip = 0, int limit = 100)
+        public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,int skip = 0, int limit = 100)
         {
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json);
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("skip", skip.ToString());
             request.AddQueryParameter("limit", limit.ToString());
-            var response = await _client.ExecuteGetAsync<TradeResponse[]>(request);
+            var response = await _client.ExecuteGetAsync<TradeResponseDto[]>(request);
             
 
             return ValidateResponse(response);
         }
-        public async Task<TradeResponse[]> GetTradeHistory(string currencyPair,string beforeId, int limit = 100)
+        public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,string beforeId, int limit = 100)
         {
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json);
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("beforeId", beforeId);
             request.AddQueryParameter("limit", limit.ToString());
-            var response = await _client.ExecuteGetAsync<TradeResponse[]>(request);
+            var response = await _client.ExecuteGetAsync<TradeResponseDto[]>(request);
                 
 
             return ValidateResponse(response);
@@ -65,7 +65,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
     }
 
 
-    public class TradeResponse
+    public class TradeResponseDto
     {
         public string Price { get; set; }
         public string Quantity { get; set; }

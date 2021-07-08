@@ -1,6 +1,8 @@
 using System;
 using System.Reflection;
 using Autofac.Extensions.DependencyInjection;
+using Bumbershoot.Utilities.Helpers;
+using Hangfire;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Api.GraphQl;
 using SteveTheTradeBot.Api.Security;
@@ -12,6 +14,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Driver;
+using StackExchange.Redis;
+using SteveTheTradeBot.Core.Components.ThirdParty;
 
 namespace SteveTheTradeBot.Api
 {
@@ -21,7 +26,10 @@ namespace SteveTheTradeBot.Api
         {
             Configuration = configuration;
             Settings.Initialize(Configuration);
+            Redis = ConnectionMultiplexer.Connect(Settings.Instance.RedisHost);
         }
+
+        public ConnectionMultiplexer Redis { get; set; }
 
         public IConfiguration Configuration { get; }
 
@@ -35,6 +43,11 @@ namespace SteveTheTradeBot.Api
             services.AddMvc(config => { config.Filters.Add(new CaptureExceptionFilter()); });
             services.AddSwagger();
             services.AddSignalR();
+            services.AddHangfire(configuration =>
+            {
+                configuration.UseRedisStorage(Redis);
+                RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate(), Cron.Daily);
+            });
 
             return new AutofacServiceProvider(IocApi.Instance.Container);
         }
@@ -63,6 +76,8 @@ namespace SteveTheTradeBot.Api
             app.AddGraphQl();
             app.UseEndpoints(e => e.MapControllers());
             app.UseSwagger();
+            app.UseHangfireDashboard();
+            app.UseHangfireServer();
             SimpleFileServer.Initialize(app);
         }
 

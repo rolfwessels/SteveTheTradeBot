@@ -18,6 +18,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.24" />
+    <PackageReference Include="Hangfire.Core" Version="1.7.24" />
+    <PackageReference Include="HangFire.Redis.StackExchange" Version="1.8.4" />
     <PackageReference Include="HotChocolate.AspNetCore" Version="11.0.6" />
     <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="11.0.6" />
     <PackageReference Include="HotChocolate.AspNetCore.Playground" Version="10.5.5" />

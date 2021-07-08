@@ -12,11 +12,16 @@ services:
       - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
     networks:
-      - dev-network  sql:
-    image: postgres:13.3-buster    ports:
+      - dev-network
+
+  sql:
+    image: postgres:13.3-buster
+    ports:
       - 5432:5432
     environment:
-      POSTGRES_PASSWORD: GRES_password  pgadmin:
+      POSTGRES_PASSWORD: GRES_password
+
+  pgadmin:
     container_name: pgadmin4_container
     image: dpage/pgadmin4
     environment:
@@ -24,6 +29,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: GRES_password
     ports:
       - "5050:80"
+
   redis:
     image: redis:6.0-alpine
     ports:
