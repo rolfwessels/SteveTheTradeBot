@@ -16,7 +16,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly RestClient _client;
-        protected static TimeLimiter _rateLimit = TimeLimiter.GetFromMaxCountByInterval(100, TimeSpan.FromSeconds(60));
+        protected static TimeLimiter _rateLimit = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(60));
         public HistoricalDataApi(string baseUrl = "https://api.valr.com/v1/public/")
         {
             _client = new RestClient(baseUrl);
