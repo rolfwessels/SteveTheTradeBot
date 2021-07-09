@@ -1,7 +1,7 @@
 ﻿namespace SteveTheTradeBot.Core.Components.Broker.Models
 {
-    public enum Side
+    public class IdResponse
     {
-        Sell,Buy
+        public string Id { get; set; }
     }
 }

@@ -16,10 +16,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             _tradePersistenceFactory = new TradePersistenceFactory("Host=localhost;Database=SteveTheTradeBotTests;Username=postgres;Password=GRES_password");
         }
 
-        private static DbContextOptions<TradePersistenceStoreContext> DbContextOptions()
+        private static DbContextOptions<TradePersistenceStoreContext> DbContextOptions(string databaseName = "TestDb")
         {
             return new DbContextOptionsBuilder<TradePersistenceStoreContext>()
-                .UseInMemoryDatabase("TestDb")
+                .UseInMemoryDatabase(databaseName)
                 .Options;
         }
 
@@ -32,6 +32,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
         public Task<TradePersistenceStoreContext> GetTestDb()
         {
             return _tradePersistenceFactory.GetTradePersistence();
+        }
+
+        public static ITradePersistenceFactory UniqueDb()
+        {
+            return new TradePersistenceFactory(DbContextOptions(Guid.NewGuid().ToString("n")));
         }
     }
 }

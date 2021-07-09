@@ -3,7 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public class TradePersistenceFactory
+    public interface ITradePersistenceFactory
+    {
+        Task<TradePersistenceStoreContext> GetTradePersistence();
+    }
+
+    public class TradePersistenceFactory : ITradePersistenceFactory
     {
         private readonly DbContextOptions<TradePersistenceStoreContext> _dbContextOptions;
 
@@ -14,7 +19,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .Options;
         }
 
-        protected TradePersistenceFactory(DbContextOptions<TradePersistenceStoreContext> dbContextOptions)
+        public TradePersistenceFactory(DbContextOptions<TradePersistenceStoreContext> dbContextOptions)
         {
             _dbContextOptions = dbContextOptions;
         }

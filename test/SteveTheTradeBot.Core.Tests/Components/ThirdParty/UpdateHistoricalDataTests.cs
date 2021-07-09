@@ -86,7 +86,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
             TestLoggingHelper.EnsureExists();
             _mockIHistoricalDataApi = new Mock<IHistoricalDataApi>();
             _tradePersistenceStoreContext = await TestTradePersistenceFactory.Instance.GetTradePersistence();
-            _updateHistoricalData = new UpdateHistoricalData(_mockIHistoricalDataApi.Object, TestTradePersistenceFactory.Instance);
+            _updateHistoricalData = new UpdateHistoricalData(_mockIHistoricalDataApi.Object, new TradeHistoryStore(TestTradePersistenceFactory.Instance));
         }
     }
 }
