@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace SteveTheTradeBot.Core.Components.ThirdParty
+namespace SteveTheTradeBot.Core.Components.Broker
 {
     public interface IUpdateHistoricalData
     {

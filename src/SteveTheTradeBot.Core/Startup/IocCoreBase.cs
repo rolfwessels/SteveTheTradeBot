@@ -15,6 +15,7 @@ using SteveTheTradeBot.Dal.Persistence;
 using FluentValidation;
 using Serilog;
 using MediatR;
+using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;

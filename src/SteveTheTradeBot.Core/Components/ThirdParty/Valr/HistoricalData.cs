@@ -9,6 +9,7 @@ using RateLimiter;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 using Serilog;
+using SteveTheTradeBot.Core.Components.Broker;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {

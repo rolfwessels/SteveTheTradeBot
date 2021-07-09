@@ -8,12 +8,9 @@ using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Framework.Mappers;
 using SteveTheTradeBot.Dal.Models.Trades;
 
-namespace SteveTheTradeBot.Core.Components.ThirdParty
+namespace SteveTheTradeBot.Core.Components.Broker
 {
-    public class CurrencyPair
-    {
-        public const string BTCZAR = "BTCZAR";
-    }
+   
 
     public class UpdateHistoricalData : IUpdateHistoricalData
     {
