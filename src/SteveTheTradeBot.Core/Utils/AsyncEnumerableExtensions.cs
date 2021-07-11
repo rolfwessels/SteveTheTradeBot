@@ -15,5 +15,28 @@ namespace SteveTheTradeBot.Core.Utils
                 results.Add(item);
             return results;
         }
-    }
+
+        public static async IAsyncEnumerable<T> Take<T>(this IAsyncEnumerable<T> items,
+            int count, CancellationToken cancellationToken = default)
+        {
+            var counter = 0;
+            await foreach (var item in items.WithCancellation(cancellationToken)
+                .ConfigureAwait(false))
+            {
+                if (counter == count) yield break;
+                counter++;
+                yield return item;
+            }
+        }
+
+        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                yield return item;
+            }
+        }
+
+        
+}
 }

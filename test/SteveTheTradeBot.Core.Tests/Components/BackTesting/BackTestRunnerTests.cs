@@ -1,11 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using FizzWare.NBuilder;
+using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Utils;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 {
+
     public class BackTestRunnerTests
     {
         private BackTestRunner _backTestRunner;
@@ -16,10 +22,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // arrange
             Setup();
             _backTestRunner = new BackTestRunner();
+            IAsyncEnumerable<HistoricalTrade> list =  Builder<HistoricalTrade>.CreateListOfSize(10).Build().ToAsyncEnumerable();
             
             // action
-            await _backTestRunner.Run(DateTime.Now.AddMonths(10), DateTime.Now, new RSiBot());
+            var backTestResult = await _backTestRunner.Run(list, new RSiBot(), CancellationToken.None);
             // assert
+            backTestResult.TradesActive.Should().Be(1);
         }
 
         #region Setup/Teardown
