@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
+using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
+using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
+using SteveTheTradeBot.Dal.Tests;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Storage
 {
@@ -17,33 +21,39 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         public void Setup()
         {
-            _tradePersistenceStoreContext = TestTradePersistenceFactory.Instance.GetTradePersistence().Result;
+            _tradePersistenceStoreContext = TestTradePersistenceFactory.Instance.GetTestDb().Result;
         }
 
         #endregion
 
         [Test]
-        public void Add_GivenHistoricalTrade_ShouldStoreRecord()
+        public async Task Add_GivenHistoricalTrade_ShouldStoreRecord()
         {
             // arrange
             Setup();
-            var historicalTrade = new HistoricalTrade()
-            {
-                Price = 259653,
-                Quantity = 0.001m,
-                CurrencyPair = "BTCZAR",
-                TradedAt = DateTime.Parse("2020-11-30T08:51:21.604113Z"),
-                TakerSide = "buy",
-                SequenceId = 15822,
-                Id = "1947cf61-8a47-4fce-bb75-07a7271f2f70",
-                QuoteVolume = 259.653m
-            };
+            var historicalTrade = Builder<HistoricalTrade>.CreateNew().WithValidData().Build();
             _tradePersistenceStoreContext.HistoricalTrades.Add(historicalTrade);
-            _tradePersistenceStoreContext.SaveChangesAsync();
+            await _tradePersistenceStoreContext.SaveChangesAsync();
             // action
             var historicalTrades = _tradePersistenceStoreContext.HistoricalTrades.AsQueryable().ToList();
             // assert
             historicalTrades.Where(x => x.Id == historicalTrade.Id).Should().HaveCount(1);
+        }
+        
+        
+        [Test]
+        public async Task Add_GivenTradeFeedCandles_ShouldStoreRecord()
+        {
+            // arrange
+            Setup();
+            var historicalTrade = Builder<HistoricalTrade>.CreateListOfSize(10).WithValidData().Build().ToCandleOneMinute();
+            var feedName = "test"+Guid.NewGuid().ToString("n");
+            _tradePersistenceStoreContext.TradeFeedCandles.AddRange(historicalTrade.Select(x=>TradeFeedCandle.From(x,feedName,Skender.Stock.Indicators.PeriodSize.OneMinute)));
+            await _tradePersistenceStoreContext.SaveChangesAsync();
+            // action
+            var historicalTrades = _tradePersistenceStoreContext.TradeFeedCandles.AsQueryable().ToList();
+            // assert
+            historicalTrades.Where(x => x.Feed == feedName).Should().HaveCount(10);
         }
 
 
