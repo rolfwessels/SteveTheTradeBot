@@ -37,8 +37,5 @@
     <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Tools\" />
-  </ItemGroup>
 
 </Project>

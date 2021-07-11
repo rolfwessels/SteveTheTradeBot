@@ -6,35 +6,73 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Broker
 {
-    public static class TradesToCandle
+    public static class CandleBuilderHelper
     {
-        public static IEnumerable<Candle> ToCandleOneMinute(this IEnumerable<HistoricalTrade> trades)
+        public static IEnumerable<CandleBuilder.Candle> ToCandleOneMinute(this IEnumerable<HistoricalTrade> trades)
+        {
+            return new CandleBuilder().ToCandleOneMinute(trades);
+        }
+    }
+
+
+    public class CandleBuilder
+    {
+        Candle currentCandle = null;
+        public Action<Candle> OnMinute { get; set; } = (z) => { };
+        public void Feed(HistoricalTrade trade)
+        {
+            var candleDate = ToMinute(trade);
+            if (currentCandle == null)
+            {
+                currentCandle = InitializeCandle(candleDate, trade);
+            }
+            else
+            {
+                if (currentCandle.Date == candleDate)
+                {
+                    UpdateCandle(currentCandle,trade);
+                }
+                else
+                {
+                    OnMinute(currentCandle);
+                    currentCandle = InitializeCandle(candleDate, trade);
+                }
+            }
+        }
+
+
+        public IEnumerable<Candle> ToCandleOneMinute(IEnumerable<HistoricalTrade> trades)
         {
             Candle candle = null;
-            foreach (var historicalTrade in trades)
+            foreach (var trade in trades)
             {
-                var candleDate = ToMinute(historicalTrade);
+                var candleDate = ToMinute(trade);
                 if (candle == null)
                 {
-                    candle = InitializeCandle(candleDate, historicalTrade);
+                    candle = InitializeCandle(candleDate, trade);
                 }
                 else
                 {
                     if (candle.Date == candleDate)
                     {
-                        candle.Close = historicalTrade.Price;
-                        candle.High = Math.Max(candle.High, historicalTrade.Price);
-                        candle.Low = Math.Min(candle.Low, historicalTrade.Price);
-                        candle.Volume += historicalTrade.Quantity;
+                        UpdateCandle(candle, trade);
                     }
                     else
                     {
                         yield return candle;
-                        candle = InitializeCandle(candleDate, historicalTrade);
+                        candle = InitializeCandle(candleDate, trade);
                     }
                 }
             }
             if (candle != null) yield return candle;
+        }
+
+        private static void UpdateCandle(Candle candle, HistoricalTrade trade)
+        {
+            candle.Close = trade.Price;
+            candle.High = Math.Max(candle.High, trade.Price);
+            candle.Low = Math.Min(candle.Low, trade.Price);
+            candle.Volume += trade.Quantity;
         }
 
         private static Candle InitializeCandle(DateTime candleDate, HistoricalTrade historicalTrade)
@@ -65,5 +103,8 @@ namespace SteveTheTradeBot.Core.Components.Broker
             public decimal Close { get; set; }
             public decimal Volume { get; set; }
         }
+
+
+       
     }
 }

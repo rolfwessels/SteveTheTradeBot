@@ -46,7 +46,7 @@ namespace SteveTheTradeBot.Dal.Tests
                 historicalTrade.Price = 259653+ _random.Next(-1000, 1000);
                 historicalTrade.Quantity = _random.Next(1, 1000)/1000m;
                 historicalTrade.CurrencyPair = "BTCZAR";
-                historicalTrade.TradedAt = DateTime.Now.AddMinutes(_counter*-1);
+                historicalTrade.TradedAt = DateTime.Now.AddMinutes(_counter*-1).ToUniversalTime();
                 historicalTrade.TakerSide = _random.Next(0,1) == 1 ? "buy" : "sell";
                 historicalTrade.SequenceId = _counter;
                 historicalTrade.Id = Guid.NewGuid().ToString();

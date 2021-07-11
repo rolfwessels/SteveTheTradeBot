@@ -8,7 +8,7 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Broker
 {
-    public class TradesToCandleTests
+    public class CandleBuilderTests
     {
         [Test]
         public void ToCandle_GivenValuesOver2Periods_ShouldReturnTwoResults()
