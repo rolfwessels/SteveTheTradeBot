@@ -29,7 +29,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Broker
             // action
             var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(historicalTrades.Last().TradedAt, historicalTrades.First().TradedAt,default, 2);
             // assert
-            var list = await readHistoricalTrades.ToListAsync();
+            var list = readHistoricalTrades.ToList();
             list.Count.Should().Be(expected);
         }
     }

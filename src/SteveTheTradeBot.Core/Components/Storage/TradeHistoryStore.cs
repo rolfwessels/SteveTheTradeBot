@@ -61,6 +61,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var context = await _factory.GetTradePersistence();
             return await context.HistoricalTrades.AsQueryable()
                 .OrderBy(x=>x.TradedAt)
+                .ThenBy(x=>x.SequenceId)
                 .Where(x => x.TradedAt >= from && x.TradedAt <= to)
                 .Skip(skip)
                 .Take(take).ToListAsync();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Skender.Stock.Indicators;
-using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Broker

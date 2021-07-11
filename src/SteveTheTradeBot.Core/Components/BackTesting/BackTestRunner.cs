@@ -22,18 +22,19 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _candleBuilder = new CandleBuilder();
         }
 
-        public async Task<BackTestResult> Run(IAsyncEnumerable<HistoricalTrade> trades, RSiBot.IBot bot,
+        public async Task<BackTestResult> Run(IEnumerable<HistoricalTrade> trades, RSiBot.IBot bot,
             CancellationToken cancellationToken)
         {
             var botData = new BotData {BackTestResult = new BackTestResult {StartingAmount = 1000}};
-            
-            _candleBuilder.OnMinute = x =>
+           
+            foreach (var trade in trades.ToCandleOneMinute().Aggregate(PeriodSize.FiveMinutes))
             {
-                botData.ByMinute.Push(x);
+                if (cancellationToken.IsCancellationRequested) break;
+                if (botData.BackTestResult.MarketOpenAt == 0) botData.BackTestResult.MarketOpenAt = trade.Close;
+                botData.ByMinute.Push(trade);
                 bot.DataReceived(botData);
-            };
-            await foreach (var trade in trades.WithCancellation(cancellationToken))
-                _candleBuilder.Feed(trade);
+                botData.BackTestResult.MarketClosedAt = trade.Close;
+            }
 
             return botData.BackTestResult;
         }
@@ -43,11 +44,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
     {
         public BotData()
         {
-            ByMinute = new Recent<CandleBuilder.Candle>(1000);
+            ByMinute = new Recent<IQuote>(1000);
         }
 
-        public Recent<CandleBuilder.Candle> ByMinute { get; }
+        public Recent<IQuote> ByMinute { get; }
         public BackTestResult BackTestResult { get; set; }
+        
     }
 
     public class BackTestResult
@@ -62,6 +64,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public double AvgDuration => TradesActive >0?0: Trades.Where(x => !x.IsActive).Average(x => (x.EndDate - x.StartDate).Hours);
         public int DatePoints { get; set; }
         public int TotalTransactionCost { get; set; }
+        
 
         public decimal StartingAmount
         {
@@ -70,6 +73,8 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
 
         public decimal Balance { get; set; }
+        public decimal MarketOpenAt { get; set; }
+        public decimal MarketClosedAt { get; set; }
 
         public Trade AddTrade(in DateTime date, in decimal price, decimal quantity)
         {
@@ -121,17 +126,18 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly int _lookBack;
         private BackTestResult.Trade _activeTrade;
         private readonly int _buySignal;
-        private double _initialStopRisk;
+        private decimal _initialStopRisk;
         private readonly int _lookBackRequired;
         private readonly int _sellSignal;
-        private double _trailingStopRisk;
+        private decimal _trailingStopRisk;
+        private decimal? _setStopLoss;
 
         public RSiBot(int lookBack = 14)
         {
             _lookBack = lookBack;
-            _initialStopRisk = 0.98;
-            _trailingStopRisk = 0.90;
-            _lookBackRequired = 100 + _lookBack;
+            _initialStopRisk = 0.95m;
+            _trailingStopRisk = 0.90m;
+            _lookBackRequired = _lookBack+100;
             _sellSignal = 80;
             _buySignal = 20;
         }
@@ -153,11 +159,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
                     _activeTrade = trade.BackTestResult.AddTrade(currentTrade.Date, currentTrade.Close,
                         trade.BackTestResult.Balance / currentTrade.Close);
+                    _setStopLoss = currentTrade.Close * _initialStopRisk;
                 }
             }
             else
             {
-                if (rsiResults > _sellSignal)
+                if (rsiResults > _sellSignal || currentTrade.Close <= _setStopLoss)
                 {
                     _log.Information(
                         $"{currentTrade.Date} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
@@ -169,64 +176,16 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             }
         }
 
-        public static decimal CalculateRelativeStrengthIndex(int numberOfDays, List<CandleBuilder.Candle> historicalDataList)
-        {
-            
-            if (historicalDataList.Count >= numberOfDays)
-            {
-                decimal totalGain = 0;
-                decimal totalLoss = 0;
-                var daysUp = 0;
-                var daysDown = 0;
-                for (int i = 0; i < numberOfDays; i++)
-                {
-                    decimal changeValue;
-                    if (i == 0)
-                        changeValue = 0;
-                    else
-                        changeValue = historicalDataList[i - 1].Close - historicalDataList[i].Close;
-
-                    if (changeValue == 0)
-                        continue; //skip
-                    if (changeValue > 0)
-                    {
-                        totalGain = totalGain + historicalDataList[i - 1].Close;
-                        daysUp = daysUp + 1;
-                    }
-                    else
-                    {
-                        totalLoss = totalLoss + Math.Abs(historicalDataList[i - 1].Close);
-                        daysDown = daysDown + 1;
-                    }
-                }
-
-                decimal relativeStrength;
- 
-                if (daysDown != 0 && daysUp != 0) //To avoid divide by zero error
-                    relativeStrength = (totalGain / daysUp) / (totalLoss / daysDown);
-                else if (daysDown != 0) //To avoid divide by zero error
-                    relativeStrength = (totalLoss / daysDown);
-                else
-                    relativeStrength = (totalGain / daysUp);
-                var relativeStrengthIndex = 100 - (100 / (1 + relativeStrength));
-                return relativeStrengthIndex;
-            }
-
-            return 50;
-        }
 
         #region Private Methods
 
-        private decimal RsiResults1(BotData trade)
+        private decimal RsiResults(BotData trade)
         {
             var rsiResults = trade.ByMinute.TakeLast(_lookBackRequired).GetRsi(_lookBack).Last();
             return rsiResults.Rsi ?? 50m;
         }
 
-        private decimal RsiResults(BotData trade)
-        {
-            return CalculateRelativeStrengthIndex(_lookBack,trade.ByMinute);
-        }
+       
 
         #endregion
 

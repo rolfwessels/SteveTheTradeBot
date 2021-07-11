@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -22,7 +23,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
 
         #region Implementation of IHistoricalDataPlayer
 
-        public async IAsyncEnumerable<HistoricalTrade> ReadHistoricalTrades(DateTime @from, DateTime to, [EnumeratorCancellation] CancellationToken cancellationToken = default, int batchSize = 1000)
+        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(DateTime @from, DateTime to, [EnumeratorCancellation] CancellationToken cancellationToken = default, int batchSize = 1000)
         {
             _log.Information($"ReadHistoricalTrades {from} {to}");
             List<HistoricalTrade> historicalTrades;
@@ -30,11 +31,10 @@ namespace SteveTheTradeBot.Core.Components.Broker
             do
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                historicalTrades = await _tradeHistoryStore.FindByDate(@from, to, skip, batchSize);
+                historicalTrades = _tradeHistoryStore.FindByDate(@from, to, skip, batchSize).Result;
                 skip += batchSize;
-                foreach (var historicalTrade in historicalTrades)
+                foreach (var historicalTrade in historicalTrades.TakeWhile(historicalTrade => !cancellationToken.IsCancellationRequested))
                 {
-                    if (cancellationToken.IsCancellationRequested) break;
                     yield return historicalTrade;
                 }
 
