@@ -38,5 +38,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
         {
             return new TradePersistenceFactory(DbContextOptions(Guid.NewGuid().ToString("n")));
         }
+
+        public static ITradePersistenceFactory RealDb()
+        {
+            return new TradePersistenceFactory(Settings.Instance.NpgsqlConnection);
+        }
     }
 }
