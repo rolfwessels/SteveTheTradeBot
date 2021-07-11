@@ -80,6 +80,4 @@ docker-compose exec api bash
 
 ## Helpful Links
 
-- <https://dev.to/ahmetkucukoglu/event-sourcing-with-asp-net-core-01-store-3k04>
-- <https://github.com/tabler/tabler-react>
-- <https://github.com/rolfwessels/stevethetradebot-dashboard>
+-  Timescaledb <https://docs.timescale.com/timescaledb/latest/how-to-guides/install-timescaledb/self-hosted/docker/installation-docker/#docker-hub> 
