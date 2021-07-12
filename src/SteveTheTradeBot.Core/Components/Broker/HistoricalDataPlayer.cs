@@ -13,17 +13,17 @@ namespace SteveTheTradeBot.Core.Components.Broker
     public class HistoricalDataPlayer : IHistoricalDataPlayer
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType); 
-        private readonly TradeHistoryStore _tradeHistoryStore;
+        private readonly ITradeHistoryStore _tradeHistoryStore;
         private readonly TradePersistenceFactory _dataFactory;
 
-        public HistoricalDataPlayer(TradeHistoryStore tradeHistoryStore)
+        public HistoricalDataPlayer(ITradeHistoryStore tradeHistoryStore)
         {
             _tradeHistoryStore = tradeHistoryStore;
         }
 
         #region Implementation of IHistoricalDataPlayer
 
-        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(DateTime @from, DateTime to, [EnumeratorCancellation] CancellationToken cancellationToken = default, int batchSize = 1000)
+        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(DateTime @from, DateTime to, CancellationToken cancellationToken = default, int batchSize = 1000)
         {
             _log.Information($"ReadHistoricalTrades {from} {to}");
             List<HistoricalTrade> historicalTrades;

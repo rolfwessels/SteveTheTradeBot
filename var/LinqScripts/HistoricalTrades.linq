@@ -18,11 +18,19 @@
 
 void Main()
 {
-	var winChart = HistoricalTrades.Take (10000000)
-		.OrderBy(x=>x.TradedAt)
+	HistoricalTrades.Count().Dump("cnt");
+	HistoricalTrades.OrderBy(x => x.TradedAt).Take(1).Dump();
+	HistoricalTrades.OrderByDescending(x => x.TradedAt).Take(1).Dump();
+
+	TradeFeedCandles.GroupBy(x => x.PeriodSize).Select(x => new { x.Key, Cnt = x.Count() }).Dump("cnt");
+
+	
+	var winChart = TradeFeedCandles
+		.Where(x=>x.PeriodSize == 8)
+		.OrderBy(x=>x.Date)
 		.ToList()
-		.GroupBy(x => x.TradedAt.Date)
-		.Select(x => new {Date = x.Key, AvgPrice = x.Last().Price })
+		.GroupBy(x => x.Date.Date)
+		.Select(x => new {Date = x.Key, AvgPrice = x.Last().Close })
 		.ToList()
 		.Chart(c => c.Date, c => c.AvgPrice)
 		.ToWindowsChart();

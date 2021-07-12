@@ -33,7 +33,7 @@ namespace SteveTheTradeBot.Api.AppStartup
             SetupCommonControllers(builder);
             SetupGraphQl(builder);
             SetupTools(builder);
-            builder.Populate(_services);
+            if (_services != null) builder.Populate(_services);
             Container = builder.Build();
         }
 

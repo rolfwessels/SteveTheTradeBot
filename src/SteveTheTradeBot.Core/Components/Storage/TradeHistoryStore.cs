@@ -11,6 +11,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
     {
         Task<(HistoricalTrade earliest, HistoricalTrade latest)> GetExistingRecords();
         Task<int> AddRangeAndIgnoreDuplicates(List<HistoricalTrade> trades);
+        Task<List<HistoricalTrade>> FindById(IEnumerable<string> ids);
+        Task<List<HistoricalTrade>> FindByDate(DateTime @from, DateTime to, int skip=0, int take = 1000000);
     }
 
     public class TradeHistoryStore : ITradeHistoryStore

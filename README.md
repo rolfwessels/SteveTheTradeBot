@@ -64,6 +64,15 @@ rm production.key
 ## Deploy docker files
 
 ```cmd
+dotnet tool install --global dotnet-ef
+cd src\SteveTheTradeBot.Core
+dotnet ef migrations add InitialCreate --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
+dotnet ef database update --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
+```
+
+## Deploy docker files
+
+```cmd
 cd src
 docker-compose build;
 docker-compose up;
