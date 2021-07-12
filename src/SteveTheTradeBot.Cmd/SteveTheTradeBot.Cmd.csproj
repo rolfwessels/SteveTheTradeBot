@@ -7,8 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj" />
     <PackageReference Include="Spectre.Console" Version="0.40.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj" />
   </ItemGroup>
 
 </Project>
