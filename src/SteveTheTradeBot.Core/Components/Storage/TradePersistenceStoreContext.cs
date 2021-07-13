@@ -8,6 +8,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
 {
     public class TradePersistenceStoreContext : DbContext
     {
+        public TradePersistenceStoreContext() 
+            : base(TradePersistenceFactory.DbContextOptions(Settings.Instance.NpgsqlConnection))
+        {
+        }
+
         public TradePersistenceStoreContext(DbContextOptions<TradePersistenceStoreContext> dbContextOptions) 
             : base(dbContextOptions)
         {

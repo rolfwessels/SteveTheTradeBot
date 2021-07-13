@@ -15,7 +15,12 @@ namespace SteveTheTradeBot.Core.Components.Storage
         private bool _isInitialized = false;
         public TradePersistenceFactory(string connection)
         {
-            _dbContextOptions = new DbContextOptionsBuilder<TradePersistenceStoreContext>()
+            _dbContextOptions = DbContextOptions(connection);
+        }
+
+        public static DbContextOptions<TradePersistenceStoreContext> DbContextOptions(string connection)
+        {
+            return new DbContextOptionsBuilder<TradePersistenceStoreContext>()
                 .UseNpgsql(connection)
                 .Options;
         }

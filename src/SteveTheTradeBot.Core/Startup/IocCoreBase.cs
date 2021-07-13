@@ -121,8 +121,9 @@ namespace SteveTheTradeBot.Core.Startup
             
             builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection)).As<ITradePersistenceFactory>().SingleInstance();
             builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result);
+            builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result).As<TradePersistenceStoreContext>();
         }
-
+        
         #endregion
 
         #region Nested type: AutofacValidatorFactory
