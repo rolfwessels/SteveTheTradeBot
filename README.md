@@ -66,6 +66,7 @@ rm production.key
 ```cmd
 dotnet tool install --global dotnet-ef
 cd src\SteveTheTradeBot.Core
+dotnet build
 dotnet ef migrations add InitialCreate --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
 dotnet ef database update --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
 ```

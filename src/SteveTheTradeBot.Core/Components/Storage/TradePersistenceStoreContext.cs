@@ -15,6 +15,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         public DbSet<HistoricalTrade> HistoricalTrades { get; set; }
         public DbSet<TradeFeedCandle> TradeFeedCandles { get; set; }
+        public DbSet<DynamicPlotter> DynamicPlots { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +26,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .HasIndex(b => new {b.TradedAt, b.SequenceId});
             modelBuilder.Entity<TradeFeedCandle>()
                 .HasKey(b => new { b.Feed, b.PeriodSize, b.Date });
+            modelBuilder.Entity<DynamicPlotter>()
+                .HasKey(b => new { b.Feed, b.Label, b.Date });
         }
     }
 

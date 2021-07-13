@@ -1,6 +1,6 @@
 version: "3.5"
 networks:
-  dev-network:
+  dev-network:volumes:  grafana_data:
 
 services:
   db:
@@ -36,7 +36,21 @@ services:
       - 6391:6379
     networks:
       - dev-network
-
+  grafana:
+    image: grafana/grafana:latest
+    container_name: "grafana"
+    user: "1000"
+    depends_on:
+      - sql
+    ports:
+      - "8088:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin!!
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=webdav      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=ilgizar-candlestick-panel
+    
   src:
     depends_on:
       - redis

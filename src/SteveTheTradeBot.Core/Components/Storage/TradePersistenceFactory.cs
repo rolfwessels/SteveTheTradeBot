@@ -27,18 +27,18 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         public async Task<TradePersistenceStoreContext> GetTradePersistence()
         {
-            var tradePersistenceStoreContext = new TradePersistenceStoreContext(_dbContextOptions);
+            var context = new TradePersistenceStoreContext(_dbContextOptions);
             if (!_isInitialized)
             {
-                lock (_locker)
+                context.Database.EnsureCreated();
+                if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
                 {
-                    tradePersistenceStoreContext.Database.EnsureCreated();
-                    tradePersistenceStoreContext.Database.Migrate();
-                    _isInitialized = true;
+                    context.Database.Migrate();
                 }
+                _isInitialized = true;
             }
 
-            return tradePersistenceStoreContext;
+            return context;
         }
     }
 }

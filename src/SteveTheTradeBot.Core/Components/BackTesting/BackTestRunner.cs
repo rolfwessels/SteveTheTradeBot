@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -9,7 +8,6 @@ using Serilog;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Tools;
-using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
 {
@@ -22,12 +20,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _candleBuilder = new CandleBuilder();
         }
 
-        public async Task<BackTestResult> Run(IEnumerable<HistoricalTrade> trades, RSiBot.IBot bot,
+        public async Task<BackTestResult> Run(IEnumerable<IQuote> enumerable, RSiBot.IBot bot,
             CancellationToken cancellationToken)
         {
             var botData = new BotData {BackTestResult = new BackTestResult {StartingAmount = 1000}};
            
-            foreach (var trade in trades.ToCandleOneMinute().Aggregate(PeriodSize.FiveMinutes))
+            foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
                 if (botData.BackTestResult.MarketOpenAt == 0) botData.BackTestResult.MarketOpenAt = trade.Close;
@@ -38,86 +36,20 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
             return botData.BackTestResult;
         }
-    }
-
-    public class BotData
-    {
-        public BotData()
+        public class BotData
         {
-            ByMinute = new Recent<IQuote>(1000);
-        }
-
-        public Recent<IQuote> ByMinute { get; }
-        public BackTestResult BackTestResult { get; set; }
-        
-    }
-
-    public class BackTestResult
-    {
-        private decimal _startingAmount;
-        public List<Trade> Trades { get; } = new List<Trade>();
-        public string CurrencyPair { get; set; }
-        public int TradesActive => Trades.Count(x => x.IsActive);
-        public int TradesMade => Trades.Count(x => !x.IsActive);
-        public int TradesSuccesses => Trades.Where(x => !x.IsActive).Count(x => x.Profit > 0);
-        public decimal TradesSuccessesPercent => (TradesMade ==0 ?0: Math.Round((decimal) TradesSuccesses / TradesMade * 100m, 2));
-        public double AvgDuration => TradesActive >0?0: Trades.Where(x => !x.IsActive).Average(x => (x.EndDate - x.StartDate).Hours);
-        public int DatePoints { get; set; }
-        public int TotalTransactionCost { get; set; }
-        
-
-        public decimal StartingAmount
-        {
-            get => _startingAmount;
-            set => _startingAmount = Balance = value;
-        }
-
-        public decimal Balance { get; set; }
-        public decimal MarketOpenAt { get; set; }
-        public decimal MarketClosedAt { get; set; }
-
-        public Trade AddTrade(in DateTime date, in decimal price, decimal quantity)
-        {
-            var addTrade = new Trade(date, price, quantity);
-            Trades.Add(addTrade);
-            return addTrade;
-        }
-
-        #region Nested type: Trade
-
-        public class Trade
-        {
-            public Trade(DateTime startDate, decimal buyPrice, decimal quantity)
+            public BotData()
             {
-                StartDate = startDate;
-                BuyPrice = buyPrice;
-                Quantity = quantity;
-                IsActive = true;
+                ByMinute = new Recent<IQuote>(1000);
             }
 
-            public decimal Value { get; set; }
-            public DateTime StartDate { get; }
-            public decimal BuyPrice { get; }
-            public decimal Quantity { get; }
-            public bool IsActive { get; private set; }
-            public decimal SellPrice { get; private set; }
-            public DateTime EndDate { get; private set; }
-            public decimal Profit { get; set; }
+            public Recent<IQuote> ByMinute { get; }
+            public BackTestResult BackTestResult { get; set; }
 
-
-            public Trade Close(in DateTime endDate, in decimal sellPrice)
-            {
-                EndDate = endDate;
-                Value = Math.Round(Quantity * sellPrice, 2);
-                SellPrice = sellPrice;
-                Profit = (sellPrice - BuyPrice) / BuyPrice * 100;
-                IsActive = false;
-                return this;
-            }
         }
-
-        #endregion
     }
+
+   
 
 
     public class RSiBot : RSiBot.IBot
@@ -141,7 +73,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
 
 
-        public void DataReceived(BotData trade)
+        public void DataReceived(BackTestRunner.BotData trade)
         {
             if (trade.ByMinute.Count < _lookBackRequired) return;
 
@@ -156,7 +88,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                         $"{currentTrade.Date} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults}");
 
                     _activeTrade = trade.BackTestResult.AddTrade(currentTrade.Date, currentTrade.Close,
-                        trade.BackTestResult.Balance / currentTrade.Close);
+                        trade.BackTestResult.ClosingBalance / currentTrade.Close);
                     _setStopLoss = currentTrade.Close * _initialStopRisk;
                 }
             }
@@ -168,7 +100,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                         $"{currentTrade.Date} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
 
                     var close = _activeTrade.Close(currentTrade.Date, currentTrade.Close);
-                    trade.BackTestResult.Balance = close.Value;
+                    trade.BackTestResult.ClosingBalance = close.Value;
                     _setStopLoss = null;
                     _activeTrade = null;
                 }
@@ -178,7 +110,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         #region Private Methods
 
-        private decimal RsiResults(BotData trade)
+        private decimal RsiResults(BackTestRunner.BotData trade)
         {
             var rsiResults = trade.ByMinute.TakeLast(_lookBackRequired).GetRsi(_lookBack).Last();
             return rsiResults.Rsi ?? 50m;
@@ -192,7 +124,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public interface IBot
         {
-            void DataReceived(BotData trade);
+            void DataReceived(BackTestRunner.BotData trade);
         }
 
         #endregion
