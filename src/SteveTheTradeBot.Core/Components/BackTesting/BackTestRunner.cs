@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
@@ -14,42 +14,53 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
     public class BackTestRunner
     {
         private readonly CandleBuilder _candleBuilder;
+        private readonly DynamicGraphs _dynamicGraphs;
 
-        public BackTestRunner()
+        public BackTestRunner(DynamicGraphs dynamicGraphs)
         {
             _candleBuilder = new CandleBuilder();
+            _dynamicGraphs = dynamicGraphs;
         }
 
         public async Task<BackTestResult> Run(IEnumerable<IQuote> enumerable, RSiBot.IBot bot,
             CancellationToken cancellationToken)
         {
-            var botData = new BotData {BackTestResult = new BackTestResult {StartingAmount = 1000}};
-           
+            var runName = $"BT-{bot.Name}-{DateTime.Now:yyMMdd}";
+            await _dynamicGraphs.Clear(runName);
+            var botData = new BotData(_dynamicGraphs, 1000, runName);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
                 if (botData.BackTestResult.MarketOpenAt == 0) botData.BackTestResult.MarketOpenAt = trade.Close;
                 botData.ByMinute.Push(trade);
-                bot.DataReceived(botData);
+                await bot.DataReceived(botData);
                 botData.BackTestResult.MarketClosedAt = trade.Close;
             }
-
+            await _dynamicGraphs.Flush();
             return botData.BackTestResult;
         }
         public class BotData
         {
-            public BotData()
+            private readonly DynamicGraphs _dynamicGraphs;
+            private readonly string _runName;
+
+            public BotData(DynamicGraphs dynamicGraphs, int startingAmount, string runName)
             {
+                _dynamicGraphs = dynamicGraphs;
+                _runName = runName;
+                BackTestResult = new BackTestResult {StartingAmount = startingAmount };
                 ByMinute = new Recent<IQuote>(1000);
             }
 
             public Recent<IQuote> ByMinute { get; }
             public BackTestResult BackTestResult { get; set; }
 
+            public async Task PlotRunData(DateTime date, string label, decimal value)
+            {
+                await _dynamicGraphs.Plot(_runName, date, label, value);
+            }
         }
     }
-
-   
 
 
     public class RSiBot : RSiBot.IBot
@@ -73,23 +84,27 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
 
 
-        public void DataReceived(BackTestRunner.BotData trade)
+        public async Task DataReceived(BackTestRunner.BotData trade)
         {
-            if (trade.ByMinute.Count < _lookBackRequired) return;
+            if (trade.ByMinute.Count < _lookBackRequired) return ;
 
             //https://daveskender.github.io/Stock.Indicators/indicators/Rsi/#content
             var rsiResults = RsiResults(trade);
             var currentTrade = trade.ByMinute.Last();
+            await trade.PlotRunData(currentTrade.Date, "rsi", rsiResults);
+
             if (_activeTrade == null)
             {
                 if (rsiResults < _buySignal)
                 {
                     _log.Information(
-                        $"{currentTrade.Date} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults}");
 
                     _activeTrade = trade.BackTestResult.AddTrade(currentTrade.Date, currentTrade.Close,
                         trade.BackTestResult.ClosingBalance / currentTrade.Close);
                     _setStopLoss = currentTrade.Close * _initialStopRisk;
+                    await trade.PlotRunData(currentTrade.Date, "activeTrades", trade.BackTestResult.TradesActive);
+                    
                 }
             }
             else
@@ -97,15 +112,19 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 if (rsiResults > _sellSignal || currentTrade.Close <= _setStopLoss)
                 {
                     _log.Information(
-                        $"{currentTrade.Date} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
 
                     var close = _activeTrade.Close(currentTrade.Date, currentTrade.Close);
                     trade.BackTestResult.ClosingBalance = close.Value;
                     _setStopLoss = null;
                     _activeTrade = null;
+                    await trade.PlotRunData(currentTrade.Date, "activeTrades", trade.BackTestResult.TradesActive);
+                    await trade.PlotRunData(currentTrade.Date, "sellPrice", close.Value);
                 }
             }
         }
+
+        public string Name => "SimpleRsi";
 
 
         #region Private Methods
@@ -124,7 +143,8 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public interface IBot
         {
-            void DataReceived(BackTestRunner.BotData trade);
+            Task DataReceived(BackTestRunner.BotData trade);
+            string Name { get;  }
         }
 
         #endregion

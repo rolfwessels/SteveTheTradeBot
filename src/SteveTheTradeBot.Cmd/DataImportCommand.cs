@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Threading;
 using Bumbershoot.Utilities.Helpers;
 using Hangfire.Logging;
+using MongoDB.Bson.IO;
+using RestSharp.Serialization.Json;
 using Serilog;
 using Skender.Stock.Indicators;
 using Spectre.Console;
@@ -11,6 +13,7 @@ using Spectre.Console.Cli;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Cmd
@@ -36,11 +39,11 @@ namespace SteveTheTradeBot.Cmd
                     var tradeHistoryStore = IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence().Result;
                     AnsiConsole.MarkupLine("Start reading records.");
                     var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(DateTime.Now.AddYears(-10), DateTime.Now);
-                    
                     var counter = 0;
+                    
                     ctx.Status("Importing");
                     var quotes = readHistoricalTrades.ToCandleOneMinute()
-                        .ForEach(x =>
+                        .ForAll(x =>
                         {
                             counter++;
                             tradeHistoryStore.TradeFeedCandles.Add(
@@ -52,23 +55,26 @@ namespace SteveTheTradeBot.Cmd
                                 AnsiConsole.MarkupLine($"Processed {counter} records up and till {x.Date}.");
                             }
                         })
-                        .Aggregate(PeriodSize.FiveMinutes)
-                        .ForEach(x =>
+                        .Aggregate(PeriodSize.FiveMinutes) 
+                        .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr",
                                 PeriodSize.FiveMinutes)))
+                        .Aggregate(PeriodSize.FifteenMinutes)
+                        .ForAll(x =>
+                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr",
+                                PeriodSize.FifteenMinutes)))
                         .Aggregate(PeriodSize.ThirtyMinutes)
-                        .ForEach(x =>
+                        .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr",
                                 PeriodSize.ThirtyMinutes)))
                         .Aggregate(PeriodSize.OneHour)
-                        
-                        .ForEach(x =>
+                        .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.OneHour)))
                         .Aggregate(PeriodSize.Day)
-                        .ForEach(x =>
+                        .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.Day)))
                         .Aggregate(PeriodSize.Week)
-                        .ForEach(x =>
+                        .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.Week)))
                         .ToList();
                     tradeHistoryStore.SaveChanges();

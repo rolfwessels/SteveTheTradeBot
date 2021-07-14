@@ -26,7 +26,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
             // arrange
             Setup();
-            _backTestRunner = new BackTestRunner();
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(TestTradePersistenceFactory.Instance));
             var list =  Builder<HistoricalTrade>.CreateListOfSize(500).WithValidData().Build();
             // action
             var backTestResult = await _backTestRunner.Run(list.ToCandleOneMinute().Aggregate(PeriodSize.OneMinute),new RSiBot(), CancellationToken.None);
@@ -41,6 +41,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             
             var historicalDataPlayer = new HistoricalDataPlayer(new TradeHistoryStore(TestTradePersistenceFactory.RealDb()));
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(TestTradePersistenceFactory.RealDb()));
             var cancellationTokenSource = new CancellationTokenSource();
             var from = DateTime.Parse("2020-01-01T00:00:00");
             var to = from.AddMonths(1112);
@@ -58,7 +59,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public void Setup()
         {
             TestLoggingHelper.EnsureExists();
-            _backTestRunner = new BackTestRunner();
+            
         }
 
         [TearDown]
