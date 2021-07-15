@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq.Language.Flow;
+using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Dal.Tests
 {
@@ -35,7 +37,7 @@ namespace SteveTheTradeBot.Dal.Tests
             if (!File.Exists(file) || DateTime.Parse(File.ReadAllText(file)) < DateTime.Now)
             {
                 await action();
-                File.WriteAllText(file,DateTime.Now.AddMinutes(1).ToString("o"));
+                File.WriteAllText(file,DateTime.Now.AddMinutes(1).ToIsoDateString());
             }
             else
             {

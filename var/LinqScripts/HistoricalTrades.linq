@@ -28,18 +28,18 @@ void Main()
 	//TradeFeedCandles.GroupBy(x => x.PeriodSize).Select(x => new { x.Key, Cnt = x.Count() }).Dump("cnt");
 
 
-	//var winChart = DynamicPlots
-	//	.OrderBy(x => x.Date)
-	//	.ToList()
-	//	.ToList()
-	//	.Chart(c => c.Date, c => c.Value)
-	//	.ToWindowsChart();
-	//// Make tweaks/customizations:
-	//winChart.Series.First().ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-	//winChart.Dump();
-	/*
+	var winChart = DynamicPlots
+		.OrderBy(x => x.Date)
+		.ToList()
+		.ToList()
+		.Chart(c => c.Date, c => c.Value)
+		.ToWindowsChart();
+	// Make tweaks/customizations:
+	winChart.Series.First().ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+	winChart.Dump();
+
 	var winChart1 = TradeFeedCandles
-		.Where(x=>x.PeriodSize == 6)
+		.Where(x=>x.PeriodSize == 8)
 		.OrderBy(x=>x.Date)
 		.ToList()
 		.ToList()
@@ -48,8 +48,7 @@ void Main()
 	// Make tweaks/customizations:
 	winChart1.Series.First().ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
 	winChart1.Dump();
-	*/
-	
+
 	
 }
 void TestFeeds()

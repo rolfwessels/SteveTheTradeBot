@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using FizzWare.NBuilder;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using NUnit.Framework;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
@@ -35,22 +36,22 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         }
 
         [Test]
+        [Timeout(240000)]
         public async Task Run_Given_ShouldMakeNoTrades()
         {
             // arrange
             Setup();
-            
-            var historicalDataPlayer = new HistoricalDataPlayer(new TradeHistoryStore(TestTradePersistenceFactory.RealDb()));
-            _backTestRunner = new BackTestRunner(new DynamicGraphs(TestTradePersistenceFactory.RealDb()));
+            var factory = TestTradePersistenceFactory.RealDb();
+            var historicalDataPlayer = new HistoricalDataPlayer(new TradeHistoryStore(factory));
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory));
             var cancellationTokenSource = new CancellationTokenSource();
             var from = DateTime.Parse("2020-01-01T00:00:00");
-            var to = from.AddMonths(1112);
+            var to = from.AddMonths(1);
             var readHistoricalTrades = historicalDataPlayer.ReadHistoricalData(from, to,PeriodSize.FiveMinutes, cancellationTokenSource.Token).ToList();
             // action
             var backTestResult = await _backTestRunner.Run(readHistoricalTrades, new RSiBot(), CancellationToken.None);
             // assert
-            backTestResult.Dump("").TradesActive.Should().Be(1);
-            backTestResult.BalanceMoved.Should().BeGreaterThan(backTestResult.MarketMoved);
+            backTestResult.Dump("").BalanceMoved.Should().BeGreaterThan(backTestResult.MarketMoved);
         }
 
 

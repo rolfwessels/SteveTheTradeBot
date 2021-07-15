@@ -71,6 +71,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
             public static decimal MovementPercent(decimal currentValue, decimal fromValue, int decimals = 3)
             {
+                if (fromValue == 0) fromValue = 0.00001m;
                 return Math.Round( (currentValue - fromValue) / fromValue * 100 , decimals);
             }
         }

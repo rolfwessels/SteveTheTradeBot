@@ -9,13 +9,18 @@ Steve is a crypto trading bot. Well he is trying to be!
  
 - [x] Read historical data for back testing
 - [ ] Create dummy broker
-- [ ] Create simple agorythm
-- [ ] Add a way do some back testing
-- [ ] Integrate a broker to get real time data
 - [ ] Integrate a broker (Valr for now)
-- [ ] Integrate with grafana
-- [ ] Deploy to AWS or Digital Ocean
+- [x] Create simple agorythm
+- [x] Add a way do some back testing
+- [ ] More back test stats
+- [ ] Store back test results
+- [ ] Integrate a broker to get real time data
+- [X] Integrate with grafana
+- [ ] Logging & monitoring
+- [ ] Slack
+- [ ] Prometheus & Slack counters
 - [ ] Add UI
+- [ ] Deploy to AWS or Digital Ocean
 - [ ] Move to using only OpenId
 
 ## Getting started with dev
@@ -61,7 +66,7 @@ rm production.crt
 rm production.key
 ```
 
-## Deploy docker files
+## Update the database
 
 ```cmd
 dotnet tool install --global dotnet-ef
