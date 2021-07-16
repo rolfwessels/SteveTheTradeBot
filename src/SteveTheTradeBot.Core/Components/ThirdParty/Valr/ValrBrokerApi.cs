@@ -174,7 +174,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public string SignBody(string timestamp, string verb, string path, string? body = null)
         {
-            var payload = timestamp + verb.ToUpper() + path + body.Dump("body");
+            var payload = timestamp + verb.ToUpper() + path + body;
             using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_secret));
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
             return hash.ToHexString();
