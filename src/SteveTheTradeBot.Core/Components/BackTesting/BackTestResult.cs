@@ -82,7 +82,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             SellPrice = tradeOrder.OrderPrice;
             Profit = MovementPercent(tradeOrder.OriginalQuantity,BuyValue);
             IsActive = false;
-            FeeAmount += tradeOrder.FeeAmount;
+            FeeAmount += tradeOrder.SwapFeeAmount(FeeCurrency);
             return this;
         }
 
@@ -116,8 +116,8 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         {
             BuyPrice = tradeOrder.OrderPrice;
             Quantity = tradeOrder.OriginalQuantity;
-            FeeAmount = tradeOrder.SwapFeeAmount();
-            FeeCurrency = tradeOrder.SwapFeeCurrency();
+            FeeCurrency = tradeOrder.OutCurrency;
+            FeeAmount = tradeOrder.SwapFeeAmount(FeeCurrency);
         }
     }
 
@@ -174,15 +174,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             FeeCurrency = response.FeeCurrency;
         }
 
-        public decimal SwapFeeAmount()
+        public decimal SwapFeeAmount(string feeCurrency)
         {
+            if (feeCurrency == FeeCurrency) return FeeAmount;
             return FeeAmount* OrderPrice;
         }
 
-        public string SwapFeeCurrency()
-        {
-            return CurrencyPair.SideOut(this.OrderSide);
-        }
+        
 
         
     }
