@@ -38,7 +38,22 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             return await ExecuteAsync<OrderBookResponse>(request);
         }
 
-        
+
+       
+
+        public class Root
+        {
+            public string orderId { get; set; }
+            public bool success { get; set; }
+            public bool processing { get; set; }
+            public string paidAmount { get; set; }
+            public string paidCurrency { get; set; }
+            public string receivedAmount { get; set; }
+            public string receivedCurrency { get; set; }
+            public string feeAmount { get; set; }
+            public string feeCurrency { get; set; }
+            public DateTime orderExecutedAt { get; set; }
+        }
 
         public async Task<OrderHistorySummaryResponse> OrderHistorySummary(string customerOrderId)
         {
@@ -47,15 +62,56 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             request.AddUrlSegment("currencyPair", customerOrderId);
             return await ExecuteAsync<OrderHistorySummaryResponse>(request);
         }
-        
-        public async Task<QuoteResponse> Quote(string currencyPair, Side side, decimal amount, string payIn)
+
+
+
+        public async Task<IdResponse> SimpleOrder(SimpleOrderRequest simpleOrderRequest)
+        {
+            _log.Information($"SimpleOrder {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
+            var request = new RestRequest("/simple/{currencyPair}/order", DataFormat.Json) { Method = Method.POST };
+            request.AddUrlSegment("currencyPair", simpleOrderRequest.CurrencyPair);
+            request.AddJsonBody(simpleOrderRequest);
+            return await ExecuteAsync<IdResponse>(request);
+        }
+
+        public async Task<SimpleOrderStatusResponse> SimpleOrderStatus(string currencyPair, string orderId)
         {
             _log.Information($"OrderBook {currencyPair}");
-            var request = new RestRequest("/simple/{currencyPair}/quote", DataFormat.Json) {Method = Method.POST};
+            var request = new RestRequest("/simple/{currencyPair}/order/{id}", DataFormat.Json) { Method = Method.GET };
             request.AddUrlSegment("currencyPair", currencyPair);
-            var quoteOrderRequest = new QuoteOrderRequest { Side = side.ToString().ToUpper() , PayAmount = amount.ToString(CultureInfo.InvariantCulture), PayInCurrency = payIn};
-            request.AddJsonBody(quoteOrderRequest);
-            return await ExecuteAsync<QuoteResponse>(request);
+            request.AddUrlSegment("id", orderId);
+            return await ExecuteAsync<SimpleOrderStatusResponse>(request);
+        }
+
+        public async Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest simpleOrderRequest)
+        {
+            var simpleOrder = await SimpleOrder(simpleOrderRequest);
+            return await SimpleOrderStatus(simpleOrderRequest.CurrencyPair, simpleOrder.Id);
+        }
+
+        public async Task<QuoteResponse> Quote(SimpleOrderRequest simpleOrderRequest)
+        {
+            _log.Information($"SimpleOrderQuote {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
+            var request = new RestRequest("/simple/{currencyPair}/quote", DataFormat.Json) {Method = Method.POST};
+            request.AddUrlSegment("currencyPair", simpleOrderRequest.CurrencyPair);
+            request.AddJsonBody(AsRequest(simpleOrderRequest));
+            var quoteResponse = await ExecuteAsync<QuoteResponse>(request);
+            HackFixCurrency(quoteResponse);
+            return quoteResponse;
+        }
+
+        private static void HackFixCurrency(QuoteResponse quoteResponse)
+        {
+            if (quoteResponse.FeeCurrency == "R") quoteResponse.FeeCurrency = "ZAR";
+        }
+
+        private object AsRequest(SimpleOrderRequest simpleOrderRequest)
+        {
+            return new {
+                Side = simpleOrderRequest.Side.ToString().ToUpper(),
+                PayInCurrency = simpleOrderRequest.PayInCurrency,
+                PayAmount = simpleOrderRequest.PayAmount
+            };
         }
 
         public Task<OrderStatusResponse> LimitOrder(LimitOrderRequest request)
@@ -125,7 +181,5 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         }
 
         #endregion
-
-
     }
 }

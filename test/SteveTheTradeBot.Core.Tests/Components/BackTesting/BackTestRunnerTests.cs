@@ -57,7 +57,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             backTestResult.Dump("").BalanceMoved.Should().BeGreaterThan(backTestResult.MarketMoved);
         }
 
-
         #region Setup/Teardown
 
         public void Setup()
@@ -77,35 +76,80 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
     public class FakeBroker : IBrokerApi
     {
+        public decimal BuyFeePercent { get; set; } = 0.0075m;
+        public decimal AskPrice { get; set; } = 100010;
+        public int BidPrice { get; set; } = 100100;
+
         private readonly ITradeHistoryStore _tradeHistoryStore;
         public List<object> Requests { get; }
+        
 
-        public FakeBroker(ITradeHistoryStore tradeHistoryStore)
+        public FakeBroker(ITradeHistoryStore tradeHistoryStore = null)
         {
             _tradeHistoryStore = tradeHistoryStore;
             Requests = new List<object>();
         }
 
-        
+
 
         #region Implementation of IBrokerApi
+
+        public async Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest request)
+        {
+
+            Requests.Add(request);
+            var price = await GetAskPrice(request.RequestDate, request.Side);
+            var totalAmount = Math.Round(request.PayAmount/ price,8);
+            var feeAmount = Math.Round(totalAmount * BuyFeePercent, 12);
+            var receivedAmount = Math.Round(totalAmount - feeAmount, 8);
+            if (request.Side == Side.Sell)
+            {
+                totalAmount = Math.Round(request.PayAmount * price, 2);
+                feeAmount = Math.Round(totalAmount * BuyFeePercent, 2);
+                receivedAmount = Math.Round(totalAmount - feeAmount, 2);
+            }
+
+            
+            return new SimpleOrderStatusResponse()
+            {
+                
+                OrderId = request.CustomerOrderId + "_broker",
+                Success = true,
+                Processing = false,
+                PaidAmount = request.PayAmount,
+                PaidCurrency = request.PayInCurrency,
+                ReceivedAmount = receivedAmount,
+                ReceivedCurrency = request.CurrencyPair.SideIn(request.Side),
+                FeeAmount = feeAmount,
+                FeeCurrency = request.CurrencyPair.SideIn(request.Side),
+                OrderExecutedAt = request.RequestDate.AddSeconds(1),
+            };
+        }
+
+        private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side)
+        {
+            decimal price = Side.Buy == side ? AskPrice : BidPrice;
+
+            if (_tradeHistoryStore != null)
+            {
+                var findByDate = await _tradeHistoryStore.FindByDate(requestRequestDate,
+                    requestRequestDate.Add(TimeSpan.FromMinutes(5)), 0, 3);
+                price = findByDate.Select(x => x.Price).Last();
+            }
+
+            return price;
+        }
 
         public async Task<OrderStatusResponse> LimitOrder(LimitOrderRequest request)
         {
             Requests.Add(request);
-            decimal originalPrice = 100001;
-            if (_tradeHistoryStore != null)
-            {
-                var findByDate = await _tradeHistoryStore.FindByDate(request.DateTime, request.DateTime.Add(TimeSpan.FromMinutes(5)), 0, 3);
-                originalPrice = findByDate.Select(x => x.Price).Last();
-            }
-
+            
             return new OrderStatusResponse()
             {
                 CustomerOrderId = request.CustomerOrderId,
                 OrderStatusType = "Filled",
                 CurrencyPair = request.Pair,
-                OriginalPrice = originalPrice,
+                OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy),
                 OrderSide = request.Side,
                 RemainingQuantity = 0,
                 OriginalQuantity = request.Quantity,
@@ -117,19 +161,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public async Task<OrderStatusResponse> MarketOrder(MarketOrderRequest request)
         {
             Requests.Add(request);
-            decimal originalPrice = 100001;
-            if (_tradeHistoryStore != null)
-            {
-                var findByDate = await _tradeHistoryStore.FindByDate(request.DateTime, request.DateTime.Add(TimeSpan.FromMinutes(5)),0,3);
-                originalPrice = findByDate.Select(x => x.Price).Last();
-            }
-
             return new OrderStatusResponse()
             {
                  CustomerOrderId = request.CustomerOrderId,
                  OrderStatusType = "Filled",
                  CurrencyPair = request.Pair,
-                 OriginalPrice = originalPrice,
+                 OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy),
                  OrderSide = request.Side,
                  RemainingQuantity = 0,
                  OriginalQuantity = request.Quantity,
@@ -142,6 +179,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
             throw new NotImplementedException();
         }
+
+       
 
         #endregion
     }

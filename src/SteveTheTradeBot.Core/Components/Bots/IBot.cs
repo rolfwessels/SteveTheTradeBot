@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
+using SteveTheTradeBot.Core.Components.BackTesting;
 
-namespace SteveTheTradeBot.Core.Components.BackTesting
+namespace SteveTheTradeBot.Core.Components.Bots
 {
     public interface IBot
     {

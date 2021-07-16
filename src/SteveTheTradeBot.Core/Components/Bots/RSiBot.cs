@@ -59,7 +59,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
 
-                    await Sell(data, ActiveTrade(data), currentTrade);
+                    await Sell(data, ActiveTrade(data));
                     _setStopLoss = null;
                     
                 }

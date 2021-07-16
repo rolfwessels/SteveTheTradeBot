@@ -19,6 +19,18 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
            
         }
 
+
+        public async Task<MarketSummaryResponse> GetMarketSummary(string currencyPair)
+        {
+            _log.Information($"GetMarketsummary {currencyPair} ");
+            var request = new RestRequest("{currencyPair}/marketsummary", DataFormat.Json);
+            request.AddUrlSegment("currencyPair", currencyPair);
+            await _rateLimit;
+            var response = await _client.ExecuteGetAsync<MarketSummaryResponse>(request);
+            return ValidateResponse(response);
+        }
+
+       
         public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,int skip = 0, int limit = 100)
         {
             _log.Information($"GetTradeHistory {currencyPair} skip={skip} limit={limit}");
