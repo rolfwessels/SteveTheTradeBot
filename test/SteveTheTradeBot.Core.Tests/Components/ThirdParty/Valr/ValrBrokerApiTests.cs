@@ -124,10 +124,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
                 "4961b74efac86b25cce8fbe4c9811c4c7a787b7a5996660afcc2e287ad864363");
             // action
             var signBody = _api.SignBody("1558017528946", "POST", "/v1/orders/market",
-                @"{""customerOrderId"":""ORDER-000001""
-                ,""pair"":""BTCZAR""
-                ,""side"":""BUY""
-                ,""quoteAmount"":""80000""}");
+                @"{""customerOrderId"":""ORDER-000001"",""pair"":""BTCZAR"",""side"":""BUY"",""quoteAmount"":""80000""}");
             // assert
             signBody.Should()
                 .Be(

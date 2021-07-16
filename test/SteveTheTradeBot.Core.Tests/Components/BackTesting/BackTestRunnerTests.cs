@@ -9,6 +9,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
+using SteveTheTradeBot.Core.Components.Bots;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;

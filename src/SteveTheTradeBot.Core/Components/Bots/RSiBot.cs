@@ -4,10 +4,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using Skender.Stock.Indicators;
-using SteveTheTradeBot.Core.Components.Bots;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 
-namespace SteveTheTradeBot.Core.Components.BackTesting
+namespace SteveTheTradeBot.Core.Components.Bots
 {
     public class RSiBot : BaseBot
     {
