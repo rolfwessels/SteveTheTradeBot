@@ -8,7 +8,7 @@ Steve is a crypto trading bot. Well he is trying to be!
 ## Todo
  
 - [x] Read historical data for back testing
-- [ ] Create dummy broker
+- [x] Create dummy broker
 - [ ] Integrate a broker (Valr for now)
 - [x] Create simple agorythm
 - [x] Add a way do some back testing

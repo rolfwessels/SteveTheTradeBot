@@ -55,8 +55,6 @@ namespace SteveTheTradeBot.Core.Components.Bots
             data.BackTestResult.ClosingBalance = close.Value;
 
             await data.PlotRunData(currentTradeDate, "sellPrice", close.Value);
-
-
         }
     }
 }

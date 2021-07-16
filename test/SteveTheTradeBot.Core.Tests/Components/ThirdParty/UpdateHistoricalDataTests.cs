@@ -59,7 +59,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
             var currencyPair = $"{CurrencyPair.BTCZAR}-{Guid.NewGuid()}";
             var allItems = Builder<HistoricalTrade>.CreateListOfSize(400).WithValidData().Build().ForEach(x => x.CurrencyPair = currencyPair);
             _updateHistoricalData.BatchSize = 50;
-            var dbContext = await TestTradePersistenceFactory.Instance.GetTradePersistence();
+            var dbContext = await TestTradePersistenceFactory.InMemoryDb.GetTradePersistence();
             dbContext.HistoricalTrades.AddRange(allItems.Skip(110).Take(30));
             dbContext.SaveChanges();
 
@@ -85,8 +85,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
         {
             TestLoggingHelper.EnsureExists();
             _mockIHistoricalDataApi = new Mock<IHistoricalDataApi>();
-            _tradePersistenceStoreContext = await TestTradePersistenceFactory.Instance.GetTradePersistence();
-            _updateHistoricalData = new UpdateHistoricalData(_mockIHistoricalDataApi.Object, new TradeHistoryStore(TestTradePersistenceFactory.Instance));
+            _tradePersistenceStoreContext = await TestTradePersistenceFactory.InMemoryDb.GetTradePersistence();
+            _updateHistoricalData = new UpdateHistoricalData(_mockIHistoricalDataApi.Object, new TradeHistoryStore(TestTradePersistenceFactory.InMemoryDb));
         }
     }
 }

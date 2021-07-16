@@ -25,7 +25,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         #region Singleton
 
-        public static TestTradePersistenceFactory Instance => _instance.Value;
+        public static TestTradePersistenceFactory InMemoryDb => _instance.Value;
 
         #endregion
 

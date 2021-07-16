@@ -27,10 +27,11 @@ void Main()
 
 	//TradeFeedCandles.GroupBy(x => x.PeriodSize).Select(x => new { x.Key, Cnt = x.Count() }).Dump("cnt");
 
-
+	DynamicPlots.Select(x=>x.Feed).Distinct().Dump("");
+	
 	var winChart = DynamicPlots
+		.Where(x=>x.Feed == "afsd");
 		.OrderBy(x => x.Date)
-		.ToList()
 		.ToList()
 		.Chart(c => c.Date, c => c.Value)
 		.ToWindowsChart();

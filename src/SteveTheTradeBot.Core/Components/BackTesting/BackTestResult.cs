@@ -26,7 +26,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             : Trades.Where(x => !x.IsActive).Average(x => (x.EndDate - x.StartDate)?.Hours ?? 0);
 
         public int DatePoints { get; set; }
-        public int TotalTransactionCost { get; set; }
+        public decimal TotalTransactionCost => Trades.Sum(x => x.FeeAmount);
 
 
         public decimal StartingAmount
