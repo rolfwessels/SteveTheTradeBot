@@ -62,6 +62,7 @@ namespace SteveTheTradeBot.Sdk.RestApi.Clients
                 if (string.IsNullOrEmpty(result.Content))
                     throw new ApplicationException(
                         $"{result.StatusCode} response contains no data.");
+                Console.Out.WriteLine("result.Content:"+ result.Content);
                 var errorMessage = SimpleJson.DeserializeObject<TokenErrorMessage>(result.Content);
                 throw new Exception($"{errorMessage.error}[{errorMessage.error_description}]");
             }

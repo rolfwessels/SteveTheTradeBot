@@ -7,11 +7,11 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {
     public class OrderBookResponse
     {
-        public List<Order> Asks { get; set; }
-        public List<Order> Bids { get; set; }
+        public List<OrderValue> Asks { get; set; }
+        public List<OrderValue> Bids { get; set; }
         public DateTime LastChange { get; set; }
 
-        public class Ask
+        public class OrderValue
         {
             public Side Side { get; set; }
             public Decimal Quantity { get; set; }

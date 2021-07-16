@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Tools;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
@@ -19,12 +21,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _dynamicGraphs = dynamicGraphs;
         }
 
-        public async Task<BackTestResult> Run(IEnumerable<IQuote> enumerable, RSiBot.IBot bot,
-            CancellationToken cancellationToken)
+        public async Task<BackTestResult> Run(IEnumerable<IQuote> enumerable, IBot bot,
+            CancellationToken cancellationToken, string currencyPair)
         {
             var runName = $"BT-{bot.Name}-{DateTime.Now:yyMMdd}";
             await _dynamicGraphs.Clear(runName);
-            var botData = new BotData(_dynamicGraphs, 1000, runName);
+            var botData = new BotData(_dynamicGraphs, 1000, runName, currencyPair);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
@@ -38,23 +40,29 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
         public class BotData
         {
-            private readonly DynamicGraphs _dynamicGraphs;
+            private readonly IDynamicGraphs _dynamicGraphs;
             private readonly string _runName;
 
-            public BotData(DynamicGraphs dynamicGraphs, int startingAmount, string runName)
+            public BotData(IDynamicGraphs dynamicGraphs, int startingAmount, string runName, string currencyPair)
             {
                 _dynamicGraphs = dynamicGraphs;
                 _runName = runName;
-                BackTestResult = new BackTestResult {StartingAmount = startingAmount };
+                BackTestResult = new BackTestResult {StartingAmount = startingAmount , CurrencyPair = currencyPair};
                 ByMinute = new Recent<IQuote>(1000);
             }
 
             public Recent<IQuote> ByMinute { get; }
             public BackTestResult BackTestResult { get; set; }
+            
 
             public async Task PlotRunData(DateTime date, string label, decimal value)
             {
                 await _dynamicGraphs.Plot(_runName, date, label, value);
+            }
+
+            public IQuote LatestQuote()
+            {
+                return ByMinute.Last();
             }
         }
     }

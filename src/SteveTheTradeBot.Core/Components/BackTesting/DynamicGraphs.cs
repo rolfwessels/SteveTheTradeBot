@@ -7,7 +7,14 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
 {
-    public class DynamicGraphs
+    public interface IDynamicGraphs
+    {
+        Task Clear(string feedName);
+        Task Plot(string feedName, DateTime date, string label, decimal value);
+        Task Flush();
+    }
+
+    public class DynamicGraphs : IDynamicGraphs
     {
         private readonly ITradePersistenceFactory _factory;
         private Lazy<Task<TradePersistenceStoreContext>> _contextLazy; 

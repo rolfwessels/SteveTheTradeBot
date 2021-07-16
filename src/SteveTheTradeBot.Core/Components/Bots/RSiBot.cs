@@ -4,21 +4,22 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Components.Bots;
+using SteveTheTradeBot.Core.Components.Broker;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
 {
-    public class RSiBot : RSiBot.IBot
+    public class RSiBot : BaseBot
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly int _lookBack;
-        private BackTestResult.Trade _activeTrade;
         private readonly int _buySignal;
         private readonly decimal _initialStopRisk;
         private readonly int _lookBackRequired;
         private readonly int _sellSignal;
         private decimal? _setStopLoss;
 
-        public RSiBot(int lookBack = 14)
+        public RSiBot(IBrokerApi api, int lookBack = 14) : base(api)
         {
             _lookBack = lookBack;
             _initialStopRisk = 0.95m;
@@ -27,30 +28,28 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _buySignal = 20;
         }
 
+        
 
-        public async Task DataReceived(BackTestRunner.BotData trade)
+
+        public override async Task DataReceived(BackTestRunner.BotData data)
         {
-            if (trade.ByMinute.Count < _lookBackRequired) return ;
+            if (data.ByMinute.Count < _lookBackRequired) return ;
 
             //https://daveskender.github.io/Stock.Indicators/indicators/Rsi/#content
-            var rsiResults = RsiResults(trade);
-            var ema = EmaResults(trade);
-            var currentTrade = trade.ByMinute.Last();
-            await trade.PlotRunData(currentTrade.Date, "rsi", rsiResults);
-            await trade.PlotRunData(currentTrade.Date, "ema", ema);
+            var rsiResults = RsiResults(data);
+            var ema = EmaResults(data);
+            var currentTrade = data.ByMinute.Last();
+            await data.PlotRunData(currentTrade.Date, "rsi", rsiResults);
+            await data.PlotRunData(currentTrade.Date, "ema", ema);
 
-            if (_activeTrade == null)
+            if (ActiveTrade(data) == null)
             {
                 if (rsiResults < _buySignal && (currentTrade.Close * 2m) > ema)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults}");
-
-                    _activeTrade = trade.BackTestResult.AddTrade(currentTrade.Date, currentTrade.Close,
-                        trade.BackTestResult.ClosingBalance / currentTrade.Close);
+                    await Buy(data, data.BackTestResult.ClosingBalance);
                     _setStopLoss = currentTrade.Close * _initialStopRisk;
-                    await trade.PlotRunData(currentTrade.Date, "activeTrades", trade.BackTestResult.TradesActive);
-                    
                 }
             }
             else
@@ -60,17 +59,20 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
 
-                    var close = _activeTrade.Close(currentTrade.Date, currentTrade.Close);
-                    trade.BackTestResult.ClosingBalance = close.Value;
+                    await Sell(data, ActiveTrade(data), currentTrade);
                     _setStopLoss = null;
-                    _activeTrade = null;
-                    await trade.PlotRunData(currentTrade.Date, "activeTrades", trade.BackTestResult.TradesActive);
-                    await trade.PlotRunData(currentTrade.Date, "sellPrice", close.Value);
+                    
                 }
             }
         }
 
-        public string Name => "SimpleRsi";
+        private static Trade ActiveTrade(BackTestRunner.BotData trade)
+        {
+            return trade.BackTestResult.Trades.FirstOrDefault(x=>x.IsActive);
+        }
+
+
+        public override string Name => "SimpleRsi";
 
 
         #region Private Methods
@@ -97,14 +99,6 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         #endregion
 
-        #region Nested type: IBot
-
-        public interface IBot
-        {
-            Task DataReceived(BackTestRunner.BotData trade);
-            string Name { get;  }
-        }
-
-        #endregion
+      
     }
 }

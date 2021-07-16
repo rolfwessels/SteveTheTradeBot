@@ -5,6 +5,7 @@ using SteveTheTradeBot.Dal.Models.Projects;
 using SteveTheTradeBot.Dal.Models.Users;
 using FizzWare.NBuilder;
 using FizzWare.NBuilder.Generators;
+using Skender.Stock.Indicators;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Dal.Tests
@@ -51,6 +52,19 @@ namespace SteveTheTradeBot.Dal.Tests
                 historicalTrade.SequenceId = _counter;
                 historicalTrade.Id = Guid.NewGuid().ToString();
                 historicalTrade.QuoteVolume = 259.653m + _random.Next(-20, 20);
+            }
+            
+            if (value is TradeFeedCandle tradeFeedCandle)
+            {
+                _counter++;
+                tradeFeedCandle.Volume = 259 + _random.Next(-1000, 1000);
+                tradeFeedCandle.Open = 259653+ _random.Next(-1000, 1000);
+                tradeFeedCandle.Close = 259653 + _random.Next(-1000, 1000);
+                tradeFeedCandle.High = Math.Max(tradeFeedCandle.Open, tradeFeedCandle.Close);
+                tradeFeedCandle.Low = Math.Min(tradeFeedCandle.Open, tradeFeedCandle.Close);
+                tradeFeedCandle.PeriodSize = PeriodSize.OneMinute;
+                tradeFeedCandle.Date = DateTime.Now.AddMinutes(_counter * -1).ToUniversalTime();
+                tradeFeedCandle.Feed = "feed1";
             }
             
 

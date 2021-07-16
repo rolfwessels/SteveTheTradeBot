@@ -1,10 +1,6 @@
 using System;
-using System.IO;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using Bumbershoot.Utilities;
-using Hangfire.Logging;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using SteveTheTradeBot.Core.Utils.Security;
