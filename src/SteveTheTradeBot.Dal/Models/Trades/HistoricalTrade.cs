@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public class HistoricalTrade
+    public class HistoricalTrade: BaseDalModelWithId
     {
-        public string Id { get; set; }
         public decimal Price { get; set; }
         public decimal Quantity { get; set; }
         public string CurrencyPair { get; set; }

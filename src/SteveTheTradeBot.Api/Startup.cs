@@ -10,6 +10,7 @@ using SteveTheTradeBot.Api.WebApi.Filters;
 using SteveTheTradeBot.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -36,6 +37,8 @@ namespace SteveTheTradeBot.Api
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             IocApi.Populate(services);
+            services.AddSingleton(x => TradePersistenceFactory.DbContextOptions(Settings.Instance.NpgsqlConnection));
+            services.AddDbContext<TradePersistenceStoreContext>();
             services.AddCors();
             services.AddGraphQl();
             services.UseIdentityService(Configuration);

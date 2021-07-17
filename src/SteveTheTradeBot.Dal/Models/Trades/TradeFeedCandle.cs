@@ -1,9 +1,10 @@
 ﻿using System;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public class TradeFeedCandle : IQuote
+    public class TradeFeedCandle : BaseDalModel, IQuote
     {
         public string Feed { get; set; }
         public PeriodSize PeriodSize { get; set; }
@@ -29,13 +30,5 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 CurrencyPair = currencyPair
             };
         }
-    }
-
-    public class DynamicPlotter 
-    {
-        public string Feed { get; set; }
-        public string Label { get; set; }
-        public DateTime Date { get; set; }
-        public decimal Value { get; set; }
     }
 }
