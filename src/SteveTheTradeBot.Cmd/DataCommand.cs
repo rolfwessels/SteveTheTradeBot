@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Cmd
 
             public override int Execute(CommandContext context, Settings settings)
             {
-                var cancellationTokenSource = BindToCancelKey();
+                var cancellationTokenSource = ConsoleHelper.BindToCancelKey();
 
                 foreach (var feed in ValrFeeds.All)
                 {
@@ -43,19 +43,6 @@ namespace SteveTheTradeBot.Cmd
 
                 if (cancellationTokenSource.IsCancellationRequested) AnsiConsole.MarkupLine("Stopped");
                 return 1;
-            }
-
-            private static CancellationTokenSource BindToCancelKey()
-            {
-                var cancellationTokenSource = new CancellationTokenSource();
-                Console.CancelKeyPress += (sender, e) =>
-                {
-                    e.Cancel = true;
-                    AnsiConsole.MarkupLine("Stopping...");
-                    cancellationTokenSource.Cancel(false);
-                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(5));
-                };
-                return cancellationTokenSource;
             }
 
             public async Task Process(ValrFeeds.Feed feed, CancellationToken token)
