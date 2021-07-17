@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Serilog;
 using Skender.Stock.Indicators;
@@ -15,7 +14,6 @@ namespace SteveTheTradeBot.Core.Components.Broker
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType); 
         private readonly ITradeHistoryStore _tradeHistoryStore;
-        private readonly TradePersistenceFactory _dataFactory;
 
         public HistoricalDataPlayer(ITradeHistoryStore tradeHistoryStore)
         {

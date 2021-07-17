@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
@@ -30,7 +31,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             var historicalTrades = Builder<HistoricalTrade>.CreateListOfSize(4).WithValidData().Build();
             await _tradeHistoryStore.AddRangeAndIgnoreDuplicates(historicalTrades.ToList());
             // action
-            var existingRecords = await _tradeHistoryStore.GetExistingRecords();
+            var existingRecords = await _tradeHistoryStore.GetExistingRecords(CurrencyPair.BTCZAR);
             // assert
             existingRecords.earliest.TradedAt.Should().BeBefore(existingRecords.latest.TradedAt);
             existingRecords.earliest.Id.Should().Be(historicalTrades.Last().Id);

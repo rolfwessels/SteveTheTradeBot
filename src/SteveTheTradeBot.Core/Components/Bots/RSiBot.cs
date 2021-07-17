@@ -27,10 +27,7 @@ namespace SteveTheTradeBot.Core.Components.Bots
             _sellSignal = 80;
             _buySignal = 20;
         }
-
         
-
-
         public override async Task DataReceived(BackTestRunner.BotData data)
         {
             if (data.ByMinute.Count < _lookBackRequired) return ;
@@ -44,7 +41,7 @@ namespace SteveTheTradeBot.Core.Components.Bots
 
             if (ActiveTrade(data) == null)
             {
-                if (rsiResults < _buySignal && (currentTrade.Close * 2m) > ema)
+                if (rsiResults < _buySignal )
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults}");

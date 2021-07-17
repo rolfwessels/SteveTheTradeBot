@@ -38,6 +38,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             backTestResult.TradesActive.Should().Be(0);
         }
 
+
+
         [Test]
         [Timeout(240000)]
         public async Task Run_Given_ShouldMakeNoTrades()
@@ -49,9 +51,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var historicalDataPlayer = new HistoricalDataPlayer(tradeHistoryStore);
             _backTestRunner = new BackTestRunner(new DynamicGraphs(factory));
             var cancellationTokenSource = new CancellationTokenSource();
-            var from = DateTime.Parse("2020-01-01T00:00:00");
-            var to = from.AddDays(61111);
-            var readHistoricalTrades = historicalDataPlayer.ReadHistoricalData(from, to,PeriodSize.FiveMinutes, cancellationTokenSource.Token).ToList();
+            var from = DateTime.Parse("2020-11-01   T00:00:00");
+            var to = from.AddDays(20);
+            var readHistoricalTrades = historicalDataPlayer.ReadHistoricalData(from, to,PeriodSize.FiveMinutes, cancellationTokenSource.Token);
             // action
             var backTestResult = await _backTestRunner.Run(readHistoricalTrades, new RSiBot(new FakeBroker(tradeHistoryStore)), CancellationToken.None, CurrencyPair.BTCZAR);
             // assert
@@ -77,21 +79,17 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
     public class FakeBroker : IBrokerApi
     {
-        public decimal BuyFeePercent { get; set; } = 0.0075m;
+        public decimal BuyFeePercent { get; set; } = 0.001m; // 0.0075m;
         public decimal AskPrice { get; set; } = 100010;
         public int BidPrice { get; set; } = 100100;
-
         private readonly ITradeHistoryStore _tradeHistoryStore;
         public List<object> Requests { get; }
         
-
         public FakeBroker(ITradeHistoryStore tradeHistoryStore = null)
         {
             _tradeHistoryStore = tradeHistoryStore;
             Requests = new List<object>();
         }
-
-
 
         #region Implementation of IBrokerApi
 
@@ -113,7 +111,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             
             return new SimpleOrderStatusResponse()
             {
-                
                 OrderId = request.CustomerOrderId + "_broker",
                 Success = true,
                 Processing = false,
@@ -134,7 +131,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             if (_tradeHistoryStore != null)
             {
                 var findByDate = await _tradeHistoryStore.FindByDate(requestRequestDate,
-                    requestRequestDate.Add(TimeSpan.FromMinutes(5)), 0, 3);
+                    requestRequestDate.Add(TimeSpan.FromMinutes(5)), 0, 1);
                 price = findByDate.Select(x => x.Price).Last();
             }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +18,7 @@ namespace SteveTheTradeBot.Core.Utils
         }
 
         public static async IAsyncEnumerable<T> Take<T>(this IAsyncEnumerable<T> items,
-            int count, CancellationToken cancellationToken = default)
+            int count, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var counter = 0;
             await foreach (var item in items.WithCancellation(cancellationToken)
@@ -28,15 +29,5 @@ namespace SteveTheTradeBot.Core.Utils
                 yield return item;
             }
         }
-
-        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> items)
-        {
-            foreach (var item in items)
-            {
-                yield return item;
-            }
-        }
-
-        
-}
+    }
 }

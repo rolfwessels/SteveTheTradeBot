@@ -46,7 +46,7 @@ namespace SteveTheTradeBot.Api
             services.AddHangfire(configuration =>
             {
                 configuration.UseRedisStorage(Redis);
-                RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
+                //RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
             });
             return new AutofacServiceProvider(IocApi.Instance.Container);
         }

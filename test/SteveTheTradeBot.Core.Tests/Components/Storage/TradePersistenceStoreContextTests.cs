@@ -48,7 +48,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             Setup();
             var historicalTrade = Builder<HistoricalTrade>.CreateListOfSize(10).WithValidData().Build().ToCandleOneMinute();
             var feedName = "test"+Guid.NewGuid().ToString("n");
-            _tradePersistenceStoreContext.TradeFeedCandles.AddRange(historicalTrade.Select(x=>TradeFeedCandle.From(x,feedName,Skender.Stock.Indicators.PeriodSize.OneMinute)));
+            _tradePersistenceStoreContext.TradeFeedCandles.AddRange(historicalTrade.Select(x=>TradeFeedCandle.From(x,feedName,Skender.Stock.Indicators.PeriodSize.OneMinute, "BTCZAR")));
             await _tradePersistenceStoreContext.SaveChangesAsync();
             // action
             var historicalTrades = _tradePersistenceStoreContext.TradeFeedCandles.AsQueryable().ToList();

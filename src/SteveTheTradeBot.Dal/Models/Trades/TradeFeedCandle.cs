@@ -13,8 +13,9 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public decimal Low { get; set; }
         public decimal Close { get; set; }
         public decimal Volume { get; set; }
+        public string CurrencyPair { get; set; }
 
-        public static TradeFeedCandle From(IQuote trade, string feed , PeriodSize periodSize)
+        public static TradeFeedCandle From(IQuote trade, string feed , PeriodSize periodSize, string currencyPair)
         {
             return new TradeFeedCandle {
                 Feed = feed,
@@ -25,6 +26,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 Low = trade.Low,
                 Close = trade.Close,
                 Volume = trade.Volume,
+                CurrencyPair = currencyPair
             };
         }
     }

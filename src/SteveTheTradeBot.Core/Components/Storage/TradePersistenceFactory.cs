@@ -35,10 +35,10 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var context = new TradePersistenceStoreContext(_dbContextOptions);
             if (!_isInitialized)
             {
-                context.Database.EnsureCreated();
+                await context.Database.EnsureCreatedAsync();
                 if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
                 {
-                    context.Database.Migrate();
+                    await context.Database.MigrateAsync();
                 }
                 _isInitialized = true;
             }

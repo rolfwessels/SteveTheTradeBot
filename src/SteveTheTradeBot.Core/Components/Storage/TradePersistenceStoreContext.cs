@@ -1,7 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
-using Skender.Stock.Indicators;
-using SteveTheTradeBot.Core.Components.Broker;
+﻿using Microsoft.EntityFrameworkCore;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage

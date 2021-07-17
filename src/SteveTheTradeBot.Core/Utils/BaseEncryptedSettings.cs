@@ -29,7 +29,7 @@ namespace SteveTheTradeBot.Core.Utils
                 {
                     return DecryptString(ReadConfigValue("EncryptionKey", "EncryptionKey"), value.Substring(4));
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     _log.Warning($"BaseEncryptedSettings:ReadEncryptedValue could not decrypt `{value.Substring(0,Math.Min(10, value.Length))}...`");
                     return defaultValue;

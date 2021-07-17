@@ -19,6 +19,7 @@ namespace SteveTheTradeBot.Cmd
             app.Configure(config =>
             {
                 config.SetApplicationName("sttb");
+                config.CaseSensitivity(CaseSensitivity.None);
                 config.ValidateExamples();
                 config.AddCommand<ServiceCommand>("service")
                     .WithDescription("Run the web service.")
@@ -26,6 +27,19 @@ namespace SteveTheTradeBot.Cmd
                 config.AddCommand<DataImportCommand>("import")
                     .WithDescription("Build candle stick data from historical trades.")
                     .WithExample(new[] { "import", "-v" });
+
+                config.AddBranch("data", student =>
+                {
+                    student.SetDescription("Download & import historical data.");
+
+                    student.AddCommand<DataCommand.Download>("download")
+                        .WithAlias("import")
+                        .WithDescription("Download historical data to csv files.")
+                        .WithExample(new[] { "data", "download" });
+
+                   
+                });
+                
             });
             try
             {
@@ -46,10 +60,18 @@ namespace SteveTheTradeBot.Cmd
                 .Enrich.FromLogContext()
                 .WriteTo.File(@"c:\temp\logs\SteveTheTradeBot.Api.log", fileSizeLimitBytes: 10 * LoggingHelper.MB,
                     rollOnFileSizeLimit: true)
-                .WriteTo.Console(args.Any(x => x == "-v") ? LogEventLevel.Debug : LogEventLevel.Information)
+                .WriteTo.Console(RestrictedToMinimumLevel(args))
                 //.ReadFrom.Configuration(BaseSettings.Config)
                 .CreateLogger());
 
         }
+
+        private static LogEventLevel RestrictedToMinimumLevel(string[] args)
+        {
+            if (args.Any(x => x == "--vv")) return LogEventLevel.Debug;
+            return args.Any(x => x == "-v") ? LogEventLevel.Information : LogEventLevel.Warning;
+        }
     }
+
+    
 }
