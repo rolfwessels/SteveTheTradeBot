@@ -1,35 +1,56 @@
 version: "3.5"
 networks:
-  dev-network:
+  dev-network:volumes:  grafana_data:
 
 services:
   db:
     image: mongo:4.0
-    container_name: "db"
-    restart: unless-stopped
     environment:
       - MONGO_DATA_DIR=/data/db
       - MONGO_LOG_DIR=/dev/null
     ports:
-      - 27021:27017
+      - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
     networks:
       - dev-network
+
+  sql:
+    image: postgres:13.3-buster
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: GRES_password
+
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: GRES_password
+    ports:
+      - "5050:80"
+
   redis:
     image: redis:6.0-alpine
     ports:
-      - 6390:6379
+      - 6391:6379
     networks:
       - dev-network
-
-  www:
-    image: rolfwessels/stevethetradebot-dashboard:alpha
-    links:
-      - src
-    environment:
-      - API_URL=http://localhost:5000
+  grafana:
+    image: grafana/grafana:latest
+    container_name: "grafana"
+    user: "1000"
+    depends_on:
+      - sql
     ports:
-      - 84:80
+      - "8088:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin!!
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=webdav      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=ilgizar-candlestick-panel
+    
   src:
     depends_on:
       - redis
@@ -52,7 +73,6 @@ services:
       - /SteveTheTradeBot/src/SteveTheTradeBot.Utilities/bin
       - /SteveTheTradeBot/test/SteveTheTradeBot.Api.Tests/bin
       - /SteveTheTradeBot/test/SteveTheTradeBot.Core.Tests/bin
-      - /SteveTheTradeBot/test/SteveTheTradeBot.Utilities.Tests/bin
       #find src* | grep  '/obj$' | sed 's/^/ - /SteveTheTradeBot\//'
       - /SteveTheTradeBot/src/SteveTheTradeBot.Api/obj
       - /SteveTheTradeBot/src/SteveTheTradeBot.Api.Lambda/obj
@@ -64,7 +84,6 @@ services:
       - /SteveTheTradeBot/src/SteveTheTradeBot.Utilities/obj
       - /SteveTheTradeBot/test/SteveTheTradeBot.Api.Tests/obj
       - /SteveTheTradeBot/test/SteveTheTradeBot.Core.Tests/obj
-      - /SteveTheTradeBot/test/SteveTheTradeBot.Utilities.Tests/obj
 
     environment:
       - DOTNET_ENVIRONMENT=Development
@@ -74,7 +93,7 @@ services:
       - App__HostUrl=http://localhost:5000
       - OpenId__Origins=http://localhost:5000,http://localhost:84,http://localhost:3000
     ports:
-      - 5000:5000
+      - 5001:5000
     entrypoint: top -b
     logging:
       driver: none

@@ -15,6 +15,10 @@ using SteveTheTradeBot.Dal.Persistence;
 using FluentValidation;
 using Serilog;
 using MediatR;
+using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Components.ThirdParty;
+using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using IValidatorFactory = SteveTheTradeBot.Dal.Validation.IValidatorFactory;
 using ValidatorFactoryBase = SteveTheTradeBot.Dal.Validation.ValidatorFactoryBase;
 
@@ -109,8 +113,17 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<SubscriptionNotifications>().SingleInstance();
             builder.RegisterType<StringifyJson>().As<IStringify>().SingleInstance();
             builder.RegisterType<EventStoreConnection>().As<IEventStoreConnection>();
+            builder.RegisterType<UpdateHistoricalData>().As<IUpdateHistoricalData>();
+            builder.RegisterType<ValrHistoricalDataApi>().As<IHistoricalDataApi>();
+            builder.RegisterType<HistoricalDataPlayer>().As<IHistoricalDataPlayer>();
+            builder.RegisterType<TradeHistoryStore>().As<ITradeHistoryStore>();
+            
+            
+            builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection)).As<ITradePersistenceFactory>().SingleInstance();
+            builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result);
+            builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result).As<TradePersistenceStoreContext>();
         }
-
+        
         #endregion
 
         #region Nested type: AutofacValidatorFactory

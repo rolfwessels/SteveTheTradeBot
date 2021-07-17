@@ -26,7 +26,7 @@ namespace SteveTheTradeBot.Api.Security
 
         public string ScopeApi => ReadConfigValue("ScopeApi", "api");
 
-        public string Origins => ReadConfigValue("Origins", "http://localhost:5000");
+        public string Origins => ReadConfigValue("Origins", "http://localhost:5002");
 
         public string CertPfx => ReadConfigValue("CertPfx", "development.pfx");
 

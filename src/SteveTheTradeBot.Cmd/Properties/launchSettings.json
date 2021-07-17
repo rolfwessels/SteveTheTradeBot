@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SteveTheTradeBot.Cmd": {
+      "commandName": "Project",
+      "commandLineArgs": "import"
+    }
+  }
+}

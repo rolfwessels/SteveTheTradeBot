@@ -20,6 +20,7 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
                 CreateCommandMap(cfg);
                 CreateProjectMap(cfg);
                 CreateUserMap(cfg);
+                CreateTradesMap(cfg);
             });
             return config.CreateMapper();
         }

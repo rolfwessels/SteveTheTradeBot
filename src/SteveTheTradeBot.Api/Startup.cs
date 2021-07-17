@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using Autofac.Extensions.DependencyInjection;
+using Hangfire;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Api.GraphQl;
 using SteveTheTradeBot.Api.Security;
@@ -12,6 +13,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using StackExchange.Redis;
+using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Components.ThirdParty;
 
 namespace SteveTheTradeBot.Api
 {
@@ -21,26 +26,34 @@ namespace SteveTheTradeBot.Api
         {
             Configuration = configuration;
             Settings.Initialize(Configuration);
+            Redis = ConnectionMultiplexer.Connect(Settings.Instance.RedisHost);
         }
+
+        public ConnectionMultiplexer Redis { get; set; }
 
         public IConfiguration Configuration { get; }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             IocApi.Populate(services);
-            services.AddGraphQl();
             services.AddCors();
+            services.AddGraphQl();
             services.UseIdentityService(Configuration);
             services.AddBearerAuthentication();
             services.AddMvc(config => { config.Filters.Add(new CaptureExceptionFilter()); });
             services.AddSwagger();
             services.AddSignalR();
-
+            services.AddHangfire(configuration =>
+            {
+                configuration.UseRedisStorage(Redis);
+                RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
+            });
             return new AutofacServiceProvider(IocApi.Instance.Container);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            
             app.UseStaticFiles();
             app.UseRouting();
             var openIdSettings = new OpenIdSettings(Configuration);
@@ -63,6 +76,8 @@ namespace SteveTheTradeBot.Api
             app.AddGraphQl();
             app.UseEndpoints(e => e.MapControllers());
             app.UseSwagger();
+            app.UseHangfireDashboard();
+            app.UseHangfireServer();
             SimpleFileServer.Initialize(app);
         }
 
