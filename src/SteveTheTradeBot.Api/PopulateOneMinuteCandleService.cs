@@ -3,10 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
@@ -29,7 +27,6 @@ namespace SteveTheTradeBot.Api
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
-            
             while (!token.IsCancellationRequested)
             {
                 foreach (var valrFeed in ValrFeeds.All)
@@ -38,7 +35,6 @@ namespace SteveTheTradeBot.Api
                 }
                 await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }
-            
         }
 
         public async Task Populate(CancellationToken token, string currencyPair, string feed)
@@ -62,13 +58,12 @@ namespace SteveTheTradeBot.Api
             
             foreach (var feedCandles in candles.BatchedBy())
             {
-                    var saveContext = await _factory.GetTradePersistence();
-                    if (token.IsCancellationRequested) return;
-                    saveContext.TradeFeedCandles.AddRange(feedCandles);
-                    var count = await saveContext.SaveChangesAsync(token);
-                    _log.Information($"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
-                    stopwatch.Restart();
-                
+                await using var saveContext = await _factory.GetTradePersistence();
+                if (token.IsCancellationRequested) return;
+                saveContext.TradeFeedCandles.AddRange(feedCandles);
+                var count = await saveContext.SaveChangesAsync(token);
+                _log.Information($"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
+                stopwatch.Restart();
             }
         }
 

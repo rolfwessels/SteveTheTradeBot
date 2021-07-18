@@ -10,6 +10,8 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Broker
 {
+   
+
     public class HistoricalDataPlayer : IHistoricalDataPlayer
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType); 
@@ -26,37 +28,41 @@ namespace SteveTheTradeBot.Core.Components.Broker
             CancellationToken cancellationToken = default, int batchSize = 1000)
         {
             _log.Information($"ReadHistoricalTrades for {currencyPair} from {from} to {to}");
-            List<HistoricalTrade> historicalTrades;
             var skip = 0;
+            int counter;
             do
             {
+                counter = 0;
                 if (cancellationToken.IsCancellationRequested) break;
-                historicalTrades = _tradeHistoryStore.FindByDate(currencyPair,@from, to, skip, batchSize).Result;
+                var historicalTrades = _tradeHistoryStore.FindByDate(currencyPair,@from, to, skip, batchSize).Result;
                 skip += batchSize;
                 foreach (var historicalTrade in historicalTrades.TakeWhile(historicalTrade => !cancellationToken.IsCancellationRequested))
                 {
                     yield return historicalTrade;
+                    counter++;
                 }
 
-            } while (historicalTrades.Count != 0);
+            } while (counter > 0);
         }
 
         public IEnumerable<TradeFeedCandle> ReadHistoricalData(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, CancellationToken cancellationToken = default, int batchSize = 1000)
         {
             _log.Information($"ReadHistoricalTrades {from} {to}");
-            List<TradeFeedCandle> historicalTrades;
             var skip = 0;
+            int counter;
             do
             {
+                counter = 0;
                 if (cancellationToken.IsCancellationRequested) break;
-                historicalTrades = _tradeHistoryStore.FindCandlesByDate(currencyPair,@from, to,periodSize,skip:skip,take: batchSize).Result;
+                var historicalTrades = _tradeHistoryStore.FindCandlesByDate(currencyPair,@from, to,periodSize,skip:skip,take: batchSize).Result;
                 skip += batchSize;
                 foreach (var historicalTrade in historicalTrades.TakeWhile(historicalTrade => !cancellationToken.IsCancellationRequested))
                 {
                     yield return historicalTrade;
+                    counter++;
                 }
 
-            } while (historicalTrades.Count != 0);
+            } while (counter != 0);
         }
 
         #endregion
