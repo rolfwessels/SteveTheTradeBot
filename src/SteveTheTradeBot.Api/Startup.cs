@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Hangfire;
 using SteveTheTradeBot.Api.AppStartup;
@@ -23,20 +24,26 @@ namespace SteveTheTradeBot.Api
 {
     public class Startup
     {
+       
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
             Settings.Initialize(Configuration);
             Redis = ConnectionMultiplexer.Connect(Settings.Instance.RedisHost);
         }
+        
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            IocApi.Instance.SetBuilder(builder);
+        }
 
         public ConnectionMultiplexer Redis { get; set; }
 
         public IConfiguration Configuration { get; }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
-            IocApi.Populate(services);
+            
             services.AddSingleton(x => TradePersistenceFactory.DbContextOptions(Settings.Instance.NpgsqlConnection));
             services.AddDbContext<TradePersistenceStoreContext>();
             services.AddCors();
@@ -51,12 +58,13 @@ namespace SteveTheTradeBot.Api
                 configuration.UseRedisStorage(Redis);
                 //RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
             });
-            return new AutofacServiceProvider(IocApi.Instance.Container);
+           
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            
+            IocApi.Instance.SetContainer(app.ApplicationServices.GetAutofacRoot());
+
             app.UseStaticFiles();
             app.UseRouting();
             var openIdSettings = new OpenIdSettings(Configuration);

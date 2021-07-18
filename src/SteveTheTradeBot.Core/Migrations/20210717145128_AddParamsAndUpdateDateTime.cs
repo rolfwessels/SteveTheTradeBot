@@ -72,7 +72,7 @@ namespace SteveTheTradeBot.Core.Migrations
                 });
 
 
-            migrationBuilder.Sql($"UPDATE public.\"TradeFeedCandles\" SET  \"CurrencyPair\"=\"BTCZAR\"");
+            migrationBuilder.Sql($"UPDATE public.\"TradeFeedCandles\" SET  \"CurrencyPair\"=\'BTCZAR\'");
             migrationBuilder.Sql($"UPDATE public.\"DynamicPlots\" SET  \"CreateDate\"=NOW(), \"UpdateDate\"=NOW()");
             migrationBuilder.Sql($"UPDATE public.\"TradeFeedCandles\" SET  \"CreateDate\"=NOW(), \"UpdateDate\"=NOW()");
             migrationBuilder.Sql($"UPDATE public.\"HistoricalTrades\" SET  \"CreateDate\"=NOW(), \"UpdateDate\"=NOW()");

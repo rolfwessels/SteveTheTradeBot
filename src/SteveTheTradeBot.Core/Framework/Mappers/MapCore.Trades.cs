@@ -10,7 +10,9 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
     {
         public static void CreateTradesMap(IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap<TradeResponseDto, HistoricalTrade>();
+            cfg.CreateMap<TradeResponseDto, HistoricalTrade>()
+                .ForMember(x => x.CreateDate, opt => opt.Ignore())
+                .ForMember(x => x.UpdateDate, opt => opt.Ignore());
             cfg.CreateMap<HistoricalTrade, TradeResponseDto>();
         }
 

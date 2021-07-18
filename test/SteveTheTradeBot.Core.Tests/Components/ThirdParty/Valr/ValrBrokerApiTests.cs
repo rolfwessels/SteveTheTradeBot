@@ -21,7 +21,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
         [Test]
         public async Task SimpleOrder_GivenFakeBroker_ShouldGetFeeAndAmountsCorrect()
         {
-            var fakeBroker = new FakeBroker {AskPrice = 461786};
+            var fakeBroker = new FakeBroker {AskPrice = 461786, BuyFeePercent = 0.0075m};
             // action
             var response = await fakeBroker.Order(SimpleOrderRequest.From(Side.Buy, 100m, "ZAR", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR));
             // assert
@@ -38,7 +38,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
         [Test]
         public async Task SimpleOrder_GivenFakeBrokerAndSellOrder_ShouldGetFeeAndAmountsCorrect()
         {
-            var fakeBroker = new FakeBroker { BidPrice = 460001 };
+            var fakeBroker = new FakeBroker { BidPrice = 460001, BuyFeePercent = 0.0075m };
             // action
             var response = await fakeBroker.Order(SimpleOrderRequest.From(Side.Sell, 0.0001m, "BTC", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR));
             // assert

@@ -69,7 +69,7 @@ namespace SteveTheTradeBot.Api.Swagger
 
         public static void UseSwagger(this IApplicationBuilder app)
         {
-            var openIdSettings = IocApi.Instance.Resolve<OpenIdSettings>();
+            var openIdSettings = app.ApplicationServices.GetService<OpenIdSettings>();
             SwaggerBuilderExtensions.UseSwagger(app);
             app.UseSwaggerUI(c =>
             {
