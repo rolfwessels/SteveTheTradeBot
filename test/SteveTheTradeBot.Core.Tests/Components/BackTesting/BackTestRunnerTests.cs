@@ -53,7 +53,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var cancellationTokenSource = new CancellationTokenSource();
             var from = DateTime.Parse("2020-11-01   T00:00:00");
             var to = from.AddDays(20);
-            var readHistoricalTrades = historicalDataPlayer.ReadHistoricalData(from, to,PeriodSize.FiveMinutes, cancellationTokenSource.Token);
+            var readHistoricalTrades = historicalDataPlayer.ReadHistoricalData(CurrencyPair.BTCZAR, @from, to,PeriodSize.FiveMinutes, cancellationTokenSource.Token);
             // action
             var backTestResult = await _backTestRunner.Run(readHistoricalTrades, new RSiBot(new FakeBroker(tradeHistoryStore)), CancellationToken.None, CurrencyPair.BTCZAR);
             // assert
@@ -97,7 +97,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
 
             Requests.Add(request);
-            var price = await GetAskPrice(request.RequestDate, request.Side);
+            var price = await GetAskPrice(request.RequestDate, request.Side, request.CurrencyPair);
             var totalAmount = Math.Round(request.PayAmount/ price,8);
             var feeAmount = Math.Round(totalAmount * BuyFeePercent, 12);
             var receivedAmount = Math.Round(totalAmount - feeAmount, 8);
@@ -124,14 +124,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             };
         }
 
-        private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side)
+        private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side, string currencyPair)
         {
             decimal price = Side.Buy == side ? AskPrice : BidPrice;
 
             if (_tradeHistoryStore != null)
             {
-                var findByDate = await _tradeHistoryStore.FindByDate(requestRequestDate,
-                    requestRequestDate.Add(TimeSpan.FromMinutes(5)), 0, 1);
+                var findByDate = await _tradeHistoryStore.FindByDate(currencyPair,requestRequestDate,
+                    requestRequestDate.Add(TimeSpan.FromMinutes(5)), skip: 0, take: 1);
                 price = findByDate.Select(x => x.Price).Last();
             }
 
@@ -147,7 +147,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 CustomerOrderId = request.CustomerOrderId,
                 OrderStatusType = "Filled",
                 CurrencyPair = request.Pair,
-                OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy),
+                OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy, request.Pair),
                 OrderSide = request.Side,
                 RemainingQuantity = 0,
                 OriginalQuantity = request.Quantity,
@@ -164,7 +164,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                  CustomerOrderId = request.CustomerOrderId,
                  OrderStatusType = "Filled",
                  CurrencyPair = request.Pair,
-                 OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy),
+                 OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy, request.Pair),
                  OrderSide = request.Side,
                  RemainingQuantity = 0,
                  OriginalQuantity = request.Quantity,

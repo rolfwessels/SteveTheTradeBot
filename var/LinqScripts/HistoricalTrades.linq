@@ -26,11 +26,13 @@ void Main()
 	HistoricalTrades.OrderByDescending(x => x.TradedAt).Take(1).Dump();
 
 	//TradeFeedCandles.GroupBy(x => x.PeriodSize).Select(x => new { x.Key, Cnt = x.Count() }).Dump("cnt");
-
+	
+	HistoricalTrades.GroupBy(x=>x.CurrencyPair).Select(x=>new {x.Key, Cnt = x.Count()}).Dump("fai");
+	TradeFeedCandles.GroupBy(x=>x.CurrencyPair).Select(x=>new {x.Key, Cnt = x.Count()}).Dump("fai");
 	DynamicPlots.Select(x=>x.Feed).Distinct().Dump("");
 	
 	var winChart = DynamicPlots
-		.Where(x=>x.Feed == "afsd");
+		.Where(x=>x.Feed == "afsd")
 		.OrderBy(x => x.Date)
 		.ToList()
 		.Chart(c => c.Date, c => c.Value)

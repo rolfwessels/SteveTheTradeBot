@@ -17,5 +17,15 @@ namespace SteveTheTradeBot.Core.Utils
             if (stopwatchElapsed.TotalMilliseconds > 1) return $"{Math.Round(stopwatchElapsed.TotalMilliseconds,decimals)}ms";
             return "0ms";
         }
+
+        public static DateTime ToMinute(this DateTime now)
+        {
+            return new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Kind);
+        }
+
+        public static TimeSpan TimeTill(this DateTime toMinute)
+        {
+            return toMinute - DateTime.Now;
+        }
     }
 }

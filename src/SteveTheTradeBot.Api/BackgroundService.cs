@@ -16,7 +16,7 @@ namespace SteveTheTradeBot.Api
         private readonly CancellationTokenSource _tokenSource =
             new CancellationTokenSource();
 
-        protected abstract Task ExecuteAsync(CancellationToken token);
+        public abstract Task ExecuteAsync(CancellationToken token);
 
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {

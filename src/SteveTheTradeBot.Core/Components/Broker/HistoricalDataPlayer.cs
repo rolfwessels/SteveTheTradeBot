@@ -22,15 +22,16 @@ namespace SteveTheTradeBot.Core.Components.Broker
 
         #region Implementation of IHistoricalDataPlayer
 
-        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(DateTime @from, DateTime to, CancellationToken cancellationToken = default, int batchSize = 1000)
+        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(string currencyPair, DateTime @from, DateTime to,
+            CancellationToken cancellationToken = default, int batchSize = 1000)
         {
-            _log.Information($"ReadHistoricalTrades {from} {to}");
+            _log.Information($"ReadHistoricalTrades for {currencyPair} from {from} to {to}");
             List<HistoricalTrade> historicalTrades;
             var skip = 0;
             do
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                historicalTrades = _tradeHistoryStore.FindByDate(@from, to, skip, batchSize).Result;
+                historicalTrades = _tradeHistoryStore.FindByDate(currencyPair,@from, to, skip, batchSize).Result;
                 skip += batchSize;
                 foreach (var historicalTrade in historicalTrades.TakeWhile(historicalTrade => !cancellationToken.IsCancellationRequested))
                 {
@@ -40,7 +41,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
             } while (historicalTrades.Count != 0);
         }
 
-        public IEnumerable<TradeFeedCandle> ReadHistoricalData(DateTime @from, DateTime to, PeriodSize periodSize, CancellationToken cancellationToken = default, int batchSize = 1000)
+        public IEnumerable<TradeFeedCandle> ReadHistoricalData(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, CancellationToken cancellationToken = default, int batchSize = 1000)
         {
             _log.Information($"ReadHistoricalTrades {from} {to}");
             List<TradeFeedCandle> historicalTrades;
@@ -48,7 +49,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
             do
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                historicalTrades = _tradeHistoryStore.FindCandlesByDate(@from, to,periodSize,skip:skip,take: batchSize).Result;
+                historicalTrades = _tradeHistoryStore.FindCandlesByDate(currencyPair,@from, to,periodSize,skip:skip,take: batchSize).Result;
                 skip += batchSize;
                 foreach (var historicalTrade in historicalTrades.TakeWhile(historicalTrade => !cancellationToken.IsCancellationRequested))
                 {

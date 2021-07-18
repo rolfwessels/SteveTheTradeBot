@@ -13,6 +13,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -40,8 +41,7 @@ namespace SteveTheTradeBot.Cmd
                     var tradeHistoryStore = IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence()
                         .Result;
                     AnsiConsole.MarkupLine("Start reading records.");
-                    var readHistoricalTrades =
-                        historicalDataPlayer.ReadHistoricalTrades(DateTime.Now.AddYears(-10), DateTime.Now);
+                    var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(CurrencyPair.BTCZAR, DateTime.Now.AddYears(-10), DateTime.Now);
                     var counter = 0;
 
                     ctx.Status("Importing");

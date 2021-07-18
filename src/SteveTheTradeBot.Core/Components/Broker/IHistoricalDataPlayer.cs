@@ -7,6 +7,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
 {
     public interface IHistoricalDataPlayer
     {
-        IEnumerable<HistoricalTrade> ReadHistoricalTrades(DateTime from, DateTime to, CancellationToken cancellationToken = default, int batchSize = 1000);
+        IEnumerable<HistoricalTrade> ReadHistoricalTrades(string currencyPair, DateTime @from, DateTime to,
+            CancellationToken cancellationToken = default, int batchSize = 1000);
     }
 }

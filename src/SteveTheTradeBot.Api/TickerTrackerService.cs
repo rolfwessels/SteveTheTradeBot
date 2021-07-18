@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 
@@ -18,8 +16,8 @@ namespace SteveTheTradeBot.Api
         }
 
         #region Implementation of IHostedService
-        
-        protected override async Task ExecuteAsync(CancellationToken token)
+
+        public override async Task ExecuteAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {

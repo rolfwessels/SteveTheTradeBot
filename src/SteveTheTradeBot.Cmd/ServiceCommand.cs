@@ -39,6 +39,7 @@ namespace SteveTheTradeBot.Cmd
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<TickerTrackerService>();
+                    services.AddHostedService<PopulateOneMinuteCandleService>();
                     
                 })
                 .Build()
