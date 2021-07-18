@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using SteveTheTradeBot.Api.WebApi.Exceptions;
@@ -22,7 +23,23 @@ namespace SteveTheTradeBot.Api
         {
             _log.Information($"Starting {GetType().Name}.");
             _currentTask = ExecuteAsync(_tokenSource.Token);
+            _currentTask.ContinueWith(x =>
+            {
+                if (x.Exception != null)
+                {
+                    LogException(x.Exception);
+                }
+            }, cancellationToken);
             return _currentTask.IsCompleted ? _currentTask : Task.CompletedTask;
+        }
+
+        private static void LogException(Exception aggregateException)
+        {
+            _log.Error($"{aggregateException.Message}\n {aggregateException.StackTrace}", aggregateException);
+            if (aggregateException.InnerException != null)
+            {
+                LogException(aggregateException.InnerException);
+            }
         }
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)

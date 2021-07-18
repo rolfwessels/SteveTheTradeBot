@@ -30,7 +30,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             modelBuilder.Entity<HistoricalTrade>()
                 .HasIndex(b => new { b.TradedAt, b.SequenceId });
             modelBuilder.Entity<TradeFeedCandle>()
-                .HasKey(b => new { b.Feed, b.PeriodSize, b.Date });
+                .HasKey(b => new { b.Feed, b.CurrencyPair, b.PeriodSize, b.Date });
             modelBuilder.Entity<DynamicPlotter>()
                 .HasKey(b => new { b.Feed, b.Label, b.Date });
             modelBuilder.Entity<SimpleParam>()

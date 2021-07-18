@@ -29,6 +29,7 @@ namespace SteveTheTradeBot.Api
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
+            
             while (!token.IsCancellationRequested)
             {
                 foreach (var valrFeed in ValrFeeds.All)
@@ -37,7 +38,7 @@ namespace SteveTheTradeBot.Api
                 }
                 await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }
-           
+            
         }
 
         public async Task Populate(CancellationToken token, string currencyPair, string feed)
@@ -53,6 +54,7 @@ namespace SteveTheTradeBot.Api
             {
                 from = foundCandle.Date;
                 context.Remove(foundCandle);
+                context.SaveChanges();
             }
             var stopwatch = new Stopwatch().With(x => x.Start());
             var readHistoricalTrades = _historicalDataPlayer.ReadHistoricalTrades(currencyPair, from, DateTime.Now, token);
@@ -60,11 +62,13 @@ namespace SteveTheTradeBot.Api
             
             foreach (var feedCandles in candles.BatchedBy())
             {
-                if (token.IsCancellationRequested) return;
-                context.TradeFeedCandles.AddRange(feedCandles);
-                var count = await context.SaveChangesAsync(token);
-                _log.Information($"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
-                stopwatch.Restart();
+                    var saveContext = await _factory.GetTradePersistence();
+                    if (token.IsCancellationRequested) return;
+                    saveContext.TradeFeedCandles.AddRange(feedCandles);
+                    var count = await saveContext.SaveChangesAsync(token);
+                    _log.Information($"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
+                    stopwatch.Restart();
+                
             }
         }
 
