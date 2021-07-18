@@ -3,9 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Hangfire.Logging;
 using Serilog;
-using SteveTheTradeBot.Api.WebApi.Exceptions;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 
@@ -14,7 +12,6 @@ namespace SteveTheTradeBot.Api
     public class TickerTrackerService : BackgroundService
     {
         private readonly IUpdateHistoricalData _historicalData;
-        private new static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         public TickerTrackerService(IUpdateHistoricalData historicalData)
         {
             _historicalData = historicalData;

@@ -14,7 +14,7 @@ using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
 
-namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
+namespace SteveTheTradeBot.Core.Tests.Components.Broker
 {
     public class UpdateHistoricalDataTests
     {
@@ -33,7 +33,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
             _updateHistoricalData.BatchSize = 50;
             
             _mockIHistoricalDataApi.Setup(mc => mc.GetTradeHistory(currencyPair, 0, _updateHistoricalData.BatchSize))
-                .Returns(() => Task.FromResult(allItems.Select(x=>x.ToDto()).Take(_updateHistoricalData.BatchSize).ToArray()));
+                .Returns(() => Task.FromResult(allItems.Select(x=>MapCore.ToDto(x)).Take(_updateHistoricalData.BatchSize).ToArray()));
             var skip = 0;
             _mockIHistoricalDataApi.Setup(mc => mc.GetTradeHistory(currencyPair, It.IsAny<string>(), _updateHistoricalData.BatchSize))
                 .Returns(() =>

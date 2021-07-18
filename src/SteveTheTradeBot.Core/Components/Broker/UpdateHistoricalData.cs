@@ -79,6 +79,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
         {
             var trades = await _api.GetTradeHistory(currencyPair, 0, BatchSize);
             var saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
+            if (saveChangesAsync == 0) return;
             _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x => x.TradedAt).LastOrDefault()}");
             while (saveChangesAsync == BatchSize && !token.IsCancellationRequested)
             {
