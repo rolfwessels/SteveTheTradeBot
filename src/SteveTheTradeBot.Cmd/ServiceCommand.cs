@@ -13,10 +13,6 @@ using SteveTheTradeBot.Core.Framework.Settings;
 
 namespace SteveTheTradeBot.Cmd
 {
-   
-
-    
-
     public sealed class ServiceCommand : Command<ServiceCommand.Settings>
     {
         public sealed class Settings : BaseCommandSettings
@@ -34,8 +30,7 @@ namespace SteveTheTradeBot.Cmd
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
-                        // .ConfigureServices((_, collection) =>
-                        //     collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
+                        .ConfigureServices((_, collection) => collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
                         .UseKestrel()
                         .UseUrls($"http://*:{settings.Port ?? "5002"}")
                         .ConfigureAppConfiguration(SettingsFileReaderHelper)
@@ -43,14 +38,14 @@ namespace SteveTheTradeBot.Cmd
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<LifetimeEventsHostedService>();
+                    services.AddHostedService<TickerTrackerService>();
                     
                 })
-                .Build().Run();
+                .Build()
+                .Run();
             return 0;
         }
 
-        
         public static void SettingsFileReaderHelper(WebHostBuilderContext hostingContext, IConfigurationBuilder config)
         {
             var env = hostingContext.HostingEnvironment;

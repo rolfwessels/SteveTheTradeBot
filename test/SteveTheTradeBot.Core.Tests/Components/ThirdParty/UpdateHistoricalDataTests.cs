@@ -44,7 +44,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
                 });
 
             // action
-            await _updateHistoricalData.StartUpdate(currencyPair, default);
+            await _updateHistoricalData.PopulateNewThenOld(currencyPair, default);
             // assert
             var historicalTrades = _tradePersistenceStoreContext.HistoricalTrades.AsQueryable().Where(x=>x.CurrencyPair == currencyPair).ToList();
             historicalTrades.Count.Should().Be(400);
@@ -75,7 +75,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty
                 });
 
             // action
-            await _updateHistoricalData.StartUpdate(currencyPair, default);
+            await _updateHistoricalData.PopulateNewThenOld(currencyPair, default);
             // assert
             var historicalTrades = _tradePersistenceStoreContext.HistoricalTrades.AsQueryable().Where(x => x.CurrencyPair == currencyPair).ToList();
             historicalTrades.Count.Should().Be(400);

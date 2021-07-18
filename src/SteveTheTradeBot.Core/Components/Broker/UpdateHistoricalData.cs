@@ -27,13 +27,13 @@ namespace SteveTheTradeBot.Core.Components.Broker
             _store = store;
         }
 
-        public async Task StartUpdate(string currencyPair, CancellationToken token)
+        public async Task PopulateNewThenOld(string currencyPair, CancellationToken token)
         {
             var (earliest, latest) = await _store.GetExistingRecords(currencyPair);
 
             var hasSomeData = earliest != null;
-            if (hasSomeData) _log.Information($"Found existing records between {earliest.TradedAt} and {latest.TradedAt}.");
-            await StartPopulatingData(currencyPair, token);
+            if (hasSomeData) _log.Information($"Found existing records for {currencyPair} between {earliest.TradedAt} and {latest.TradedAt}.");
+            await PopulateNewData(currencyPair, token);
             if (hasSomeData)
             {
                 await ProcessAllHistoricalData(currencyPair, earliest, token);
@@ -70,23 +70,22 @@ namespace SteveTheTradeBot.Core.Components.Broker
                 var trades = await _api.GetTradeHistory(currencyPair, lastId, BatchSize);
                 var stopwatch = new Stopwatch().With(x=>x.Start());
                 saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
-                _log.Information($"Saved {saveChangesAsync} new items after {trades.Select(x=>x.TradedAt).LastOrDefault()} in  {stopwatch.Elapsed.ToShort()}");
+                _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x=>x.TradedAt).LastOrDefault()} in  {stopwatch.Elapsed.ToShort()}");
                 lastId = trades.LastOrDefault()?.Id;
             }
         }
 
-        private async Task StartPopulatingData(string currencyPair, CancellationToken token)
+        public async Task PopulateNewData(string currencyPair, CancellationToken token)
         {
-            _log.Information("Start processing historical data");
             var trades = await _api.GetTradeHistory(currencyPair, 0, BatchSize);
             var saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
-            _log.Information($"Saved {saveChangesAsync} new items");
+            _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x => x.TradedAt).LastOrDefault()}");
             while (saveChangesAsync == BatchSize && !token.IsCancellationRequested)
             {
-                
+                var stopwatch = new Stopwatch().With(x => x.Start());
                 trades = await _api.GetTradeHistory(currencyPair, trades.Last().Id, BatchSize);
                 saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
-                _log.Information($"Saved {saveChangesAsync} new items after {trades.Select(x => x.TradedAt).LastOrDefault()}");
+                _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x => x.TradedAt).LastOrDefault()} in  {stopwatch.Elapsed.ToShort()}");
             }
         }
 
