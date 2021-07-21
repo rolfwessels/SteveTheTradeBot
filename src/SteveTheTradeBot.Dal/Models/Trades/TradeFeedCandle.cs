@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Dal.Models.Base;
 
@@ -15,6 +16,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public decimal Close { get; set; }
         public decimal Volume { get; set; }
         public string CurrencyPair { get; set; }
+        public Dictionary<string,decimal?> Metric { get; set; } = new Dictionary<string, decimal?>();
 
         public static TradeFeedCandle From(IQuote trade, string feed , PeriodSize periodSize, string currencyPair)
         {

@@ -7,6 +7,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,7 @@
     <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="BetterConsoleTables" Version="1.1.2" />
     <PackageReference Include="Bumbershoot.Utilities" Version="1.0.0" />
     <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="4.0.0" />
     <PackageReference Include="FluentValidation" Version="10.2.3" />

@@ -14,6 +14,7 @@ namespace SteveTheTradeBot.Api
 {
     public class PopulateOneMinuteCandleService : BackgroundService
     {
+        public static bool IsFirstRunDone { get; private set; }
         private readonly ITradePersistenceFactory _factory;
         private readonly IHistoricalDataPlayer _historicalDataPlayer;
 
@@ -27,12 +28,20 @@ namespace SteveTheTradeBot.Api
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
+
             while (!token.IsCancellationRequested)
             {
+                if (!TickerTrackerService.IsFirstRunDone)
+                {
+                    _log.Debug($"PopulateOneMinuteCandleService: Waiting for feed to be populated.");
+                    await Task.Delay(TimeSpan.FromSeconds(2), token);
+                    continue;
+                }
                 foreach (var valrFeed in ValrFeeds.All)
                 {
                     await Populate(token, valrFeed.CurrencyPair, valrFeed.Name);
                 }
+                IsFirstRunDone = true;
                 await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }
         }

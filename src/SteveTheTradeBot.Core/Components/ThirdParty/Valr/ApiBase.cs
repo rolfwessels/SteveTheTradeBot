@@ -50,19 +50,19 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                     throw new ApplicationException(
                         $"{_client.BuildUri(result.Request)} {result.StatusCode} response contains no data.");
                 var errorMessage = JsonConvert.DeserializeObject<ErrorMessage>(result.Content);
-                throw new ApiException(errorMessage.Message, result);
+                throw new ApiResponseException(errorMessage.Message, result);
             }
             return result.Data;
         }
+    }
 
-        public class ApiException : Exception
+    public class ApiResponseException : Exception
+    {
+        public IRestResponse Response { get; }
+
+        public ApiResponseException(string message, IRestResponse response) : base(message)
         {
-            public IRestResponse Response { get; }
-
-            public ApiException(string message, IRestResponse response) : base(message)
-            {
-                Response = response;
-            }
+            Response = response;
         }
     }
 }

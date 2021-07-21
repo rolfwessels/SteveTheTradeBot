@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Bumbershoot.Utilities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using SteveTheTradeBot.Dal.Models.Base;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -8,6 +9,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
 {
     public class TradePersistenceStoreContext : DbContext
     {
+        private bool _isInMemoryContainer;
+
         public TradePersistenceStoreContext()
             : base(TradePersistenceFactory.DbContextOptions(Settings.Instance.NpgsqlConnection))
         {
@@ -23,6 +26,13 @@ namespace SteveTheTradeBot.Core.Components.Storage
         public DbSet<DynamicPlotter> DynamicPlots { get; set; }
         public DbSet<SimpleParam> SimpleParam { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            _isInMemoryContainer = optionsBuilder.Options.Extensions.Select(x => x.GetType().Name).Contains("InMemoryOptionsExtension");
+            
+            
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<HistoricalTrade>()
@@ -31,10 +41,20 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .HasIndex(b => new { b.TradedAt, b.SequenceId });
             modelBuilder.Entity<TradeFeedCandle>()
                 .HasKey(b => new { b.Feed, b.CurrencyPair, b.PeriodSize, b.Date });
+            if (_isInMemoryContainer)
+            {
+                modelBuilder.Entity<TradeFeedCandle>().Ignore(t => t.Metric);
+            }
+            else
+            {
+                modelBuilder.Entity<TradeFeedCandle>().Property(x => x.Metric).HasColumnType("jsonb");
+            }
+
             modelBuilder.Entity<DynamicPlotter>()
                 .HasKey(b => new { b.Feed, b.Label, b.Date });
             modelBuilder.Entity<SimpleParam>()
                 .HasKey(b => b.Key);
+            base.OnModelCreating(modelBuilder);
         }
 
         public override int SaveChanges()

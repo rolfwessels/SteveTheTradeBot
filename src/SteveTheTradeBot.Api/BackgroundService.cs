@@ -6,6 +6,7 @@ using Bumbershoot.Utilities.Helpers;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using SteveTheTradeBot.Api.WebApi.Exceptions;
+using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Api
@@ -69,30 +70,7 @@ namespace SteveTheTradeBot.Api
 
         protected async Task RunWithRetry(Func<Task> action, CancellationToken token, int delaySeconds = 1, int maxDelay = 500)
         {
-            var seconds = delaySeconds;
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    await action();
-                    break;
-                }
-                catch (ApiException e ) 
-                {
-                    var fromSeconds = TimeSpan.FromSeconds(seconds = 60);
-                    _log.Warning($"Action {action} failed with exception {e.Message}. Trying again in {fromSeconds.ToShort()}");
-                    await Task.Delay(TimeSpan.FromSeconds(seconds), token);
-                }
-                catch (Exception e)
-                {
-                    var fromSeconds = TimeSpan.FromSeconds(seconds);
-                    _log.Warning($"Action {action} failed with exception {e.Message}. Trying again in {fromSeconds.ToShort()}");
-                    await Task.Delay(fromSeconds, token);
-                }
-                seconds = Math.Max(seconds * 2, maxDelay);
-            }
-            
-            
+            await Retry.Run(action, token, delaySeconds, maxDelay);
         }
     }
 }

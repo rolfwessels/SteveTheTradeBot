@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Bumbershoot.Utilities.Helpers;
 using FizzWare.NBuilder;
 using FluentAssertions;
@@ -44,6 +45,21 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             // assert
             list.SelectMany(x=>x).Should().BeEquivalentTo(ints);
             list.SelectMany(x => x).Count().Should().Be(5);
+        }
+
+        [Test]
+        public void AddOrReplace_GivenTwoDictionaries_ShouldAddOrOverride()
+        {
+            // arrange
+            var value = new Dictionary<string, int>() { { "one", 1 } };
+            var add = new Dictionary<string, int>() { { "two", 2 } , { "three", 0 } };
+            var overrideValue = new Dictionary<string, int>() { { "three", 3} };
+            // action
+            value.AddOrReplace(add).AddOrReplace(overrideValue);
+            // assert
+            value["one"].Should().Be(1);
+            value["two"].Should().Be(2);
+            value["three"].Should().Be(3);
         }
 
     }

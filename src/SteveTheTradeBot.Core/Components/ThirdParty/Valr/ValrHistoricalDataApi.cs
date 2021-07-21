@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using ComposableAsync;
-using Hangfire.Logging;
 using RateLimiter;
 using RestSharp;
 using Serilog;

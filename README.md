@@ -11,7 +11,8 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Create dummy broker.
 - [x] Create simple bot.
 - [x] Add a way do some back testing.
-- [ ] Store metrics when importing data.
+- [x] Store metrics when importing data [RSI, Super trend,EMA100 , EMA200 ]. 
+- [x] Have a BTC bot that actually makes money!
 - [ ] Store back test results
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
@@ -73,7 +74,7 @@ rm production.key
 dotnet tool install --global dotnet-ef
 cd src\SteveTheTradeBot.Core
 dotnet build
-dotnet ef migrations add AddParamsAndUpdateDateTime --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
+dotnet ef migrations add --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj AddMetricMapping
 dotnet ef database update --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
 dotnet ef migrations list --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
 #dotnet ef database update 20210713171034_AddGeneralPlotTable --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj

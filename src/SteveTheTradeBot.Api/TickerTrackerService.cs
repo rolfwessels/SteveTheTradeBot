@@ -9,6 +9,7 @@ namespace SteveTheTradeBot.Api
 {
     public class TickerTrackerService : BackgroundService
     {
+        public static bool IsFirstRunDone { get; private set; }
         private readonly IUpdateHistoricalData _historicalData;
         public TickerTrackerService(IUpdateHistoricalData historicalData)
         {
@@ -21,16 +22,13 @@ namespace SteveTheTradeBot.Api
         {
             while (!token.IsCancellationRequested)
             {
-                await RunWithRetry(() => ExecuteWithSync(token), token);
+                var enumerable = ValrFeeds.All.Select(x=> RunWithRetry(() => _historicalData.PopulateNewData(x.CurrencyPair, token), token));
+                await Task.WhenAll(enumerable);
+                IsFirstRunDone = true;
                 await Task.Delay(TimeSpan.FromSeconds(30), token);
             }
         }
 
-        private async Task ExecuteWithSync(CancellationToken token)
-        {
-            var tasks = ValrFeeds.All.Select(x=> _historicalData.PopulateNewData(x.CurrencyPair, token));
-            await Task.WhenAll(tasks);
-        }
 
         #endregion
     }

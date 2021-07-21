@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Framework.Mappers;
 using SteveTheTradeBot.Core.Utils;
@@ -64,8 +62,8 @@ namespace SteveTheTradeBot.Core.Components.Broker
         {
             _log.Information($"Ensure we have the latest data after {earliest.TradedAt}.");
             var saveChangesAsync = BatchSize;
-            var lastId = earliest.Id;
-            while (saveChangesAsync != 0 && !token.IsCancellationRequested)
+            string? lastId = earliest.Id;
+            while (saveChangesAsync != 0 && !token.IsCancellationRequested && lastId != null)
             {
                 var trades = await _api.GetTradeHistory(currencyPair, lastId, BatchSize);
                 var stopwatch = new Stopwatch().With(x=>x.Start());
@@ -83,10 +81,15 @@ namespace SteveTheTradeBot.Core.Components.Broker
             _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x => x.TradedAt).LastOrDefault()}");
             while (saveChangesAsync == BatchSize && !token.IsCancellationRequested)
             {
-                var stopwatch = new Stopwatch().With(x => x.Start());
-                trades = await _api.GetTradeHistory(currencyPair, trades.Last().Id, BatchSize);
-                saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
-                _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x => x.TradedAt).LastOrDefault()} in  {stopwatch.Elapsed.ToShort()}");
+                await Retry.Run(async () =>
+                {
+                    var stopwatch = new Stopwatch().With(x => x.Start());
+                    trades = await _api.GetTradeHistory(currencyPair, trades.Last().Id, BatchSize);
+                    saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
+                    _log.Information(
+                        $"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x => x.TradedAt).LastOrDefault()} in  {stopwatch.Elapsed.ToShort()}");
+                }, token);
+
             }
         }
 

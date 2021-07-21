@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
@@ -21,6 +22,11 @@ namespace SteveTheTradeBot.Core.Components.Bots
 
         public abstract Task DataReceived(BackTestRunner.BotData data);
         public abstract string Name { get; }
+        public Task SellAll(BackTestRunner.BotData botData)
+        {
+            var enumerable = botData.BackTestResult.Trades.Where(x => x.IsActive).Select(x => Sell(botData, x));
+            return Task.WhenAll(enumerable);
+        }
 
         #endregion
 
@@ -34,7 +40,9 @@ namespace SteveTheTradeBot.Core.Components.Bots
             var response = await _broker.Order(tradeOrder.ToOrderRequest());
             tradeOrder.ApplyValue(response, Side.Sell);
             addTrade.ApplyBuyInfo(tradeOrder);
-            await data.PlotRunData(currentTrade.Date, "activeTrades", data.BackTestResult.TradesActive);
+            await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 0);
+            await data.PlotRunData(currentTrade.Date, "activeTrades", 1);
+            await data.PlotRunData(currentTrade.Date, "sellPrice", randValue);
             return addTrade;
         }
 
@@ -50,10 +58,10 @@ namespace SteveTheTradeBot.Core.Components.Bots
             tradeOrder.ApplyValue(response, Side.Buy);
             var close = activeTrade.Close(currentTradeDate, tradeOrder);
 
-            await data.PlotRunData(currentTradeDate, "activeTrades", data.BackTestResult.TradesActive);
+            await data.PlotRunData(currentTradeDate.AddMinutes(-1), "activeTrades", 1);
+            await data.PlotRunData(currentTradeDate, "activeTrades", 0);
             
             data.BackTestResult.ClosingBalance = close.Value;
-
             await data.PlotRunData(currentTradeDate, "sellPrice", close.Value);
         }
     }

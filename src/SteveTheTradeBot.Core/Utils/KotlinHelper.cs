@@ -9,5 +9,10 @@ namespace SteveTheTradeBot.Core.Utils
             action(value);
             return value;
         }
+
+        public static T2 Let<T,T2>(this T rsi, Func<T,T2> let) 
+        {
+            return let(rsi);
+        }
     }
 }

@@ -1,16 +1,10 @@
 using System;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using SteveTheTradeBot.Dal.Tests;
 using SteveTheTradeBot.Sdk;
 using SteveTheTradeBot.Sdk.Helpers;
 using SteveTheTradeBot.Sdk.RestApi;
 using Serilog;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using SteveTheTradeBot.Api.AppStartup;
 
 namespace SteveTheTradeBot.Api.Tests
 {
@@ -55,18 +49,8 @@ namespace SteveTheTradeBot.Api.Tests
             Environment.SetEnvironmentVariable("OpenId__HostUrl", address);
             Environment.SetEnvironmentVariable("OpenId__UseReferenceTokens", "true"); //helps with testing on appveyor
             TestLoggingHelper.EnsureExists();
-            var host = Host.CreateDefaultBuilder()
-                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        // .ConfigureServices((_, collection) =>
-                        //     collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
-                        .UseKestrel()
-                        .UseUrls(address)
-                        .ConfigureAppConfiguration(Program.SettingsFileReaderHelper)
-                        .UseStartup<Startup>();
-                }).Build();
+
+            var host = Program.BuildWebHost(address);
             host.RunAsync().ConfigureAwait(false);
 
             Log.Information($"Starting api on [{address}]");

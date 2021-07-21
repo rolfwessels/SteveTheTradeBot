@@ -8,6 +8,7 @@ using SteveTheTradeBot.Core.Components.Bots;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Tools;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
 {
@@ -22,10 +23,10 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _dynamicGraphs = dynamicGraphs;
         }
 
-        public async Task<BackTestResult> Run(IEnumerable<IQuote> enumerable, IBot bot,
+        public async Task<BackTestResult> Run(IEnumerable<TradeFeedCandle> enumerable, IBot bot,
             CancellationToken cancellationToken, string currencyPair)
         {
-            var runName = $"BT-{bot.Name}-{DateTime.Now:yyMMdd}";
+            var runName = $"BT-{bot.Name}-{currencyPair}-{DateTime.Now:yyMMdd}";
             await _dynamicGraphs.Clear(runName);
             var botData = new BotData(_dynamicGraphs, 1000, runName, currencyPair);
             foreach (var trade in enumerable)
@@ -35,10 +36,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 botData.ByMinute.Push(trade);
                 await bot.DataReceived(botData);
                 botData.BackTestResult.MarketClosedAt = trade.Close;
+                
             }
             await _dynamicGraphs.Flush();
+            await bot.SellAll(botData);
             return botData.BackTestResult;
         }
+
         public class BotData
         {
             private readonly IDynamicGraphs _dynamicGraphs;
@@ -49,10 +53,10 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 _dynamicGraphs = dynamicGraphs;
                 _runName = runName;
                 BackTestResult = new BackTestResult {StartingAmount = startingAmount , CurrencyPair = currencyPair};
-                ByMinute = new Recent<IQuote>(1000);
+                ByMinute = new Recent<TradeFeedCandle>(1000);
             }
 
-            public Recent<IQuote> ByMinute { get; }
+            public Recent<TradeFeedCandle> ByMinute { get; }
             public BackTestResult BackTestResult { get; set; }
             
 
@@ -61,7 +65,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 await _dynamicGraphs.Plot(_runName, date, label, value);
             }
 
-            public IQuote LatestQuote()
+            public TradeFeedCandle LatestQuote()
             {
                 return ByMinute.Last();
             }

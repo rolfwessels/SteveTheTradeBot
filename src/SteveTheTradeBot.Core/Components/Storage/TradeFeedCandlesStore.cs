@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Base;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -11,12 +12,15 @@ namespace SteveTheTradeBot.Core.Components.Storage
 {
     public abstract class StoreBase<T> where T : BaseDalModel
     {
+        
         protected readonly ITradePersistenceFactory _factory;
 
         protected StoreBase(ITradePersistenceFactory factory)
         {
             _factory = factory;
         }
+
+        
 
         protected abstract DbSet<T> DbSet(TradePersistenceStoreContext context);
 
@@ -30,9 +34,6 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
     public class TradeFeedCandlesStore : StoreBase<TradeFeedCandle>, ITradeFeedCandlesStore
     {
-        
-
-       
         #region Implementation of ITradeFeedCandlesStore
 
         public async Task<TradeFeedCandle> FindLatestCandle(string feed, string currencyPair, PeriodSize periodSize)
@@ -51,6 +52,27 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return await context.SaveChangesAsync();
         }
 
+        public async Task<int> UpdateFeed(IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store,
+            string feed, string currencyPair,
+            PeriodSize periodSize, string candleName)
+        {
+            
+            await using var context = await _factory.GetTradePersistence();
+            var keyValuePairs = store.ToDictionary(x=>x.Key,x=>x.Value);
+            var dateTimes = keyValuePairs.Keys;
+            var candles = DbSet(context).AsQueryable()
+                .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize && dateTimes.Contains(x.Date))
+                .OrderByDescending(x => x.Date)
+                .ToList();
+            foreach (var candle in candles)
+            {
+                if (candle.Metric == null) candle.Metric = new Dictionary<string, decimal?>();
+                candle.Metric.AddOrReplace(keyValuePairs[candle.Date]);
+            }
+            DbSet(context).UpdateRange(candles);
+            return await context.SaveChangesAsync();
+        }
+
         public IEnumerable<TradeFeedCandle> FindAllBetween( DateTime fromDate,  DateTime toDate, string feed,
             string currencyPair, PeriodSize periodSize, int batchSize = 1000)
         {
@@ -62,6 +84,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 var tradeFeedCandles = context.TradeFeedCandles.AsQueryable()
                     .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
                                 x.Date >= fromDate && x.Date <= toDate)
+                    .OrderBy(x=>x.Date)
                     .Skip(skip)
                     .Take(batchSize);
                 
@@ -101,5 +124,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
             string currencyPair, PeriodSize periodSize, int batchSize = 1000);
 
         Task<int> AddRange(List<TradeFeedCandle> feedCandles);
+        Task<int> UpdateFeed(IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store, string feed,
+            string currencyPair, PeriodSize periodSize,
+            string candleName);
     }
 }

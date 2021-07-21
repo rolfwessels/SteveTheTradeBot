@@ -41,6 +41,7 @@ namespace SteveTheTradeBot.Cmd
                     services.AddHostedService<TickerTrackerService>();
                     services.AddHostedService<PopulateOneMinuteCandleService>();
                     services.AddHostedService<PopulateOtherCandlesService>();
+                    services.AddHostedService<PopulateOtherMetrics>();
                     
                 })
                 .Build()
