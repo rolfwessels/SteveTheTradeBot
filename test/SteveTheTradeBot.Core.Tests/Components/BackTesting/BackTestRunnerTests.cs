@@ -22,6 +22,7 @@ using SteveTheTradeBot.Dal.Tests;
 namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 {
 
+    [Category("Integration")]
     public class BackTestRunnerTests
     {
         private BackTestRunner _backTestRunner;
@@ -45,6 +46,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
+        [Explicit]
         public async Task Run_GivenRSiBot_ShouldOver2YearsShouldMake400PlusProfit()
         {
             // arrange

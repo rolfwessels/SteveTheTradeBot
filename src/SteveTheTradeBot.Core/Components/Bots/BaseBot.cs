@@ -6,6 +6,7 @@ using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Bots
 {
@@ -37,8 +38,8 @@ namespace SteveTheTradeBot.Core.Components.Bots
             var estimatedQuantity = randValue / estimatedPrice;
             var addTrade = data.BackTestResult.AddTrade(currentTrade.Date, estimatedPrice, estimatedQuantity, randValue);
             var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice , estimatedQuantity, data.BackTestResult.CurrencyPair, currentTrade.Date);
-            var response = await _broker.Order(tradeOrder.ToOrderRequest());
-            tradeOrder.ApplyValue(response, Side.Sell);
+            var response = await _broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
+            BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
             addTrade.ApplyBuyInfo(tradeOrder);
             await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 0);
             await data.PlotRunData(currentTrade.Date, "activeTrades", 1);
@@ -53,10 +54,10 @@ namespace SteveTheTradeBot.Core.Components.Bots
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = activeTrade.Quantity * estimatedPrice;
             var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.Quantity, estimatedPrice, estimatedQuantity, data.BackTestResult.CurrencyPair, currentTrade.Date);
-            var response = await _broker.Order(tradeOrder.ToOrderRequest());
+            var response = await _broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
             
-            tradeOrder.ApplyValue(response, Side.Buy);
-            var close = activeTrade.Close(currentTradeDate, tradeOrder);
+            BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
+            var close = BrokerUtils.Close(activeTrade, currentTradeDate, tradeOrder);
 
             await data.PlotRunData(currentTradeDate.AddMinutes(-1), "activeTrades", 1);
             await data.PlotRunData(currentTradeDate, "activeTrades", 0);

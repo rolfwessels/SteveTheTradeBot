@@ -2,11 +2,6 @@
 
 namespace SteveTheTradeBot.Core.Components.Broker.Models
 {
-    public enum Side
-    {
-        Sell,Buy
-    }
-
     public static class SidePicker
     {
         public static string SideOut(this string currencyPair,Side side)

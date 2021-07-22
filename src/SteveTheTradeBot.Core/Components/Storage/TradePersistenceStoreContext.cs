@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Bumbershoot.Utilities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using SteveTheTradeBot.Dal.Models.Base;
 using SteveTheTradeBot.Dal.Models.Trades;

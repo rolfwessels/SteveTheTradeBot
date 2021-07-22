@@ -15,7 +15,6 @@ namespace SteveTheTradeBot.Core.Components.Bots
         
         private readonly int _buySignal;
         private readonly decimal _initialStopRisk;
-        private readonly int _sellSignal;
         private decimal? _setStopLoss;
         private readonly decimal _buy200rocsma;
         private readonly decimal _initialTakeProfit;
@@ -28,7 +27,6 @@ namespace SteveTheTradeBot.Core.Components.Bots
             _initialStopRisk = 0.96m;
             _initialTakeProfit = 1.10m;
             _moveProfitPercent = 1.05m;
-            _sellSignal = 70;
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }

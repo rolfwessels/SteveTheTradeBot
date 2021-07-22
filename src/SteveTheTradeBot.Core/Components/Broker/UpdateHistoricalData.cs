@@ -30,18 +30,17 @@ namespace SteveTheTradeBot.Core.Components.Broker
             var (earliest, latest) = await _store.GetExistingRecords(currencyPair);
 
             var hasSomeData = earliest != null;
-            if (hasSomeData) _log.Information($"Found existing records for {currencyPair} between {earliest.TradedAt} and {latest.TradedAt}.");
+            if (hasSomeData) _log.Information($"Found existing records for {currencyPair} between {earliest!.TradedAt} and {latest.TradedAt}.");
             await PopulateNewData(currencyPair, token);
             if (hasSomeData)
             {
-                await ProcessAllHistoricalData(currencyPair, earliest, token);
+                await ProcessAllHistoricalData(currencyPair, earliest!, token);
             }
         }
 
         public async Task UpdateHistory(string currencyPair, CancellationToken token)
         {
             var (earliest, _) = await _store.GetExistingRecords(currencyPair);
-
             var hasSomeData = earliest != null;
             if (!hasSomeData)
             {
@@ -53,7 +52,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
             }
             if (hasSomeData)
             {
-                await ProcessAllHistoricalData(currencyPair, earliest, token);
+                await ProcessAllHistoricalData(currencyPair, earliest!, token);
             }
         }
 
