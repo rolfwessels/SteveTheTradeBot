@@ -5,6 +5,7 @@ using Bumbershoot.Utilities.Helpers;
 using StackExchange.Redis;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
@@ -21,13 +22,17 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public decimal TradesSuccessesPercent =>
             (TradesMade == 0 ? 0 : Math.Round((decimal) TradesSuccesses / TradesMade * 100m, 2));
 
-        public double AvgDuration => TradesActive > 0
-            ? 0
-            : Trades.Where(x => !x.IsActive).Average(x => (x.EndDate - x.StartDate)?.Hours ?? 0);
+        public TimeSpan AvgDuration => TradesMade > 0
+            ? TimeSpan.FromSeconds(0)
+            : TimeSpan.FromHours(Trades.Where(x => !x.IsActive).Average(x => (x.EndDate - x.StartDate)?.Hours ?? 0));
 
         public int DatePoints { get; set; }
         public decimal TotalTransactionCost => Trades.Sum(x => x.FeeAmount);
-
+        public decimal ClosingBalance { get; set; }
+        public decimal BalanceMoved => TradeUtils.MovementPercent(ClosingBalance, StartingAmount);
+        public decimal MarketOpenAt { get; set; }
+        public decimal MarketClosedAt { get; set; }
+        public decimal MarketMoved => TradeUtils.MovementPercent(MarketClosedAt, MarketOpenAt);
 
         public decimal StartingAmount
         {
@@ -35,11 +40,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             set => _startingAmount = ClosingBalance = value;
         }
 
-        public decimal ClosingBalance { get; set; }
-        public decimal BalanceMoved => Trade.MovementPercent(ClosingBalance, StartingAmount);
-        public decimal MarketOpenAt { get; set; }
-        public decimal MarketClosedAt { get; set; }
-        public decimal MarketMoved => Trade.MovementPercent(MarketClosedAt, MarketOpenAt);
+        
 
         public Trade AddTrade(in DateTime date, in decimal price, decimal quantity, decimal randValue)
         {
@@ -80,16 +81,10 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             EndDate = tradeOrder.RequestDate;
             Value = tradeOrder.OriginalQuantity;
             SellPrice = tradeOrder.OrderPrice;
-            Profit = MovementPercent(tradeOrder.OriginalQuantity,BuyValue);
+            Profit = TradeUtils.MovementPercent(tradeOrder.OriginalQuantity,BuyValue);
             IsActive = false;
             FeeAmount += tradeOrder.SwapFeeAmount(FeeCurrency);
             return this;
-        }
-
-        public static decimal MovementPercent(decimal currentValue, decimal fromValue, int decimals = 3)
-        {
-            if (fromValue == 0) fromValue = 0.00001m;
-            return Math.Round((currentValue - fromValue) / fromValue * 100, decimals);
         }
 
         public TradeOrder AddOrderRequest(Side side, decimal outQuantity, decimal estimatedPrice, decimal estimatedQuantity,

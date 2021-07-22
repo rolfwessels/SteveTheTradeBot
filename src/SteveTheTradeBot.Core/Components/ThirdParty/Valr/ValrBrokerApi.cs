@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using RestSharp;
-using RestSharp.Serializers.NewtonsoftJson;
 using Serilog;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
@@ -36,23 +32,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             var request = new RestRequest("marketdata/{currencyPair}/orderbook", DataFormat.Json) {Method = Method.GET};
             request.AddUrlSegment("currencyPair", currencyPair);
             return await ExecuteAsync<OrderBookResponse>(request);
-        }
-
-
-       
-
-        public class Root
-        {
-            public string orderId { get; set; }
-            public bool success { get; set; }
-            public bool processing { get; set; }
-            public string paidAmount { get; set; }
-            public string paidCurrency { get; set; }
-            public string receivedAmount { get; set; }
-            public string receivedCurrency { get; set; }
-            public string feeAmount { get; set; }
-            public string feeCurrency { get; set; }
-            public DateTime orderExecutedAt { get; set; }
         }
 
         public async Task<OrderHistorySummaryResponse> OrderHistorySummary(string customerOrderId)

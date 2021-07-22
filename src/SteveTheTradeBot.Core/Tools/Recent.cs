@@ -21,4 +21,6 @@ namespace SteveTheTradeBot.Core.Tools
             Add(candle);
         }
     }
+
+
 }

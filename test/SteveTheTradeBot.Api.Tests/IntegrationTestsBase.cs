@@ -4,9 +4,7 @@ using SteveTheTradeBot.Sdk;
 using SteveTheTradeBot.Sdk.Helpers;
 using SteveTheTradeBot.Sdk.RestApi;
 using Serilog;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 
 namespace SteveTheTradeBot.Api.Tests
 {
@@ -42,22 +40,18 @@ namespace SteveTheTradeBot.Api.Tests
 
         #region Private Methods
 
+        
         private static string StartHosting()
         {
-            var port = new Random().Next(9000, 9999);
+
+            var port = new Random().Next(9500, 9699);
             var address = $"http://localhost:{port}";
             Environment.SetEnvironmentVariable("OpenId__HostUrl", address);
             Environment.SetEnvironmentVariable("OpenId__UseReferenceTokens", "true"); //helps with testing on appveyor
             TestLoggingHelper.EnsureExists();
-            var host = new WebHostBuilder()
-                .UseKestrel()
-                .ConfigureServices((context, collection) =>
-                    collection.AddSingleton<ILoggerFactory>(services =>
-                        new Serilog.Extensions.Logging.SerilogLoggerFactory()))
-                .ConfigureAppConfiguration(Program.SettingsFileReaderHelper)
-                .UseStartup<Startup>()
-                .UseUrls(address);
-            host.Build().Start();
+
+            var host = Program.BuildWebHost(address);
+            host.RunAsync().ConfigureAwait(false);
 
             Log.Information($"Starting api on [{address}]");
             var forContext = Log.ForContext(typeof(RestSharpHelper));

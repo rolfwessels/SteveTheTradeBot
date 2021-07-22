@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using Autofac;
+using Autofac.Builder;
 using Autofac.Extensions.DependencyInjection;
 using SteveTheTradeBot.Api.Components;
 using SteveTheTradeBot.Api.Components.Projects;
@@ -19,27 +20,26 @@ using Microsoft.Extensions.DependencyInjection;
 namespace SteveTheTradeBot.Api.AppStartup
 {
     public class IocApi : IocCoreBase
+   
     {
         private static bool _isInitialized;
         private static readonly object _locker = new object();
         private static IocApi _instance;
         private static IServiceCollection _services;
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+        private ContainerBuilder _builder;
+        private Lazy<IContainer> _container;
+        private ILifetimeScope _getAutofacRoot;
 
         public IocApi()
         {
-            var builder = new ContainerBuilder();
-            SetupCore(builder);
-            SetupCommonControllers(builder);
-            SetupGraphQl(builder);
-            SetupTools(builder);
-            if (_services != null) builder.Populate(_services);
-            Container = builder.Build();
+            _container = new Lazy<IContainer>(() => _builder.Build());
+            SetBuilder(new ContainerBuilder());
+            if (_services != null) _builder.Populate(_services);
         }
-
         public static void Populate(IServiceCollection services)
         {
-            if (_isInitialized) throw new Exception("Need to call Populate before first instance call.");
+            if (Instance._container.IsValueCreated) throw new Exception("Need to call Populate before first instance call.");
             _services = services;
         }
 
@@ -128,14 +128,32 @@ namespace SteveTheTradeBot.Api.AppStartup
             }
         }
 
-        public IContainer Container { get; }
+        public IContainer Container =>  _container.Value;
 
 
         public T Resolve<T>()
         {
+            if (_getAutofacRoot != null) return _getAutofacRoot.Resolve<T>();
             return Container.Resolve<T>();
         }
 
         #endregion
+
+
+
+     
+        public void SetBuilder(ContainerBuilder builder)
+        {
+            _builder = builder;
+            SetupCore(_builder);
+            SetupCommonControllers(_builder);
+            SetupGraphQl(_builder);
+            SetupTools(_builder);
+        }
+
+        public void SetContainer(ILifetimeScope getAutofacRoot)
+        {
+            _getAutofacRoot = getAutofacRoot;
+        }
     }
 }

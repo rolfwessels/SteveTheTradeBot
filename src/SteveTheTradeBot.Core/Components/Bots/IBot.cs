@@ -7,5 +7,6 @@ namespace SteveTheTradeBot.Core.Components.Bots
     {
         Task DataReceived(BackTestRunner.BotData data);
         string Name { get; }
+        Task SellAll(BackTestRunner.BotData botData);
     }
 }

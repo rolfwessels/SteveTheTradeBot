@@ -1,9 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore;
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;
 using Spectre.Console.Cli;
@@ -23,24 +24,29 @@ namespace SteveTheTradeBot.Cmd
 
         public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
         {
-            BuildWebHost($"http://*:{settings.Port ?? "5002"}").Run();
-            return 0;
-        }
-
-        public static IWebHost BuildWebHost(string port)
-        {
-            return WebHost.CreateDefaultBuilder()
-                .ConfigureLogging(logging =>
+            // var cancellationTokenSource = ConsoleHelper.BindToCancelKey();
+            Host.CreateDefaultBuilder()
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Warning);
+                    webBuilder
+                        .ConfigureServices((_, collection) => collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
+                        .UseKestrel()
+                        .UseUrls($"http://*:{settings.Port ?? "5002"}")
+                        .ConfigureAppConfiguration(SettingsFileReaderHelper)
+                        .UseStartup<Startup>();
                 })
-                .ConfigureServices((context, collection) =>
-                    collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
-                .UseKestrel()
-                .UseUrls(port ?? "http://*:5002")
-                .ConfigureAppConfiguration(SettingsFileReaderHelper)
-                .UseStartup<Startup>()
-                .Build();
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.AddHostedService<TickerTrackerService>();
+                    services.AddHostedService<PopulateOneMinuteCandleService>();
+                    services.AddHostedService<PopulateOtherCandlesService>();
+                    services.AddHostedService<PopulateOtherMetrics>();
+                    
+                })
+                .Build()
+                .Run();
+            return 0;
         }
 
         public static void SettingsFileReaderHelper(WebHostBuilderContext hostingContext, IConfigurationBuilder config)

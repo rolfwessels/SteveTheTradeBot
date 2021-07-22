@@ -1,104 +1,86 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using AutoMapper.Internal;
 using Serilog;
-using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Bots
 {
     public class RSiBot : BaseBot
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly int _lookBack;
+        
         private readonly int _buySignal;
         private readonly decimal _initialStopRisk;
-        private readonly int _lookBackRequired;
         private readonly int _sellSignal;
         private decimal? _setStopLoss;
+        private readonly decimal _buy200rocsma;
+        private readonly decimal _initialTakeProfit;
+        private decimal _setTakeProfit;
+        private readonly decimal _moveProfitPercent;
+        private decimal _setMoveProfit;
 
-        public RSiBot(IBrokerApi api, int lookBack = 14) : base(api)
+        public RSiBot(IBrokerApi api) : base(api)
         {
-            _lookBack = lookBack;
-            _initialStopRisk = 0.95m;
-            _lookBackRequired = _lookBack+100;
-            _sellSignal = 80;
-            _buySignal = 20;
+            _initialStopRisk = 0.96m;
+            _initialTakeProfit = 1.10m;
+            _moveProfitPercent = 1.05m;
+            _sellSignal = 70;
+            _buySignal = 30;
+            _buy200rocsma = 0.5m;
         }
-
         
-
-
         public override async Task DataReceived(BackTestRunner.BotData data)
         {
-            if (data.ByMinute.Count < _lookBackRequired) return ;
-
-            //https://daveskender.github.io/Stock.Indicators/indicators/Rsi/#content
-            var rsiResults = RsiResults(data);
-            var ema = EmaResults(data);
             var currentTrade = data.ByMinute.Last();
-            await data.PlotRunData(currentTrade.Date, "rsi", rsiResults);
-            await data.PlotRunData(currentTrade.Date, "ema", ema);
-
-            if (ActiveTrade(data) == null)
+            var activeTrade = ActiveTrade(data);
+            var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
+            var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
+            if (activeTrade == null)
             {
-                if (rsiResults < _buySignal && (currentTrade.Close * 2m) > ema)
+                if (rsiResults < _buySignal && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma))
                 {
                     _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
                     await Buy(data, data.BackTestResult.ClosingBalance);
-                    _setStopLoss = currentTrade.Close * _initialStopRisk;
+                    ResetStops(currentTrade);
                 }
             }
             else
             {
-                if (rsiResults > _sellSignal || currentTrade.Close <= _setStopLoss)
+                //if ( (rsiResults > _sellSignal && activeTrade.BuyPrice < currentTrade.Close) || currentTrade.Close <= _setStopLoss)
+                if (currentTrade.Close > _setMoveProfit)
+                {
+                    ResetStops(currentTrade);
+                }
+
+                if ( currentTrade.Close <= _setStopLoss || currentTrade.Close >= _setTakeProfit)
                 {
                     _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} Rsi:{rsiResults}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
 
-                    await Sell(data, ActiveTrade(data));
+                    await Sell(data, activeTrade);
                     _setStopLoss = null;
-                    
                 }
             }
         }
 
-        private static Trade ActiveTrade(BackTestRunner.BotData trade)
+        private void ResetStops(TradeFeedCandle currentTrade)
+        {
+            _setStopLoss = currentTrade.Close * _initialStopRisk;
+            _setTakeProfit = currentTrade.Close * _initialTakeProfit;
+            _setMoveProfit = currentTrade.Close * _moveProfitPercent;
+        }
+
+        private static Trade? ActiveTrade(BackTestRunner.BotData trade)
         {
             return trade.BackTestResult.Trades.FirstOrDefault(x=>x.IsActive);
         }
 
-
         public override string Name => "SimpleRsi";
-
-
-        #region Private Methods
-
-        private decimal RsiResults(BackTestRunner.BotData trade)
-        {
-            var rsiResults = trade.ByMinute.TakeLast(_lookBackRequired).GetRsi(_lookBack).Last();
-            return rsiResults.Rsi ?? 50m;
-        }
-
-
-        private decimal EmaResults(BackTestRunner.BotData trade)
-        {
-            try
-            {
-                var rsiResults = trade.ByMinute.TakeLast(400).GetEma(200).Last();
-                return rsiResults.Ema ?? 0;
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
-        }
-
-        #endregion
-
       
     }
 }

@@ -4,17 +4,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
     public interface ITradeHistoryStore
     {
-        Task<(HistoricalTrade earliest, HistoricalTrade latest)> GetExistingRecords();
+        Task<(HistoricalTrade earliest, HistoricalTrade latest)> GetExistingRecords(string currencyPair);
         Task<int> AddRangeAndIgnoreDuplicates(List<HistoricalTrade> trades);
         Task<List<HistoricalTrade>> FindById(IEnumerable<string> ids);
-        Task<List<HistoricalTrade>> FindByDate(DateTime @from, DateTime to, int skip=0, int take = 1000000);
-        Task<List<TradeFeedCandle>> FindCandlesByDate(DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000);
+        Task<List<HistoricalTrade>> FindByDate(string currencyPair, DateTime @from, DateTime to, int skip = 0,
+            int take = 1000000);
+        Task<List<TradeFeedCandle>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000);
     }
 
     public class TradeHistoryStore : ITradeHistoryStore
@@ -27,11 +29,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<(HistoricalTrade earliest, HistoricalTrade latest)> GetExistingRecords()
+        public async Task<(HistoricalTrade earliest, HistoricalTrade latest)> GetExistingRecords(string currencyPair)
         {
             var context = await _factory.GetTradePersistence();
-            var earliest = context.HistoricalTrades.AsQueryable().OrderBy(x => x.TradedAt).Take(1).FirstOrDefault();
-            var latest = context.HistoricalTrades.AsQueryable().OrderByDescending(x => x.TradedAt).Take(1).FirstOrDefault();
+            var earliest = context.HistoricalTrades.AsQueryable().Where(x=> x.CurrencyPair == currencyPair).OrderBy(x => x.TradedAt).Take(1).FirstOrDefault();
+            var latest = context.HistoricalTrades.AsQueryable().Where(x => x.CurrencyPair == currencyPair).OrderByDescending(x => x.TradedAt).Take(1).FirstOrDefault();
             return (earliest, latest);
         }
 
@@ -60,10 +62,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return context.HistoricalTrades.AsQueryable().Where(x => ids.Contains(x.Id)).ToList();
         }
 
-        public async Task<List<HistoricalTrade>> FindByDate(DateTime @from, DateTime to, int skip=0, int take = 1000000)
+        public async Task<List<HistoricalTrade>> FindByDate(string currencyPair, DateTime @from, DateTime to,
+            int skip = 0, int take = 1000000)
         {
             var context = await _factory.GetTradePersistence();
-            return await context.HistoricalTrades.AsQueryable()
+            return await context.HistoricalTrades.AsQueryable().Where(x => x.CurrencyPair == currencyPair)
                 .OrderBy(x=>x.TradedAt)
                 .ThenBy(x=>x.SequenceId)
                 .Where(x => x.TradedAt >= from && x.TradedAt <= to)
@@ -71,11 +74,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .Take(take).ToListAsync();
         }
 
-        public async Task<List<TradeFeedCandle>> FindCandlesByDate(DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000)
+        public async Task<List<TradeFeedCandle>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000)
         {
             var context = await _factory.GetTradePersistence();
             return await context.TradeFeedCandles.AsQueryable()
-                .Where(x=> x.Feed == feed && x.PeriodSize == periodSize  && x.Date >= from && x.Date <= to)
+                .Where(x=> x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize  && x.Date >= from && x.Date <= to)
                 .OrderBy(x => x.Date)
                 .Skip(skip)
                 .Take(take).ToListAsync();

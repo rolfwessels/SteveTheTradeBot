@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public class TradeFeedCandle : IQuote
+    public class TradeFeedCandle : BaseDalModel, IQuote
     {
         public string Feed { get; set; }
         public PeriodSize PeriodSize { get; set; }
@@ -13,8 +15,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public decimal Low { get; set; }
         public decimal Close { get; set; }
         public decimal Volume { get; set; }
+        public string CurrencyPair { get; set; }
+        public Dictionary<string,decimal?> Metric { get; set; } = new Dictionary<string, decimal?>();
 
-        public static TradeFeedCandle From(IQuote trade, string feed , PeriodSize periodSize)
+        public static TradeFeedCandle From(IQuote trade, string feed , PeriodSize periodSize, string currencyPair)
         {
             return new TradeFeedCandle {
                 Feed = feed,
@@ -25,15 +29,8 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 Low = trade.Low,
                 Close = trade.Close,
                 Volume = trade.Volume,
+                CurrencyPair = currencyPair
             };
         }
-    }
-
-    public class DynamicPlotter 
-    {
-        public string Feed { get; set; }
-        public string Label { get; set; }
-        public DateTime Date { get; set; }
-        public decimal Value { get; set; }
     }
 }

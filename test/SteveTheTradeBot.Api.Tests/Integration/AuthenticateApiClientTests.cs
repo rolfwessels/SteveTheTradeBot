@@ -20,9 +20,7 @@ namespace SteveTheTradeBot.Api.Tests.Integration
         protected void Setup()
         {
             _connection = _defaultRequestFactory.Value.GetConnection();
-            _connectionAuth = _defaultRequestFactory.Value.GetConnection();
-            //            _connection = new SteveTheTradeBotClient("http://localhost:5000");
-            //            _connectionAuth = new SteveTheTradeBotClient("http://localhost:5000");   
+            _connectionAuth = _defaultRequestFactory.Value.GetConnection();   
         }
 
         [TearDown]

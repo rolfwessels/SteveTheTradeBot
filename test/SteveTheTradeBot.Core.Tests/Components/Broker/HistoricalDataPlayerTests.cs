@@ -5,6 +5,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Core.Utils;
@@ -27,7 +28,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Broker
 
             var historicalDataPlayer = new HistoricalDataPlayer(tradeHistoryStore);
             // action
-            var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(historicalTrades.Last().TradedAt, historicalTrades.First().TradedAt,default, 2);
+            var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(CurrencyPair.BTCZAR, historicalTrades.Last().TradedAt, historicalTrades.First().TradedAt,default, 2);
             // assert
             var list = readHistoricalTrades.ToList();
             list.Count.Should().Be(expected);

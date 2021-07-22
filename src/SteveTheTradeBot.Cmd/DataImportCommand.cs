@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -12,6 +13,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -21,9 +23,9 @@ namespace SteveTheTradeBot.Cmd
     public class DataImportCommand : Command<DataImportCommand.Settings>
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+
         public sealed class Settings : BaseCommandSettings
         {
-           
         }
 
         #region Overrides of Command<Settings>
@@ -36,18 +38,19 @@ namespace SteveTheTradeBot.Cmd
                     AnsiConsole.MarkupLine("Initialize db.");
                     ctx.Status("Initialize db");
                     var historicalDataPlayer = IocApi.Instance.Resolve<IHistoricalDataPlayer>();
-                    var tradeHistoryStore = IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence().Result;
+                    var tradeHistoryStore = IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence()
+                        .Result;
                     AnsiConsole.MarkupLine("Start reading records.");
-                    var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(DateTime.Now.AddYears(-10), DateTime.Now);
+                    var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(CurrencyPair.BTCZAR, DateTime.Now.AddYears(-10), DateTime.Now);
                     var counter = 0;
-                    
+
                     ctx.Status("Importing");
                     var quotes = readHistoricalTrades.ToCandleOneMinute()
                         .ForAll(x =>
                         {
                             counter++;
                             tradeHistoryStore.TradeFeedCandles.Add(
-                                TradeFeedCandle.From(x, "valr", PeriodSize.OneMinute));
+                                TradeFeedCandle.From(x, "valr", PeriodSize.OneMinute, "BTCZAR"));
                             if (counter % 1000 == 0)
                             {
                                 tradeHistoryStore.SaveChanges();
@@ -55,27 +58,27 @@ namespace SteveTheTradeBot.Cmd
                                 AnsiConsole.MarkupLine($"Processed {counter} records up and till {x.Date}.");
                             }
                         })
-                        .Aggregate(PeriodSize.FiveMinutes) 
+                        .Aggregate(PeriodSize.FiveMinutes)
                         .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr",
-                                PeriodSize.FiveMinutes)))
+                                PeriodSize.FiveMinutes, "BTCZAR")))
                         .Aggregate(PeriodSize.FifteenMinutes)
                         .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr",
-                                PeriodSize.FifteenMinutes)))
+                                PeriodSize.FifteenMinutes, "BTCZAR")))
                         .Aggregate(PeriodSize.ThirtyMinutes)
                         .ForAll(x =>
                             tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr",
-                                PeriodSize.ThirtyMinutes)))
+                                PeriodSize.ThirtyMinutes, "BTCZAR")))
                         .Aggregate(PeriodSize.OneHour)
                         .ForAll(x =>
-                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.OneHour)))
+                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.OneHour, "BTCZAR")))
                         .Aggregate(PeriodSize.Day)
                         .ForAll(x =>
-                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.Day)))
+                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.Day, "BTCZAR")))
                         .Aggregate(PeriodSize.Week)
                         .ForAll(x =>
-                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.Week)))
+                            tradeHistoryStore.TradeFeedCandles.Add(TradeFeedCandle.From(x, "valr", PeriodSize.Week, "BTCZAR")))
                         .ToList();
                     tradeHistoryStore.SaveChanges();
                     //_log.Information($"Processed {counter} records up and till {x.Date}.");

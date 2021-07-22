@@ -117,6 +117,9 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<ValrHistoricalDataApi>().As<IHistoricalDataApi>();
             builder.RegisterType<HistoricalDataPlayer>().As<IHistoricalDataPlayer>();
             builder.RegisterType<TradeHistoryStore>().As<ITradeHistoryStore>();
+            builder.RegisterType<TradeFeedCandlesStore>().As<ITradeFeedCandlesStore>();
+            builder.RegisterType<ParameterStore>().As<IParameterStore>();
+            
             
             
             builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection)).As<ITradePersistenceFactory>().SingleInstance();

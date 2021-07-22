@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
+using Autofac.Extensions.DependencyInjection;
 using SteveTheTradeBot.Core.Framework.Logging;
 using SteveTheTradeBot.Core.Framework.Settings;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -31,7 +33,7 @@ namespace SteveTheTradeBot.Api
 
             try
             {
-                BuildWebHost(args).Run();
+                BuildWebHost(args.FirstOrDefault() ?? "http://*:5002").Run();
             }
             finally
             {
@@ -39,20 +41,21 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        public static IWebHost BuildWebHost(string[] args)
+        public static IHost BuildWebHost(string address)
         {
-            return WebHost.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
+            var host = Host.CreateDefaultBuilder()
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Warning);
-                })
-                .ConfigureServices((context, collection) =>
-                    collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
-                .UseKestrel()
-                .UseUrls(args.FirstOrDefault() ?? "http://*:5002")
-                .ConfigureAppConfiguration(SettingsFileReaderHelper)
-                .UseStartup<Startup>()
-                .Build();
+                    webBuilder
+                        .ConfigureServices((_, collection) =>
+                            collection.AddSingleton<ILoggerFactory>(services => new SerilogLoggerFactory()))
+                        .UseKestrel()
+                        .UseUrls(address)
+                        .ConfigureAppConfiguration(SettingsFileReaderHelper)
+                        .UseStartup<Startup>();
+                }).Build();
+            return host;
         }
 
         public static void SettingsFileReaderHelper(WebHostBuilderContext hostingContext, IConfigurationBuilder config)

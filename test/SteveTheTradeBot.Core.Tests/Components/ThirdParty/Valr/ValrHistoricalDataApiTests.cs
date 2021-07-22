@@ -32,7 +32,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
                 // action
                 var tradeResponses = await _valrHistoricalDataApi.GetTradeHistory(CurrencyPair.BTCZAR, limit: 10);
                 // assert
-                tradeResponses.Dump("d").Should().HaveCount(10);
+                tradeResponses.Should().HaveCount(10);
             });
         }
 

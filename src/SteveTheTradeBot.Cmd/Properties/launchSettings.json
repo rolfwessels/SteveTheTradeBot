@@ -2,7 +2,7 @@
   "profiles": {
     "SteveTheTradeBot.Cmd": {
       "commandName": "Project",
-      "commandLineArgs": "import"
+      "commandLineArgs": "service -v"
     }
   }
 }

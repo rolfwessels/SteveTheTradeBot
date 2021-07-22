@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Hangfire.Logging;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -16,6 +19,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
     public class DynamicGraphs : IDynamicGraphs
     {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly ITradePersistenceFactory _factory;
         private Lazy<Task<TradePersistenceStoreContext>> _contextLazy; 
         public DynamicGraphs(ITradePersistenceFactory factory)
@@ -41,19 +45,33 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public async Task Plot(string feedName, DateTime date, string label, decimal value)
         {
             var context = await _contextLazy.Value;
-            await context.DynamicPlots.AddAsync(new DynamicPlotter()
+            try
             {
-                Date = date,
-                Feed = feedName,
-                Label = label,
-                Value = value,
-            });
+                await context.DynamicPlots.AddAsync(new DynamicPlotter()
+                {
+                    Date = date,
+                    Feed = feedName,
+                    Label = label,
+                    Value = value,
+                });
+            }
+            catch (Exception e)
+            {
+                _log.Warning($"DynamicGraphs:Plot save failed {e.Message}");
+            }
         }
 
         public async Task Flush()
         {
             var context = await _contextLazy.Value;
-            await context.SaveChangesAsync();
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                _log.Warning($"DynamicGraphs:Plot save failed {e.Message}");
+            }
             ResetLazy();
         }
     }

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using Bumbershoot.Utilities.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RateLimiter;
@@ -16,8 +15,8 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         protected RestClient _client;
-        protected static TimeLimiter _rateLimit = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(60));
-        private JsonSerializerSettings _options;
+        
+        private readonly JsonSerializerSettings _options;
 
         public ApiBase(string baseUrl)
         {
@@ -41,6 +40,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                 .Select(x => JsonConvert.SerializeObject(x.Value, _options))
                 .FirstOrDefault();
         }
+        
 
         public virtual T ValidateResponse<T>(IRestResponse<T> result)
         {
@@ -50,9 +50,19 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                     throw new ApplicationException(
                         $"{_client.BuildUri(result.Request)} {result.StatusCode} response contains no data.");
                 var errorMessage = JsonConvert.DeserializeObject<ErrorMessage>(result.Content);
-                throw new Exception(errorMessage.Message);
+                throw new ApiResponseException(errorMessage.Message, result);
             }
             return result.Data;
+        }
+    }
+
+    public class ApiResponseException : Exception
+    {
+        public IRestResponse Response { get; }
+
+        public ApiResponseException(string message, IRestResponse response) : base(message)
+        {
+            Response = response;
         }
     }
 }
