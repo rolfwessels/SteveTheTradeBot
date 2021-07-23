@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Bumbershoot.Utilities.Helpers;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -12,6 +13,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             _holder = new Dictionary<string, Func<IStrategy>>();
         }
+
+        public List<string> List => _holder.Keys.ToList();
 
         public StrategyPicker Add(string name, Func<IStrategy> factory)
         {

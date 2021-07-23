@@ -123,6 +123,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<string>("Feed")
+                        .HasColumnType("text");
+
                     b.Property<decimal>("FirstClose")
                         .HasColumnType("numeric");
 

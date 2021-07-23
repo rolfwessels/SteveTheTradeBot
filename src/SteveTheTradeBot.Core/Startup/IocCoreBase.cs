@@ -15,8 +15,10 @@ using SteveTheTradeBot.Dal.Persistence;
 using FluentValidation;
 using Serilog;
 using MediatR;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using IValidatorFactory = SteveTheTradeBot.Dal.Validation.IValidatorFactory;
@@ -119,6 +121,12 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<TradeHistoryStore>().As<ITradeHistoryStore>();
             builder.RegisterType<TradeFeedCandlesStore>().As<ITradeFeedCandlesStore>();
             builder.RegisterType<ParameterStore>().As<IParameterStore>();
+            builder.RegisterType<StrategyInstanceStore>().As<IStrategyInstanceStore>();
+            builder.RegisterType<StrategyRunner>().As<IStrategyRunner>();
+            builder.Register(x=>new StrategyPicker()
+                .Add(RSiStrategy.SimpleRsi, ()=> new RSiStrategy(x.Resolve<IBrokerApi>()))
+                .Add(NewRSiStrategy.NewRsi, () => new NewRSiStrategy(x.Resolve<IBrokerApi>()))
+            ).As<StrategyPicker>();
             
             
             

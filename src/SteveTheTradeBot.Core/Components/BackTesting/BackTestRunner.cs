@@ -35,7 +35,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             
             await _dynamicGraphs.Clear(strategyInstance.Reference);
             var strategy = _picker.Get(strategyInstance.StrategyName);
-            var botData = new BotData(_dynamicGraphs, strategyInstance);
+            var botData = new StrategyContext(_dynamicGraphs, strategyInstance);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
@@ -53,37 +53,37 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             }
             await _dynamicGraphs.Flush();
             await strategy.SellAll(botData);
-            TradeUtils.Recalculate(botData.StrategyInstance);
+            botData.StrategyInstance.Recalculate();
             await _strategyInstanceStore.Update(botData.StrategyInstance);
             return botData.StrategyInstance;
         }
+    }
 
-        public class BotData
-        {
-            private readonly IDynamicGraphs _dynamicGraphs;
-            private readonly StrategyInstance _strategyInstance;
+    public class StrategyContext
+    {
+        private readonly IDynamicGraphs _dynamicGraphs;
+        private readonly StrategyInstance _strategyInstance;
       
 
-            public BotData(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance)
-            {
-                _dynamicGraphs = dynamicGraphs;
-                _strategyInstance = strategyInstance;
-                ByMinute = new Recent<TradeFeedCandle>(1000);
-            }
+        public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance)
+        {
+            _dynamicGraphs = dynamicGraphs;
+            _strategyInstance = strategyInstance;
+            ByMinute = new Recent<TradeFeedCandle>(1000);
+        }
 
-            public Recent<TradeFeedCandle> ByMinute { get; }
-            public StrategyInstance StrategyInstance => _strategyInstance;
+        public Recent<TradeFeedCandle> ByMinute { get; }
+        public StrategyInstance StrategyInstance => _strategyInstance;
             
 
-            public async Task PlotRunData(DateTime date, string label, decimal value)
-            {
-                await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
-            }
+        public async Task PlotRunData(DateTime date, string label, decimal value)
+        {
+            await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
+        }
 
-            public TradeFeedCandle LatestQuote()
-            {
-                return ByMinute.Last();
-            }
+        public TradeFeedCandle LatestQuote()
+        {
+            return ByMinute.Last();
         }
     }
 }

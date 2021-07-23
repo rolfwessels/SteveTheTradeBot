@@ -18,17 +18,17 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         #region Implementation of IBot
 
-        public abstract Task DataReceived(BackTestRunner.BotData data);
+        public abstract Task DataReceived(StrategyContext data);
         public abstract string Name { get; }
-        public Task SellAll(BackTestRunner.BotData botData)
+        public Task SellAll(StrategyContext strategyContext)
         {
-            var enumerable = botData.StrategyInstance.Trades.Where(x => x.IsActive).Select(x => Sell(botData, x));
+            var enumerable = strategyContext.StrategyInstance.Trades.Where(x => x.IsActive).Select(x => Sell(strategyContext, x));
             return Task.WhenAll(enumerable);
         }
 
         #endregion
 
-        public async Task<StrategyTrade> Buy(BackTestRunner.BotData data, decimal randValue)
+        public async Task<StrategyTrade> Buy(StrategyContext data, decimal randValue)
         {
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
@@ -44,7 +44,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             return addTrade;
         }
 
-        public async Task Sell(BackTestRunner.BotData data, StrategyTrade activeTrade)
+        public async Task Sell(StrategyContext data, StrategyTrade activeTrade)
         {
             var currentTrade = data.LatestQuote();
             var currentTradeDate = currentTrade.Date;

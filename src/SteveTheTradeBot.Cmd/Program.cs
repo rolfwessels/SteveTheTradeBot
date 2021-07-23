@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Events;
@@ -10,29 +11,45 @@ namespace SteveTheTradeBot.Cmd
 {
     public class Program
     {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+
         public static async Task<int> Main(string[] args)
         {
             Console.Title = "SteveTheTradeBot.Api";
             SetupLogin(args);
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             var app = new CommandApp();
+            
             app.Configure(config =>
             {
+                config.PropagateExceptions();
                 config.SetApplicationName("sttb");
                 config.CaseSensitivity(CaseSensitivity.None);
                 config.ValidateExamples();
                 config.AddCommand<ServiceCommand>("service")
                     .WithDescription("Run the web service.")
                     .WithExample(new[] { "service", "-v" });
-                config.AddCommand<DataImportCommand>("import")
-                    .WithDescription("Build candle stick data from historical trades.")
-                    .WithExample(new[] { "import", "-v" });
 
-                config.AddBranch("data", student =>
+                config.AddBranch("strategy", conf =>
                 {
-                    student.SetDescription("Download & import historical data.");
+                    conf.SetDescription("Allows control of strategies.");
+                    
+                    conf.AddCommand<StrategyCommand.List>("list")
+                        .WithDescription("Add a strategy.")
+                        .WithExample(new[] { "strategy", "list" });
+                    
+                    conf.AddCommand<StrategyCommand.Add>("add")
+                        .WithDescription("List strategies.")
+                        .WithExample(new[] { "strategy", "add" });
 
-                    student.AddCommand<DataCommand.Download>("download")
+
+                });
+
+                config.AddBranch("data", conf =>
+                {
+                    conf.SetDescription("Download & import historical data.");
+
+                    conf.AddCommand<DataCommand.Download>("download")
                         .WithAlias("import")
                         .WithDescription("Download historical data to csv files.")
                         .WithExample(new[] { "data", "download" });
@@ -45,8 +62,14 @@ namespace SteveTheTradeBot.Cmd
             {
                 return await app.RunAsync(args);
             }
+            catch (Exception e)
+            {
+                _log.Error(e,e.Message);
+                return 100;
+            }
             finally
             {
+
                 Log.CloseAndFlush();
             }
         }
@@ -58,7 +81,10 @@ namespace SteveTheTradeBot.Cmd
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
-                .WriteTo.File(@"c:\temp\logs\SteveTheTradeBot.Api.log", fileSizeLimitBytes: 10 * LoggingHelper.MB,
+                
+                .WriteTo.File(@"c:\temp\logs\SteveTheTradeBot.Api.log", 
+                    fileSizeLimitBytes: 10 * LoggingHelper.MB, 
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",
                     rollOnFileSizeLimit: true)
                 .WriteTo.Console(RestrictedToMinimumLevel(args))
                 //.ReadFrom.Configuration(BaseSettings.Config)

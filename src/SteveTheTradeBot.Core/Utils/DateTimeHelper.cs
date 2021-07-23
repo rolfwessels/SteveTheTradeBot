@@ -23,6 +23,11 @@ namespace SteveTheTradeBot.Core.Utils
             return new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Kind);
         }
 
+        public static DateTime To30Seconds(this DateTime now)
+        {
+            return new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second >= 30? 30:0, now.Kind);
+        }
+
         public static TimeSpan TimeTill(this DateTime toMinute)
         {
             return toMinute - DateTime.Now;

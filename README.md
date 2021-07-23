@@ -14,6 +14,7 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Store metrics when importing data [RSI, Super trend,EMA100 , EMA200 ]. 
 - [x] Have a BTC bot that actually makes money!
 - [x] Store back test results
+- [ ] Run paper trades
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
@@ -73,9 +74,10 @@ rm production.key
 ```cmd
 dotnet tool install --global dotnet-ef
 cd src\SteveTheTradeBot.Core
-dotnet ef migrations add --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj AddStrategy
-dotnet ef database update --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
-dotnet ef migrations list --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
+dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj add AddStrategy
+dotnet ef database  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj update
+dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj list
+#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 
 #dotnet ef database update  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 20210719165547_AddMetricMapping
 ```
 

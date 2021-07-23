@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
@@ -7,7 +8,6 @@ using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
@@ -20,14 +20,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
     public class BaseStrategyTests
     {
         private FakeStrategy _fakeStrategy;
-        private BackTestRunner.BotData _data;
+        private StrategyContext _data;
         private FakeBroker _fakeBroker;
 
         #region Setup/Teardown
 
         public void Setup()
         {
-            _data = new BackTestRunner.BotData(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR));
+            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR));
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
             _data.ByMinute.AddRange(tradeFeedCandles);
             _fakeBroker = new FakeBroker().With(x=>x.BuyFeePercent = 0.0075m);
@@ -81,7 +81,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // action
             await _fakeStrategy.Sell(_data, trade);
             // assert
-            trade.Dump("asd");
             trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
             trade.SellValue.Should().Be(98.59m);
             trade.SellPrice.Should().BeApproximately(100100,1m);
@@ -243,15 +242,17 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
     public class FakeStrategy : BaseStrategy
     {
+        public List<StrategyContext> DateRecievedValues = new List<StrategyContext>();
         public FakeStrategy(IBrokerApi broker) : base(broker)
         {
         }
 
         #region Overrides of BaseBot
 
-        public override Task DataReceived(BackTestRunner.BotData data)
+        public override Task DataReceived(StrategyContext data)
         {
-            throw new System.NotImplementedException();
+            DateRecievedValues.Add(data);
+            return Task.CompletedTask;
         }
 
         public override string Name { get; } = "Test";

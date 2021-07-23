@@ -14,34 +14,54 @@ namespace SteveTheTradeBot.Core.Utils
             return Math.Round((currentValue - fromValue) / fromValue * 100, decimals);
         }
 
-        public static ConsoleTables ToTable<T>(IEnumerable<T> enumerable)
+        public static ConsoleTables ToTable<T>(this IEnumerable<T> enumerable)
         {
             var table = new Table().From(enumerable.ToList()).With(x => x.Config = TableConfiguration.UnicodeAlt());
             return new ConsoleTables(table);
         }
 
 
-        public static void Recalculate(StrategyInstance strategyInstance)
+        public static TradeFeedCandle ForDate(this IEnumerable<TradeFeedCandle> updateFeed )
         {
-            strategyInstance.TotalFee = strategyInstance.Trades.Where(x => x.IsActive).Sum(x=>x.FeeAmount);
-            strategyInstance.TotalActiveTrades = strategyInstance.Trades.Count(x => x.IsActive);
-            strategyInstance.TotalNumberOfTrades = strategyInstance.Trades.Count;
-            strategyInstance.AverageTradesPerMonth = Math.Round(strategyInstance.Trades.Count / (strategyInstance.LastDate - strategyInstance.FirstStart).TotalDays / 30, 3);
-            strategyInstance.NumberOfProfitableTrades = strategyInstance.Trades.Count(x => !x.IsActive && x.Profit > 0);
-            strategyInstance.NumberOfLosingTrades = strategyInstance.Trades.Count(x => !x.IsActive && x.Profit <= 0);
-            strategyInstance.PercentOfProfitableTrades = Math.Round(strategyInstance.NumberOfProfitableTrades / strategyInstance.TotalNumberOfTrades * 100,2);
-            strategyInstance.TotalProfit = strategyInstance.Trades.Where(x => !x.IsActive && x.Profit > 0).Sum(x => x.SellValue - x.BuyValue);
-            strategyInstance.TotalLoss = strategyInstance.Trades.Where(x => !x.IsActive && x.Profit < 0).Sum(x => x.BuyValue - x.SellValue);
-            strategyInstance.PercentProfit = MovementPercent(strategyInstance.BaseAmount, strategyInstance.InvestmentAmount);
-            strategyInstance.LargestProfit = strategyInstance.Trades.Where(x => !x.IsActive && x.Profit > 0)
-                .Select(x => x.SellValue - x.BuyValue).Max();
-            strategyInstance.LargestLoss = strategyInstance.Trades.Where(x => !x.IsActive && x.Profit < 0)
-                .Select(x => x.BuyValue - x.SellValue).Max();
-            strategyInstance.PercentMarketProfit =
-                MovementPercent(strategyInstance.LastClose, strategyInstance.FirstClose);
-            strategyInstance.AverageTimeInMarket = TimeSpan.FromHours(strategyInstance.Trades.Where(x => !x.IsActive)
-                .Select(x => (x.EndDate ?? DateTime.Now) - x.StartDate)
-                .Sum(x => x.TotalHours));
+            return ForDate(updateFeed, DateTime.Now);
+        }
+
+        public static TradeFeedCandle ForDate(this IEnumerable<TradeFeedCandle> updateFeed,
+            DateTime dateTime )
+        {
+            foreach (var tradeFeedCandle in updateFeed)
+            {
+                if (dateTime.ToUniversalTime() >= tradeFeedCandle.Date.ToUniversalTime() && 
+                    dateTime.ToUniversalTime() < tradeFeedCandle.Date.ToUniversalTime().Add(tradeFeedCandle.PeriodSize.ToTimeSpan())) 
+                    return tradeFeedCandle;
+            }
+            return null;
+        }
+
+        public static void Print(this StrategyInstance backTestResult)
+        {
+            Console.Out.WriteLine("BalanceMoved: " + backTestResult.PercentProfit);
+            Console.Out.WriteLine("MarketMoved: " + backTestResult.PercentMarketProfit);
+            Console.Out.WriteLine("Trades: " + backTestResult.TotalNumberOfTrades);
+            Console.Out.WriteLine("TradesSuccesses: " + backTestResult.NumberOfProfitableTrades);
+            Console.Out.WriteLine("TradesSuccessesPercent: " + backTestResult.PercentOfProfitableTrades);
+            Console.Out.WriteLine("TradesActive: " + backTestResult.TotalActiveTrades);
+            Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket);
+            var tradeValues = backTestResult.Trades
+                .Select(x => new
+                {
+                    x.StartDate, x.Profit, Value = x.SellValue - x.BuyValue,
+                    MarketMoved = TradeUtils.MovementPercent(x.SellPrice, x.BuyPrice)
+                })
+                .OrderByDescending(x => x.Value).ToArray();
+            Console.Write(tradeValues.Take(10).Concat(tradeValues.TakeLast(10)).ToTable().ToString());
+            Console.Write(backTestResult.Trades
+                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice}).ToTable()
+                .ToString());
+            Console.Write(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
+                    new {x.OrderSide, x.PriceAtRequest, x.OrderPrice, x.OutQuantity, x.OriginalQuantity, x.CurrencyPair})
+                .ToTable()
+                .ToString());
         }
     }
 }

@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -14,27 +17,26 @@ namespace SteveTheTradeBot.Api
 {
     public class PopulateOtherCandlesService : BackgroundService
     {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly ITradeFeedCandlesStore _store;
+        private readonly IMessenger _messenger;
+        readonly ManualResetEventSlim _delayWorker = new ManualResetEventSlim(false);
 
-        public PopulateOtherCandlesService(ITradeFeedCandlesStore store)
+        public PopulateOtherCandlesService(ITradeFeedCandlesStore store, IMessenger messenger)
         {
             _store = store;
+            _messenger = messenger;
         }
 
-        public static bool IsFirstRunDone { get; set; }
 
         #region Overrides of BackgroundService
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
+            _messenger.Register<PopulateOneMinuteCandleService.Updated>(this, x => _delayWorker.Set());
             while (!token.IsCancellationRequested)
             {
-                if (!PopulateOneMinuteCandleService.IsFirstRunDone)
-                {
-                    _log.Debug($"PopulateOtherCandlesService: Waiting for feed to be populated.");
-                    await Task.Delay(TimeSpan.FromSeconds(2), token);
-                    continue;
-                }
+                _delayWorker.Wait(token);
                 var tasks = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.OneMinute)
                     .Select(x =>
                     {
@@ -42,7 +44,7 @@ namespace SteveTheTradeBot.Api
                         return Populate(token, feed.CurrencyPair, feed.Name, periodSize);
                     });
                 await Task.WhenAll(tasks);
-                IsFirstRunDone = true;
+                await _messenger.Send(new Updated());
                 await Task.Delay(DateTime.Now.AddMinutes(5).ToMinute().TimeTill(), token);
             }
         }
@@ -73,5 +75,14 @@ namespace SteveTheTradeBot.Api
         }
 
         #endregion
+
+        public class Updated
+        {
+            public Updated()
+            {
+            
+            }
+        }
     }
+
 }

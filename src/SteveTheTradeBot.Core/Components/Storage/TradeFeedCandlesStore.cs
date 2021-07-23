@@ -146,9 +146,10 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return await context.SaveChangesAsync();
         }
 
-        public async Task<int> UpdateFeed(IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store,
+        public async Task<List<TradeFeedCandle>> UpdateFeed(
+            IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store,
             string feed, string currencyPair,
-            PeriodSize periodSize, string candleName)
+            PeriodSize periodSize)
         {
             
             await using var context = await _factory.GetTradePersistence();
@@ -164,7 +165,21 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 candle.Metric.AddOrReplace(keyValuePairs[candle.Date]);
             }
             DbSet(context).UpdateRange(candles);
-            return await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+            return candles;
+        }
+
+        public async Task<List<TradeFeedCandle>> FindBefore( DateTime startDate, string feed, string currencyPair,
+            PeriodSize periodSize,  int take)
+        {
+            await using var context = await _factory.GetTradePersistence();
+            var tradeFeedCandles = context.TradeFeedCandles.AsQueryable()
+                .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
+                             x.Date < startDate)
+                .OrderBy(x => x.Date)
+                .Take(take)
+                .ToList();
+            return tradeFeedCandles;
         }
 
         public IEnumerable<TradeFeedCandle> FindAllBetween( DateTime fromDate,  DateTime toDate, string feed,
@@ -218,8 +233,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
             string currencyPair, PeriodSize periodSize, int batchSize = 1000);
 
         Task<int> AddRange(List<TradeFeedCandle> feedCandles);
-        Task<int> UpdateFeed(IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store, string feed,
-            string currencyPair, PeriodSize periodSize,
-            string candleName);
+        Task<List<TradeFeedCandle>> UpdateFeed(IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store,
+            string feed,
+            string currencyPair, PeriodSize periodSize);
+
+        Task<List<TradeFeedCandle>> FindBefore(DateTime startDate, string feed, string currencyPair,
+            PeriodSize periodSize, int take);
     }
 }

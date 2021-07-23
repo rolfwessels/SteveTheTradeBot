@@ -54,5 +54,7 @@ namespace SteveTheTradeBot.Dal.Tests.Models.Trades
             forBackTest.Reference.Should().Be("123_btczar_fiveminutes_20210723");
         }
 
+       
+
     }
 }

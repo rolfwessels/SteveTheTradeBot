@@ -54,6 +54,17 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .Take(take).ToListAsync();
         }
 
+
+        public async Task<List<TradeFeedCandle>> FindRecentCandles(PeriodSize periodSize, DateTime beforeDate, int take, string feed = "valr")
+        {
+            var context = await _factory.GetTradePersistence();
+            return await context.TradeFeedCandles.AsQueryable()
+                .Where(x => x.Feed == feed && x.CurrencyPair == CurrencyPair.BTCZAR && x.PeriodSize == periodSize && x.Date < beforeDate)
+                .OrderByDescending(x => x.Date)
+                .Take(take)
+                .ToListAsync();
+        }
+
         #region Overrides of StoreBase<HistoricalTrade>
 
         protected override DbSet<HistoricalTrade> DbSet(TradePersistenceStoreContext context)

@@ -9,10 +9,13 @@ namespace SteveTheTradeBot.Dal.Models.Trades
     public class StrategyInstance : BaseDalModelWithGuid
     {
         public string Reference { get; set; }
-        public List<StrategyTrade> Trades { get; set; } = new List<StrategyTrade>();
-        public string StrategyName { get; set; }
+        public string Feed { get; set; }
         public string Pair { get; set; }
         public PeriodSize PeriodSize { get; set; }
+        public string StrategyName { get; set; }
+
+        public List<StrategyTrade> Trades { get; set; } = new List<StrategyTrade>();
+
         public bool IsActive { get; set; }
         public bool IsBackTest { get; set; }
         public decimal InvestmentAmount { get; set; }
@@ -40,7 +43,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public TimeSpan AverageTimeInMarket { get; set; }
         public DateTime FirstStart { get; set; }
         public DateTime LastDate { get; set; }
-
+        
         // public decimal MaximumDrawDown { get; set; }
         // public decimal MaximumDrawDownMonteCarlo { get; set; }
         // public decimal StandardDeviation { get; set; }
@@ -79,6 +82,23 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             return addTrade;
         }
 
-       
+
+        public static StrategyInstance From(string strategy, string pair, decimal amount, PeriodSize periodSize)
+        {
+            return new StrategyInstance()
+            {
+                StrategyName = strategy,
+                IsActive = true,
+                IsBackTest = false,
+                Pair = pair,
+                PeriodSize = periodSize,
+                InvestmentAmount = amount,
+                BaseAmount = amount,
+                BaseAmountCurrency = pair.SideIn(Side.Sell),
+                QuoteAmount = 0,
+                QuoteAmountCurrency = pair.SideIn(Side.Buy),
+                Reference = $"{strategy}_{pair}_{periodSize}_{DateTime.Now:yyyyMMdd}".ToLower()
+            };
+        }
     }
 }

@@ -11,6 +11,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public class RSiStrategy : BaseStrategy
     {
+        public const string SimpleRsi = "SimpleRsi";
+
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
         private readonly int _buySignal;
@@ -31,7 +33,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _buy200rocsma = 0.5m;
         }
         
-        public override async Task DataReceived(BackTestRunner.BotData data)
+        public override async Task DataReceived(StrategyContext data)
         {
             var currentTrade = data.ByMinute.Last();
             var activeTrade = ActiveTrade(data);
@@ -73,12 +75,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _setMoveProfit = currentTrade.Close * _moveProfitPercent;
         }
 
-        private static StrategyTrade? ActiveTrade(BackTestRunner.BotData trade)
+        private static StrategyTrade? ActiveTrade(StrategyContext trade)
         {
             return trade.StrategyInstance.Trades.FirstOrDefault(x=>x.IsActive);
         }
 
-        public override string Name => "SimpleRsi";
+        public override string Name => SimpleRsi;
       
     }
 }
