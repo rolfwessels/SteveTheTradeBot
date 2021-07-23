@@ -24,7 +24,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Broker
             var tradeHistoryStore = new TradeHistoryStore(TestTradePersistenceFactory.InMemoryDb);
             var expected = 10;
             var historicalTrades = Builder<HistoricalTrade>.CreateListOfSize(expected).WithValidData().Build().ForEach(x=> x.TradedAt = x.TradedAt.AddYears(-1)).ToList();
-            await tradeHistoryStore.AddRangeAndIgnoreDuplicates(historicalTrades);
+            await tradeHistoryStore.AddOrIgnoreFast(historicalTrades);
 
             var historicalDataPlayer = new HistoricalDataPlayer(tradeHistoryStore);
             // action

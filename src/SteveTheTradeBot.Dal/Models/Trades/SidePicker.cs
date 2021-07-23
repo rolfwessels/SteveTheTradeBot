@@ -1,12 +1,7 @@
 ﻿using System;
 
-namespace SteveTheTradeBot.Core.Components.Broker.Models
+namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public enum Side
-    {
-        Sell,Buy
-    }
-
     public static class SidePicker
     {
         public static string SideOut(this string currencyPair,Side side)

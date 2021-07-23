@@ -5,6 +5,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
 
 namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr

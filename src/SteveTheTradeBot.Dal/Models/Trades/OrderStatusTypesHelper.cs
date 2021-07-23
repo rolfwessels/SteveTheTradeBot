@@ -1,15 +1,7 @@
 ﻿using System;
 
-namespace SteveTheTradeBot.Core.Components.Broker.Models
+namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public enum OrderStatusTypes
-    {
-        Filled,
-        PartiallyFilled,
-        Placed,
-        Failed
-    }
-
     public static class OrderStatusTypesHelper
     {
         public static OrderStatusTypes ToOrderStatus(string statusType)

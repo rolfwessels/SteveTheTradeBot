@@ -3,7 +3,7 @@ using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public class HistoricalTrade: BaseDalModelWithId
+    public class HistoricalTrade : BaseDalModelWithId
     {
         public decimal Price { get; set; }
         public decimal Quantity { get; set; }
