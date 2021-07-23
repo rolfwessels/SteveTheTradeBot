@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Tools;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
@@ -16,56 +18,66 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly CandleBuilder _candleBuilder;
         private readonly DynamicGraphs _dynamicGraphs;
         private readonly StrategyPicker _picker;
+        private readonly StrategyInstanceStore _strategyInstanceStore;
 
-        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker)
+        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore)
         {
             _candleBuilder = new CandleBuilder();
             _dynamicGraphs = dynamicGraphs;
             _picker = picker;
+            _strategyInstanceStore = strategyInstanceStore;
         }
 
-        public async Task<BackTestResult> Run(StrategyInstance strategyInstance,
+        public async Task<StrategyInstance> Run(StrategyInstance strategyInstance,
             IEnumerable<TradeFeedCandle> enumerable, 
             CancellationToken cancellationToken)
         {
             
             await _dynamicGraphs.Clear(strategyInstance.Reference);
             var strategy = _picker.Get(strategyInstance.StrategyName);
-            var botData = new BotData(_dynamicGraphs, 1000, strategyInstance.StrategyName, strategyInstance.Pair);
+            var botData = new BotData(_dynamicGraphs, strategyInstance);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                if (botData.BackTestResult.MarketOpenAt == 0) botData.BackTestResult.MarketOpenAt = trade.Close;
+                if (botData.StrategyInstance.FirstClose == 0)
+                {
+                    botData.StrategyInstance.FirstClose = trade.Close;
+                    botData.StrategyInstance.FirstStart = trade.Date;
+                }
+
                 botData.ByMinute.Push(trade);
                 await strategy.DataReceived(botData);
-                botData.BackTestResult.MarketClosedAt = trade.Close;
-                
+                botData.StrategyInstance.LastClose = trade.Close;
+                botData.StrategyInstance.LastDate = trade.Date;
+
             }
             await _dynamicGraphs.Flush();
             await strategy.SellAll(botData);
-            return botData.BackTestResult;
+            TradeUtils.Recalculate(botData.StrategyInstance);
+            await _strategyInstanceStore.Update(botData.StrategyInstance);
+            return botData.StrategyInstance;
         }
 
         public class BotData
         {
             private readonly IDynamicGraphs _dynamicGraphs;
-            private readonly string _runName;
+            private readonly StrategyInstance _strategyInstance;
+      
 
-            public BotData(IDynamicGraphs dynamicGraphs, int startingAmount, string runName, string currencyPair)
+            public BotData(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance)
             {
                 _dynamicGraphs = dynamicGraphs;
-                _runName = runName;
-                BackTestResult = new BackTestResult {StartingAmount = startingAmount , CurrencyPair = currencyPair};
+                _strategyInstance = strategyInstance;
                 ByMinute = new Recent<TradeFeedCandle>(1000);
             }
 
             public Recent<TradeFeedCandle> ByMinute { get; }
-            public BackTestResult BackTestResult { get; set; }
+            public StrategyInstance StrategyInstance => _strategyInstance;
             
 
             public async Task PlotRunData(DateTime date, string label, decimal value)
             {
-                await _dynamicGraphs.Plot(_runName, date, label, value);
+                await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
             }
 
             public TradeFeedCandle LatestQuote()

@@ -22,7 +22,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         public abstract string Name { get; }
         public Task SellAll(BackTestRunner.BotData botData)
         {
-            var enumerable = botData.BackTestResult.Trades.Where(x => x.IsActive).Select(x => Sell(botData, x));
+            var enumerable = botData.StrategyInstance.Trades.Where(x => x.IsActive).Select(x => Sell(botData, x));
             return Task.WhenAll(enumerable);
         }
 
@@ -33,8 +33,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = randValue / estimatedPrice;
-            var addTrade = data.BackTestResult.AddTrade(currentTrade.Date, estimatedPrice, estimatedQuantity, randValue);
-            var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice , estimatedQuantity, data.BackTestResult.CurrencyPair, currentTrade.Date);
+            var addTrade = data.StrategyInstance.AddTrade(currentTrade.Date, estimatedPrice, estimatedQuantity, randValue);
+            var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice , estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
             var response = await _broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
             BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
             addTrade.ApplyBuyInfo(tradeOrder);
@@ -49,8 +49,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.LatestQuote();
             var currentTradeDate = currentTrade.Date;
             var estimatedPrice = currentTrade.Close;
-            var estimatedQuantity = activeTrade.Quantity * estimatedPrice;
-            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.Quantity, estimatedPrice, estimatedQuantity, data.BackTestResult.CurrencyPair, currentTrade.Date);
+            var estimatedQuantity = activeTrade.BuyQuantity * estimatedPrice;
+            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
             var response = await _broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
             
             BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
@@ -59,8 +59,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             await data.PlotRunData(currentTradeDate.AddMinutes(-1), "activeTrades", 1);
             await data.PlotRunData(currentTradeDate, "activeTrades", 0);
             
-            data.BackTestResult.ClosingBalance = close.Value;
-            await data.PlotRunData(currentTradeDate, "sellPrice", close.Value);
+            data.StrategyInstance.BaseAmount = close.SellValue;
+            await data.PlotRunData(currentTradeDate, "sellPrice", close.SellValue);
         }
     }
 }

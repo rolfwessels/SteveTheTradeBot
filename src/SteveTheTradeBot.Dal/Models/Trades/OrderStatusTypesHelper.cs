@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SteveTheTradeBot.Core.Components.Broker.Models
+namespace SteveTheTradeBot.Dal.Models.Trades
 {
     public static class OrderStatusTypesHelper
     {

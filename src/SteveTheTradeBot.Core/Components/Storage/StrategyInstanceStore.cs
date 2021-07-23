@@ -1,5 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
+using Microsoft.EntityFrameworkCore;
 using SteveTheTradeBot.Dal.Models.Trades;
+using SteveTheTradeBot.Dal.Persistence;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
@@ -17,5 +22,19 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
         #endregion
+
+
+        public async Task RemoveByReference(string reference)
+        {
+            await using var context = await _factory.GetTradePersistence();
+            var found = DbSet(context).AsQueryable()
+                .Include(x => x.Trades)
+                .FirstOrDefault(x => x.Reference == reference);
+            if (found != null)
+            {
+                DbSet(context).Remove(found);
+                await context.SaveChangesAsync();
+            }
+        }
     }
 }

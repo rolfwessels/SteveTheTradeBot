@@ -6,18 +6,18 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
 
-namespace SteveTheTradeBot.Core.Tests.Components.Bots
+namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 {
-    public class BaseStragegyTests
+    public class BaseStrategyTests
     {
         private FakeStrategy _fakeStrategy;
         private BackTestRunner.BotData _data;
@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
 
         public void Setup()
         {
-            _data = new BackTestRunner.BotData(new DynamicGraphsTests.FakeGraph(), 1000, "name", CurrencyPair.BTCZAR);
+            _data = new BackTestRunner.BotData(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR));
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
             _data.ByMinute.AddRange(tradeFeedCandles);
             _fakeBroker = new FakeBroker().With(x=>x.BuyFeePercent = 0.0075m);
@@ -55,11 +55,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
                 e => e.Excluding(x => x.Orders)
                     .Excluding(x => x.Id)
                     .Excluding(x => x.FeeAmount)
-                    .Excluding(x => x.Quantity)
+                    .Excluding(x => x.BuyQuantity)
                     .Excluding(x => x.CreateDate)
                     .Excluding(x => x.UpdateDate));
 
-            trade.Quantity.Should().BeApproximately(expectedTrade.Quantity, 0.01m);
+            trade.BuyQuantity.Should().BeApproximately(expectedTrade.BuyQuantity, 0.01m);
             trade.FeeAmount.Should().BeApproximately(expectedTrade.FeeAmount, 0.01m);
         }
 
@@ -83,7 +83,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             // assert
             trade.Dump("asd");
             trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
-            trade.Value.Should().Be(98.59m);
+            trade.SellValue.Should().Be(98.59m);
             trade.SellPrice.Should().BeApproximately(100100,1m);
             trade.Profit.Should().Be(-1.410m);
             trade.IsActive.Should().Be(false);
@@ -141,7 +141,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             SetupTrade(close, buyValue);
             var dateTime = DateTime.Parse("2001-01-01T01:02:03Z");
             var quantityBought = 0.1m;
-            var addTrade = _data.BackTestResult.AddTrade(dateTime, close, quantityBought, 2);
+            var addTrade = _data.StrategyInstance.AddTrade(dateTime, close, quantityBought, 2);
             return (dateTime, quantityBought, addTrade);
         }
 

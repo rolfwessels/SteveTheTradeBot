@@ -11,7 +11,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
         public static StrategyTrade Close(StrategyTrade trade, DateTime endDate, TradeOrder tradeOrder)
         {
             trade.EndDate = tradeOrder.RequestDate;
-            trade.Value = tradeOrder.OriginalQuantity;
+            trade.SellValue = tradeOrder.OriginalQuantity;
             trade.SellPrice = tradeOrder.OrderPrice;
             trade.Profit = TradeUtils.MovementPercent(tradeOrder.OriginalQuantity, trade.BuyValue);
             trade.IsActive = false;

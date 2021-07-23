@@ -52,7 +52,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
-                    await Buy(data, data.BackTestResult.ClosingBalance);
+                    await Buy(data, data.StrategyInstance.BaseAmount);
                     ResetStops(currentTrade);
                 }
             }
@@ -84,7 +84,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         private static StrategyTrade? ActiveTrade(BackTestRunner.BotData trade)
         {
-            return trade.BackTestResult.Trades.FirstOrDefault(x => x.IsActive);
+            return trade.StrategyInstance.Trades.FirstOrDefault(x => x.IsActive);
         }
 
         public override string Name => "SimpleRsi2";

@@ -1,17 +1,20 @@
 using System;
 using System.Threading;
 
-public static class ConsoleHelper
+namespace SteveTheTradeBot.Cmd
 {
-    public static CancellationTokenSource BindToCancelKey()
+    public static class ConsoleHelper
     {
-        var cancellationTokenSource = new CancellationTokenSource();
-        Console.CancelKeyPress += (sender, e) =>
+        public static CancellationTokenSource BindToCancelKey()
         {
-            e.Cancel = true;
-            Console.Out.WriteLine("Stopping");
-            cancellationTokenSource.Cancel(false);
-        };
-        return cancellationTokenSource;
+            var cancellationTokenSource = new CancellationTokenSource();
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                e.Cancel = true;
+                Console.Out.WriteLine("Stopping");
+                cancellationTokenSource.Cancel(false);
+            };
+            return cancellationTokenSource;
+        }
     }
 }

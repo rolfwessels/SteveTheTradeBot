@@ -44,6 +44,18 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
+        public async Task Fast()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-06-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 95; // 209
+            await Test(@from, to, expected, t => new NewRSiStrategy(t), CurrencyPair.BTCZAR);
+        }
+
+        [Test]
+        [Timeout(240000)]
         public async Task Run_GivenRSiBot2_ShouldOver1YearsShouldMake200PlusProfit()
         {
             // arrange
@@ -77,40 +89,39 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var fakeBroker = new FakeBroker(tradeHistoryStore);
             var strategy = getStrategy(fakeBroker);
             var picker = new StrategyPicker().Add(strategy.Name, () => strategy);
-            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker);
+
+
+            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
+            await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker, strategyInstanceStore);
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var trades = player.ReadHistoricalData(currencyPair, @from, to, PeriodSize.FiveMinutes,
-                cancellationTokenSource.Token);
+            var trades = player.ReadHistoricalData(currencyPair, @from, to, strategyInstance.PeriodSize,cancellationTokenSource.Token);
             // action
             
-            
-            
-            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
-            await strategyInstanceStore.Add(strategyInstance);
             var backTestResult = await _backTestRunner.Run(strategyInstance, trades,  CancellationToken.None);
             // assert
            
-            Console.Out.WriteLine("BalanceMoved: " + backTestResult.BalanceMoved);
-            Console.Out.WriteLine("MarketMoved: " + backTestResult.MarketMoved);
-            Console.Out.WriteLine("Trades: " + backTestResult.Trades.Count);
-            Console.Out.WriteLine("TradesSuccesses: " + backTestResult.TradesSuccesses);
-            Console.Out.WriteLine("TradesSuccessesPercent: " + backTestResult.TradesSuccessesPercent);
-            Console.Out.WriteLine("TradesActive: " + backTestResult.TradesActive);
-            Console.Out.WriteLine("AvgDuration: " + backTestResult.AvgDuration);
+            Console.Out.WriteLine("BalanceMoved: " + backTestResult.PercentProfit);
+            Console.Out.WriteLine("MarketMoved: " + backTestResult.PercentMarketProfit);
+            Console.Out.WriteLine("Trades: " + backTestResult.TotalNumberOfTrades);
+            Console.Out.WriteLine("TradesSuccesses: " + backTestResult.NumberOfProfitableTrades);
+            Console.Out.WriteLine("TradesSuccessesPercent: " + backTestResult.PercentOfProfitableTrades);
+            Console.Out.WriteLine("TradesActive: " + backTestResult.TotalActiveTrades);
+            Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket);
             var tradeValues = backTestResult.Trades
-                .Select(x => new { x.StartDate, x.Profit, Value = x.Value - x.BuyValue, MarketMoved = TradeUtils.MovementPercent(x.SellPrice, x.BuyPrice) })
+                .Select(x => new { x.StartDate, x.Profit, Value = x.SellValue - x.BuyValue, MarketMoved = TradeUtils.MovementPercent(x.SellPrice, x.BuyPrice) })
                 .OrderByDescending(x => x.Value).ToArray();
             Console.Write(TradeUtils.ToTable(tradeValues.Take(10).Concat(tradeValues.TakeLast(10))).ToString());
             Console.Write(TradeUtils
-                .ToTable(backTestResult.Trades.Select(x => new {x.StartDate, x.BuyValue, x.Quantity, x.BuyPrice, x.SellPrice}))
+                .ToTable(backTestResult.Trades.Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice}))
                 .ToString());
             Console.Write(TradeUtils.ToTable(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
                     new {x.OrderSide, x.PriceAtRequest, x.OrderPrice, x.OutQuantity, x.OriginalQuantity, x.CurrencyPair}))
                 .ToString());
 
-            backTestResult.BalanceMoved.Should().BeGreaterThan(expected);
-            backTestResult.BalanceMoved.Should().BeGreaterThan(backTestResult.MarketMoved);
+            backTestResult.PercentProfit.Should().BeGreaterThan(expected);
+            backTestResult.PercentProfit.Should().BeGreaterThan(backTestResult.PercentMarketProfit);
         }
 
         #region Setup/Teardown

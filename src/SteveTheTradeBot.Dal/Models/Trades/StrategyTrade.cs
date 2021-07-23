@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
@@ -11,11 +10,11 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         {
         }
 
-        public StrategyTrade(DateTime startDate, decimal buyPrice, decimal quantity, decimal buyValue)
+        public StrategyTrade(DateTime startDate, decimal buyPrice, decimal buyQuantity, decimal buyValue)
         {
             StartDate = startDate;
             BuyPrice = buyPrice;
-            Quantity = quantity;
+            BuyQuantity = buyQuantity;
             BuyValue = buyValue;
             IsActive = true;
             Orders = new List<TradeOrder>();
@@ -23,13 +22,17 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public string StrategyInstanceId { get; set; }
         public List<TradeOrder> Orders { get; set; }
-        public decimal Value { get; set; }
+        
         public DateTime StartDate { get; }
-        public decimal BuyPrice { get; set; }
-        public decimal Quantity { get; set; }
+        
+        public decimal BuyQuantity { get; set; }
         public decimal BuyValue { get; }
-        public bool IsActive { get; set; }
+        public decimal BuyPrice { get; set; }
+
+        public decimal SellValue { get; set; }
         public decimal SellPrice { get; set; }
+
+        public bool IsActive { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal Profit { get; set; }
         public string FeeCurrency { get; set; }
@@ -58,7 +61,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public void ApplyBuyInfo(TradeOrder tradeOrder)
         {
             BuyPrice = tradeOrder.OrderPrice;
-            Quantity = tradeOrder.OriginalQuantity;
+            BuyQuantity = tradeOrder.OriginalQuantity;
             FeeCurrency = tradeOrder.OutCurrency;
             FeeAmount = tradeOrder.SwapFeeAmount(FeeCurrency);
         }

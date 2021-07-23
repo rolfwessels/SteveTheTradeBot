@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Skender.Stock.Indicators;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
@@ -15,7 +15,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public PeriodSize PeriodSize { get; set; }
         public bool IsActive { get; set; }
         public bool IsBackTest { get; set; }
-        public decimal StartingAmount { get; set; }
+        public decimal InvestmentAmount { get; set; }
         public decimal BaseAmount { get; set; }
         public string BaseAmountCurrency { get; set; }
         public decimal QuoteAmount { get; set; }
@@ -24,14 +24,22 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public decimal TotalActiveTrades { get; set; }
         public decimal TotalNumberOfTrades { get; set; }
-        public decimal AverageTradesPerMonth { get; set; }
+        public double AverageTradesPerMonth { get; set; }
+        public decimal PercentOfProfitableTrades { get; set; }
         public decimal NumberOfProfitableTrades { get; set; }
         public decimal NumberOfLosingTrades { get; set; }
         public decimal TotalProfit { get; set; }
         public decimal TotalLoss { get; set; }
+        public decimal TotalFee { get; set; }
         public decimal PercentProfit { get; set; }
         public decimal LargestProfit { get; set; }
         public decimal LargestLoss { get; set; }
+        public decimal FirstClose { get; set; }
+        public decimal LastClose { get; set; }
+        public decimal PercentMarketProfit { get; set; }
+        public TimeSpan AverageTimeInMarket { get; set; }
+        public DateTime FirstStart { get; set; }
+        public DateTime LastDate { get; set; }
 
         // public decimal MaximumDrawDown { get; set; }
         // public decimal MaximumDrawDownMonteCarlo { get; set; }
@@ -54,7 +62,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 IsBackTest = true,
                 Pair = pair,
                 PeriodSize = PeriodSize.FiveMinutes,
-                StartingAmount = 1000m,
+                InvestmentAmount = 1000m,
                 BaseAmount = 1000m,
                 BaseAmountCurrency = pair.SideIn(Side.Sell),
                 QuoteAmount = 0,
@@ -63,6 +71,14 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             };
         }
 
-        
+
+        public StrategyTrade AddTrade(in DateTime date, in decimal price, decimal quantity, decimal randValue)
+        {
+            var addTrade = new StrategyTrade(date, price, quantity, randValue);
+            Trades.Add(addTrade);
+            return addTrade;
+        }
+
+       
     }
 }

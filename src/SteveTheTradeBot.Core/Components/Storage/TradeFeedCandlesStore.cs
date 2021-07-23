@@ -58,9 +58,23 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return baseDalModels;
         }
 
-        public Task<T> Update(Expression<Func<T, bool>> filter, T entity)
+
+        public async Task<T> Update(T entity)
         {
-            throw new NotImplementedException();
+            await using var context = await _factory.GetTradePersistence();
+            DbSet(context).Add(entity);
+            context.SaveChanges();
+            return entity;
+        }
+
+        public async Task<T> Update(Expression<Func<T, bool>> filter, T entity)
+        {
+            await using var context = await _factory.GetTradePersistence();
+            var list = DbSet(context).AsQueryable().Where(filter).Take(1).ToList();
+            if (!list.Any()) throw new ArgumentException("Could not find entity to update.");
+            context.Update(entity);
+            context.SaveChanges();
+            return entity;
         }
 
         public Task<bool> Remove(Expression<Func<T, bool>> filter)

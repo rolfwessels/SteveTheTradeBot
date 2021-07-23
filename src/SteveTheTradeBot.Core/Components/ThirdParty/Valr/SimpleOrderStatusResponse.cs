@@ -2,6 +2,7 @@
 using System.ComponentModel.Design;
 using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {

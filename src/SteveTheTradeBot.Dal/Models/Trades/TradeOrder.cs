@@ -1,5 +1,4 @@
 ﻿using System;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
