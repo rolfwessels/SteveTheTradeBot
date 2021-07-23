@@ -5,9 +5,13 @@ using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public class Trade : BaseDalModelWithGuid
+    public class StrategyTrade : BaseDalModelWithGuid
     {
-        public Trade(DateTime startDate, decimal buyPrice, decimal quantity, decimal buyValue)
+        public StrategyTrade()
+        {
+        }
+
+        public StrategyTrade(DateTime startDate, decimal buyPrice, decimal quantity, decimal buyValue)
         {
             StartDate = startDate;
             BuyPrice = buyPrice;
@@ -17,6 +21,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             Orders = new List<TradeOrder>();
         }
 
+        public string StrategyInstanceId { get; set; }
         public List<TradeOrder> Orders { get; set; }
         public decimal Value { get; set; }
         public DateTime StartDate { get; }

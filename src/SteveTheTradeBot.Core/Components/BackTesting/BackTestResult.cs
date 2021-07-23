@@ -9,7 +9,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
     public class BackTestResult
     {
         private decimal _startingAmount;
-        public List<Trade> Trades { get; } = new List<Trade>();
+        public List<StrategyTrade> Trades { get; } = new List<StrategyTrade>();
         public string CurrencyPair { get; set; }
         public int TradesActive => Trades.Count(x => x.IsActive);
         public int TradesMade => Trades.Count(x => !x.IsActive);
@@ -38,9 +38,9 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         
 
-        public Trade AddTrade(in DateTime date, in decimal price, decimal quantity, decimal randValue)
+        public StrategyTrade AddTrade(in DateTime date, in decimal price, decimal quantity, decimal randValue)
         {
-            var addTrade = new Trade(date, price, quantity, randValue);
+            var addTrade = new StrategyTrade(date, price, quantity, randValue);
             Trades.Add(addTrade);
             return addTrade;
         }

@@ -1,20 +1,17 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
-using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Dal.Models.Trades;
 
-namespace SteveTheTradeBot.Core.Components.Bots
+namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public abstract class BaseBot : IBot
+    public abstract class BaseStrategy : IStrategy
     {
         private readonly IBrokerApi _broker;
 
-        protected BaseBot(IBrokerApi broker)
+        protected BaseStrategy(IBrokerApi broker)
         {
             _broker = broker;
         }
@@ -31,7 +28,7 @@ namespace SteveTheTradeBot.Core.Components.Bots
 
         #endregion
 
-        public async Task<Trade> Buy(BackTestRunner.BotData data, decimal randValue)
+        public async Task<StrategyTrade> Buy(BackTestRunner.BotData data, decimal randValue)
         {
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
@@ -47,7 +44,7 @@ namespace SteveTheTradeBot.Core.Components.Bots
             return addTrade;
         }
 
-        public async Task Sell(BackTestRunner.BotData data, Trade activeTrade)
+        public async Task Sell(BackTestRunner.BotData data, StrategyTrade activeTrade)
         {
             var currentTrade = data.LatestQuote();
             var currentTradeDate = currentTrade.Date;

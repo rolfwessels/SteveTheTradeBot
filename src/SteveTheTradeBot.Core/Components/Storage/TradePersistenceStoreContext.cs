@@ -20,6 +20,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
         }
 
+        public DbSet<StrategyTrade> Trades { get; set; }
+        public DbSet<StrategyInstance> StrategyInstances { get; set; }
         public DbSet<HistoricalTrade> HistoricalTrades { get; set; }
         public DbSet<TradeFeedCandle> TradeFeedCandles { get; set; }
         public DbSet<DynamicPlotter> DynamicPlots { get; set; }
@@ -36,6 +38,14 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
             modelBuilder.Entity<HistoricalTrade>()
                 .HasKey(c => c.Id);
+            modelBuilder.Entity<StrategyInstance>()
+                .HasKey(c => c.Id);
+            modelBuilder.Entity<StrategyTrade>()
+                .HasKey(c => c.Id);
+            modelBuilder.Entity<StrategyInstance>()
+                .HasMany(p => p.Trades)
+                .WithOne();
+
             modelBuilder.Entity<HistoricalTrade>()
                 .HasIndex(b => new { b.TradedAt, b.SequenceId });
             modelBuilder.Entity<TradeFeedCandle>()

@@ -6,7 +6,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Components.Bots;
+using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
@@ -17,9 +17,9 @@ using SteveTheTradeBot.Dal.Tests;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Bots
 {
-    public class BaseBotTests
+    public class BaseStragegyTests
     {
-        private FakeBot _fakeBot;
+        private FakeStrategy _fakeStrategy;
         private BackTestRunner.BotData _data;
         private FakeBroker _fakeBroker;
 
@@ -32,7 +32,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             _data.ByMinute.AddRange(tradeFeedCandles);
             _fakeBroker = new FakeBroker().With(x=>x.BuyFeePercent = 0.0075m);
             
-            _fakeBot = new FakeBot(_fakeBroker);
+            _fakeStrategy = new FakeStrategy(_fakeBroker);
         }
 
         #endregion
@@ -49,7 +49,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             expectedTrade.FeeAmount = expectedTrade.BuyValue * _fakeBroker.BuyFeePercent;
             expectedTrade.FeeCurrency = "ZAR";
             // action
-            var trade = await _fakeBot.Buy(_data, buyValue);
+            var trade = await _fakeStrategy.Buy(_data, buyValue);
             // assert
             trade.Should().BeEquivalentTo(expectedTrade.Dump("expectedTrade"),
                 e => e.Excluding(x => x.Orders)
@@ -75,11 +75,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             expectedTrade.BuyPrice = _fakeBroker.AskPrice;
             expectedTrade.FeeAmount = expectedTrade.BuyValue * _fakeBroker.BuyFeePercent;
             expectedTrade.FeeCurrency = "ZAR";
-            var trade = await _fakeBot.Buy(_data, buyValue);
+            var trade = await _fakeStrategy.Buy(_data, buyValue);
             AddCandle(close - 5, new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
 
             // action
-            await _fakeBot.Sell(_data, trade);
+            await _fakeStrategy.Sell(_data, trade);
             // assert
             trade.Dump("asd");
             trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
@@ -99,7 +99,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             var buyValue = 100m;
             var expectedTrade = SetupTrade(close, buyValue);
             // action
-            var trade = await _fakeBot.Buy(_data, buyValue);
+            var trade = await _fakeStrategy.Buy(_data, buyValue);
             // assert
             var marketOrderRequest = _fakeBroker.Requests
                 .OfType<SimpleOrderRequest>().First();
@@ -121,7 +121,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             var (dateTime, quantityBought, addTrade) = SetupSale();
 
             // action
-            await _fakeBot.Sell(_data, addTrade);
+            await _fakeStrategy.Sell(_data, addTrade);
             // assert
             var marketOrderRequest = _fakeBroker.Requests
                 .OfType<SimpleOrderRequest>().First();
@@ -134,7 +134,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             marketOrderRequest.CurrencyPair.Should().Be(CurrencyPair.BTCZAR);
         }
 
-        private (DateTime dateTime, decimal quantityBought, Trade addTrade) SetupSale()
+        private (DateTime dateTime, decimal quantityBought, StrategyTrade addTrade) SetupSale()
         {
             var close = 100000;
             var buyValue = 100m;
@@ -155,7 +155,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
 
             SetupTrade(close, buyValue);
             // action
-            var trade = await _fakeBot.Buy(_data, buyValue);
+            var trade = await _fakeStrategy.Buy(_data, buyValue);
             var expectedOrder = new TradeOrder()
             {
                 RequestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc),
@@ -208,7 +208,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
                 FeeAmount = 75M,
             };
             // action
-            await _fakeBot.Sell(_data, addTrade);
+            await _fakeStrategy.Sell(_data, addTrade);
             // assert
 
             addTrade.Orders.Last().Dump("last").Should().BeEquivalentTo(expectedOrder,
@@ -221,10 +221,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
             addTrade.Orders.Last().FeeAmount.Should().BeApproximately(expectedOrder.FeeAmount, 0.1m);
         }
 
-        private Trade SetupTrade(int close, decimal buyValue)
+        private StrategyTrade SetupTrade(int close, decimal buyValue)
         {
             var tradeFeedCandle = AddCandle(close, new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc));
-            var expectedTrade = new Trade(tradeFeedCandle.Date, close, buyValue / close, buyValue);
+            var expectedTrade = new StrategyTrade(tradeFeedCandle.Date, close, buyValue / close, buyValue);
 
             return expectedTrade;
         }
@@ -241,9 +241,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Bots
     }
 
 
-    public class FakeBot : BaseBot
+    public class FakeStrategy : BaseStrategy
     {
-        public FakeBot(IBrokerApi broker) : base(broker)
+        public FakeStrategy(IBrokerApi broker) : base(broker)
         {
         }
 

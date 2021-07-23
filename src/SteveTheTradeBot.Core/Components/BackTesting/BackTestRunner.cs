@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Skender.Stock.Indicators;
-using SteveTheTradeBot.Core.Components.Bots;
+using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Tools;
@@ -23,10 +23,10 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _dynamicGraphs = dynamicGraphs;
         }
 
-        public async Task<BackTestResult> Run(IEnumerable<TradeFeedCandle> enumerable, IBot bot,
+        public async Task<BackTestResult> Run(IEnumerable<TradeFeedCandle> enumerable, IStrategy strategy,
             CancellationToken cancellationToken, string currencyPair)
         {
-            var runName = $"BT-{bot.Name}-{currencyPair}-{DateTime.Now:yyMMdd}";
+            var runName = $"BT-{strategy.Name}-{currencyPair}-{DateTime.Now:yyMMdd}";
             await _dynamicGraphs.Clear(runName);
             var botData = new BotData(_dynamicGraphs, 1000, runName, currencyPair);
             foreach (var trade in enumerable)
@@ -34,12 +34,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 if (cancellationToken.IsCancellationRequested) break;
                 if (botData.BackTestResult.MarketOpenAt == 0) botData.BackTestResult.MarketOpenAt = trade.Close;
                 botData.ByMinute.Push(trade);
-                await bot.DataReceived(botData);
+                await strategy.DataReceived(botData);
                 botData.BackTestResult.MarketClosedAt = trade.Close;
                 
             }
             await _dynamicGraphs.Flush();
-            await bot.SellAll(botData);
+            await strategy.SellAll(botData);
             return botData.BackTestResult;
         }
 

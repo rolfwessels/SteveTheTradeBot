@@ -8,7 +8,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
 {
     public class BrokerUtils
     {
-        public static Trade Close(Trade trade, DateTime endDate, TradeOrder tradeOrder)
+        public static StrategyTrade Close(StrategyTrade trade, DateTime endDate, TradeOrder tradeOrder)
         {
             trade.EndDate = tradeOrder.RequestDate;
             trade.Value = tradeOrder.OriginalQuantity;
