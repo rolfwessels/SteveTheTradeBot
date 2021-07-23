@@ -3,32 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Tools;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
 {
+
     public class BackTestRunner
     {
         private readonly CandleBuilder _candleBuilder;
         private readonly DynamicGraphs _dynamicGraphs;
+        private readonly StrategyPicker _picker;
 
-        public BackTestRunner(DynamicGraphs dynamicGraphs)
+        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker)
         {
             _candleBuilder = new CandleBuilder();
             _dynamicGraphs = dynamicGraphs;
+            _picker = picker;
         }
 
-        public async Task<BackTestResult> Run(IEnumerable<TradeFeedCandle> enumerable, IStrategy strategy,
-            CancellationToken cancellationToken, string currencyPair)
+        public async Task<BackTestResult> Run(StrategyInstance strategyInstance,
+            IEnumerable<TradeFeedCandle> enumerable, 
+            CancellationToken cancellationToken)
         {
-            var runName = $"BT-{strategy.Name}-{currencyPair}-{DateTime.Now:yyMMdd}";
-            await _dynamicGraphs.Clear(runName);
-            var botData = new BotData(_dynamicGraphs, 1000, runName, currencyPair);
+            
+            await _dynamicGraphs.Clear(strategyInstance.Reference);
+            var strategy = _picker.Get(strategyInstance.StrategyName);
+            var botData = new BotData(_dynamicGraphs, 1000, strategyInstance.StrategyName, strategyInstance.Pair);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;

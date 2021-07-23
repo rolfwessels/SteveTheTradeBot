@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Base;
 using SteveTheTradeBot.Dal.Models.Trades;
+using SteveTheTradeBot.Dal.Persistence;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public abstract class StoreBase<T> where T : BaseDalModel
+    public abstract class StoreBase<T> : IRepository<T> where T : BaseDalModel 
     {
         
         protected readonly ITradePersistenceFactory _factory;
@@ -30,6 +32,84 @@ namespace SteveTheTradeBot.Core.Components.Storage
             DbSet(context).Remove(foundCandle);
             return context.SaveChanges();
         }
+
+        #region Implementation of IRepository<T>
+
+        public IQueryable<T> Query()
+        {
+            var context = _factory.GetTradePersistence().Result;
+            return DbSet(context).AsQueryable();
+        }
+
+        public async Task<T> Add(T entity)
+        {
+            await using var context = await _factory.GetTradePersistence();
+            DbSet(context).Add(entity);
+            context.SaveChanges();
+            return entity;
+        }
+
+        public async Task<IEnumerable<T>> AddRange(IEnumerable<T> entities)
+        {
+            await using var context = await _factory.GetTradePersistence();
+            var baseDalModels = entities as T[] ?? entities.ToArray();
+            DbSet(context).AddRange(baseDalModels);
+            context.SaveChanges();
+            return baseDalModels;
+        }
+
+        public Task<T> Update(Expression<Func<T, bool>> filter, T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Remove(Expression<Func<T, bool>> filter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<T>> Find(Expression<Func<T, bool>> filter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<T> FindOne(Expression<Func<T, bool>> filter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<long> Count()
+        {
+            await using var context = await _factory.GetTradePersistence();
+            return DbSet(context).Count();
+        }
+
+        public Task<long> Count(Expression<Func<T, bool>> filter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<long> UpdateMany(Expression<Func<T, bool>> filter, Action<IUpdateCalls<T>> upd)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<long> UpdateOne(Expression<Func<T, bool>> filter, Action<IUpdateCalls<T>> upd)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<long> Upsert(Expression<Func<T, bool>> filter, Action<IUpdateCalls<T>> upd)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<T> FindOneAndUpdate(Expression<Func<T, bool>> filter, Action<IUpdateCalls<T>> upd, bool isUpsert = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 
     public class TradeFeedCandlesStore : StoreBase<TradeFeedCandle>, ITradeFeedCandlesStore

@@ -27,21 +27,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
     {
         private BackTestRunner _backTestRunner;
 
-        [Test]
-        public async Task Run_GivenSmallAmountOfData_ShouldMakeNoTrades()
-        {
-            // arrange
-            Setup();
-            _backTestRunner = new BackTestRunner(new DynamicGraphs(TestTradePersistenceFactory.InMemoryDb));
-            var list =  Builder<HistoricalTrade>.CreateListOfSize(500).WithValidData().Build();
-            var tradeFeedCandles = list.ToCandleOneMinute()
-                .Aggregate(PeriodSize.OneMinute)
-                .Select(x=>TradeFeedCandle.From(x,"f", PeriodSize.OneMinute,CurrencyPair.BTCZAR));
-            // action
-            var backTestResult = await _backTestRunner.Run(tradeFeedCandles,new RSiStrategy(new FakeBroker(null)), CancellationToken.None, CurrencyPair.BTCZAR);
-            // assert
-            backTestResult.TradesActive.Should().Be(0);
-        }
 
 
         [Test]
@@ -82,19 +67,28 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             await Test(@from, to, expected , t => new NewRSiStrategy(t), CurrencyPair.ETHZAR);
         }
 
-        private async Task Test(DateTime @from, DateTime to, int expected, Func<IBrokerApi,IStrategy> getBot, string currencyPair)
+        private async Task Test(DateTime @from, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair)
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
+            var strategyInstanceStore = new StrategyInstanceStore(factory);
             var player = new HistoricalDataPlayer(tradeHistoryStore);
-            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory));
+            
+            var fakeBroker = new FakeBroker(tradeHistoryStore);
+            var strategy = getStrategy(fakeBroker);
+            var picker = new StrategyPicker().Add(strategy.Name, () => strategy);
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker);
             var cancellationTokenSource = new CancellationTokenSource();
+
             var trades = player.ReadHistoricalData(currencyPair, @from, to, PeriodSize.FiveMinutes,
                 cancellationTokenSource.Token);
             // action
-            var fakeBroker = new FakeBroker(tradeHistoryStore);
-            var rSiBot = getBot(fakeBroker);
-            var backTestResult = await _backTestRunner.Run(trades, rSiBot, CancellationToken.None, currencyPair);
+            
+            
+            
+            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
+            await strategyInstanceStore.Add(strategyInstance);
+            var backTestResult = await _backTestRunner.Run(strategyInstance, trades,  CancellationToken.None);
             // assert
            
             Console.Out.WriteLine("BalanceMoved: " + backTestResult.BalanceMoved);
@@ -135,6 +129,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         #endregion
     }
+
 
     public class FakeBroker : IBrokerApi
     {

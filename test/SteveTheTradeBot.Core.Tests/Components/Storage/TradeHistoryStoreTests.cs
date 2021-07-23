@@ -29,7 +29,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             // arrange
             Setup();
             var historicalTrades = Builder<HistoricalTrade>.CreateListOfSize(4).WithValidData().Build();
-            await _tradeHistoryStore.AddRangeAndIgnoreDuplicates(historicalTrades.ToList());
+            await _tradeHistoryStore.AddOrIgnoreFast(historicalTrades.ToList());
             // action
             var existingRecords = await _tradeHistoryStore.GetExistingRecords(CurrencyPair.BTCZAR);
             // assert
@@ -45,11 +45,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             // arrange
             Setup();
             var historicalTrades = Builder<HistoricalTrade>.CreateListOfSize(4).WithValidData().Build();
-            await _tradeHistoryStore.AddRangeAndIgnoreDuplicates(historicalTrades.Take(2).ToList());
+            await _tradeHistoryStore.AddOrIgnoreFast(historicalTrades.Take(2).ToList());
             // action
-            var existingRecords = await _tradeHistoryStore.AddRangeAndIgnoreDuplicates(historicalTrades.ToList());
+            var existingRecords = await _tradeHistoryStore.AddOrIgnoreFast(historicalTrades.ToList());
             // assert
-            var findById = await _tradeHistoryStore.FindById(historicalTrades.Select(x => x.Id));
+            var findById = await _tradeHistoryStore.FindById(historicalTrades.Select(x => x.Id).ToArray());
             findById.Should().HaveCount(4);
         }
 

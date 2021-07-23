@@ -8,6 +8,7 @@ using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
 using SteveTheTradeBot.Core.Tests.Components.Bots;
 using SteveTheTradeBot.Core.Utils;
+using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
 
 namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr

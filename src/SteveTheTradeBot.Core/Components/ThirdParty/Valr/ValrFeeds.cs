@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {
