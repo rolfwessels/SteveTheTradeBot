@@ -52,14 +52,16 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return candles;
         }
 
-        public async Task<List<TradeFeedCandle>> FindBefore( DateTime startDate, string feed, string currencyPair,
+        public async Task<List<TradeFeedCandle>> FindBefore(DateTime startDate, string feed, string currencyPair,
             PeriodSize periodSize,  int take)
         {
             await using var context = await _factory.GetTradePersistence();
             var tradeFeedCandles = context.TradeFeedCandles.AsQueryable()
-                .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
-                             x.Date < startDate)
-                .OrderBy(x => x.Date)
+                .Where(x => x.Feed == feed && 
+                            x.CurrencyPair == currencyPair 
+                            && x.PeriodSize == periodSize &&
+                            x.Date < startDate)
+                .OrderByDescending(x => x.Date)
                 .Take(take)
                 .ToList();
             return tradeFeedCandles;

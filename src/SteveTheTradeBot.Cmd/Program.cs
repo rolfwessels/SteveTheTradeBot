@@ -17,7 +17,7 @@ namespace SteveTheTradeBot.Cmd
         {
             Console.Title = "SteveTheTradeBot.Api";
             SetupLogin(args);
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            // Console.OutputEncoding = System.Text.Encoding.UTF8;
             var app = new CommandApp();
             
             app.Configure(config =>

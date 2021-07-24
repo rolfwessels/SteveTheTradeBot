@@ -74,19 +74,15 @@ namespace SteveTheTradeBot.Cmd
 
         public class Reset : CommandSync<Reset.Settings>
         {
-            private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-
             public sealed class Settings : BaseCommandSettings
             {
                 [CommandOption("--days")]
                 [Description("How many days to go back into.")]
-                public int Days { get; set; } = 5;
+                public int Days { get; set; } = 0;
             }
 
             #region Overrides of Command<Settings>
-
-
-
+            
             public override async Task ExecuteAsync(Settings settings)
             {
                 
@@ -98,6 +94,7 @@ namespace SteveTheTradeBot.Cmd
                 var simpleParams = persistence.SimpleParam.AsQueryable().Where(x => x.Key.StartsWith("metric_populate")).ToList();
                 simpleParams.ForEach(x=>x.Value = dateTime.AddDays(-settings.Days).ToIsoDateString());
                 persistence.SaveChanges();
+                AnsiConsole.MarkupLine($"[green]Done[/] 👍.");
             }
 
             #endregion

@@ -58,19 +58,17 @@ namespace SteveTheTradeBot.Api
         {
             var required = 400;
             var key = $"metric_populate_{feed}_{currencyPair}_{periodSize}";
-
-            var startDate = await _parameterStore.Get(key, DateTime.MinValue); 
+            _log.Debug($"PopulateOtherMetrics:Populate {key}");
+            var startDate = await _parameterStore.Get(key, new DateTime(2000,1,1));
             try
             {
-                _log.Debug($"PopulateOtherMetrics:Populate {key}");
                 var findAllBetween = _store.FindAllBetween(startDate, DateTime.Now, feed, currencyPair, periodSize);
                 var prevBatch = await _store.FindBefore(startDate, feed, currencyPair, periodSize, required);
-                
-                foreach (var batch in findAllBetween.BatchedBy(required))
+                foreach (var batch in findAllBetween.BatchedBy(required*2))
                 {
                     var values = new Dictionary<DateTime,Dictionary<string,decimal?>>();
                     if (token.IsCancellationRequested) return;
-                    var tradeFeedCandles = prevBatch.Concat(batch).ToList();
+                    var tradeFeedCandles = prevBatch.Concat(batch).OrderBy(x=>x.Date).ToList();
                     if (tradeFeedCandles.Count < required)
                     {
                         _log.Debug($"Skip processing  {feed}, currencyPair {currencyPair} , periodSize {periodSize} because we only have {tradeFeedCandles.Count} historical items.");
@@ -86,8 +84,8 @@ namespace SteveTheTradeBot.Api
                     var updateFeed = await _store.UpdateFeed(values.Where(x=>x.Key >= fromDate), feed, currencyPair, periodSize);
                     await _parameterStore.Set(key, batch.Last().Date);
                     startDate = batch.Last().Date;
-                    prevBatch = batch;
-                    _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed.Count} entries LastDate:{startDate}");
+                    prevBatch = tradeFeedCandles.TakeLast(required).ToList();
+                    _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed.Count} entries before LastDate:{startDate} {tradeFeedCandles.Count} records used from {tradeFeedCandles.Min(x=>x.Date)} to {tradeFeedCandles.Max(x => x.Date)}.");
                 }
             }
             catch (ArgumentOutOfRangeException e)
