@@ -52,7 +52,11 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<DataCommand.Download>("download")
                         .WithAlias("import")
                         .WithDescription("Download historical data to csv files.")
-                        .WithExample(new[] { "data", "download" });
+                        .WithExample(new[] { "data", "download" });      
+                    
+                    conf.AddCommand<DataCommand.Reset>("reset")
+                        .WithDescription("Reset historical data to be a few days old.")
+                        .WithExample(new[] { "data", "reset","--days=5" });
 
                    
                 });
