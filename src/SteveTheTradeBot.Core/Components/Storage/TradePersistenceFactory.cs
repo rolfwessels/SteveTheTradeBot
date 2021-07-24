@@ -35,7 +35,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var context = new TradePersistenceStoreContext(_dbContextOptions);
             if (!_isInitialized)
             {
-                await context.Database.EnsureCreatedAsync();
+                //await context.Database.EnsureCreatedAsync();
                 if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
                 {
                     await context.Database.MigrateAsync();

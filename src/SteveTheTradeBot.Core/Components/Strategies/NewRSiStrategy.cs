@@ -25,7 +25,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly decimal _moveProfitPercent;
         private decimal _setMoveProfit;
 
-        public NewRSiStrategy(IBrokerApi api) : base(api)
+        public NewRSiStrategy() 
         {
             _initialStopRisk = 0.96m;
             _initialTakeProfit = 1.10m;

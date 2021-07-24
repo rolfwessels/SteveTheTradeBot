@@ -19,13 +19,15 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly DynamicGraphs _dynamicGraphs;
         private readonly StrategyPicker _picker;
         private readonly StrategyInstanceStore _strategyInstanceStore;
+        private readonly IBrokerApi _broker;
 
-        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore)
+        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore, IBrokerApi broker)
         {
             _candleBuilder = new CandleBuilder();
             _dynamicGraphs = dynamicGraphs;
             _picker = picker;
             _strategyInstanceStore = strategyInstanceStore;
+            _broker = broker;
         }
 
         public async Task<StrategyInstance> Run(StrategyInstance strategyInstance,
@@ -35,27 +37,27 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             
             await _dynamicGraphs.Clear(strategyInstance.Reference);
             var strategy = _picker.Get(strategyInstance.StrategyName);
-            var botData = new StrategyContext(_dynamicGraphs, strategyInstance);
+            var context = new StrategyContext(_dynamicGraphs, strategyInstance, _broker);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                if (botData.StrategyInstance.FirstClose == 0)
+                if (context.StrategyInstance.FirstClose == 0)
                 {
-                    botData.StrategyInstance.FirstClose = trade.Close;
-                    botData.StrategyInstance.FirstStart = trade.Date;
+                    context.StrategyInstance.FirstClose = trade.Close;
+                    context.StrategyInstance.FirstStart = trade.Date;
                 }
 
-                botData.ByMinute.Push(trade);
-                await strategy.DataReceived(botData);
-                botData.StrategyInstance.LastClose = trade.Close;
-                botData.StrategyInstance.LastDate = trade.Date;
+                context.ByMinute.Push(trade);
+                await strategy.DataReceived(context);
+                context.StrategyInstance.LastClose = trade.Close;
+                context.StrategyInstance.LastDate = trade.Date;
 
             }
             await _dynamicGraphs.Flush();
-            await strategy.SellAll(botData);
-            botData.StrategyInstance.Recalculate();
-            await _strategyInstanceStore.Update(botData.StrategyInstance);
-            return botData.StrategyInstance;
+            await strategy.SellAll(context);
+            context.StrategyInstance.Recalculate();
+            await _strategyInstanceStore.Update(context.StrategyInstance);
+            return context.StrategyInstance;
         }
     }
 
@@ -65,16 +67,18 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly StrategyInstance _strategyInstance;
       
 
-        public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance)
+        public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance, IBrokerApi broker)
         {
             _dynamicGraphs = dynamicGraphs;
             _strategyInstance = strategyInstance;
             ByMinute = new Recent<TradeFeedCandle>(1000);
+            Broker = broker;
         }
 
         public Recent<TradeFeedCandle> ByMinute { get; }
         public StrategyInstance StrategyInstance => _strategyInstance;
-            
+        public IBrokerApi Broker { get; }
+
 
         public async Task PlotRunData(DateTime date, string label, decimal value)
         {

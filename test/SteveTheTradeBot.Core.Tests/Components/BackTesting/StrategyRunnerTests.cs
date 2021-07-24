@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using FizzWare.NBuilder;
 using FluentAssertions;
 using Moq;
@@ -33,10 +32,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             _mockIDynamicGraphs = new Mock<IDynamicGraphs>();
             _mockIStrategyInstanceStore = new Mock<IStrategyInstanceStore>();
             _mockITradeHistoryStore = new Mock<ITradeHistoryStore>();
-
-            _fakeStrategy = new FakeStrategy(new FakeBroker(null));
+            var fakeBroker = new FakeBroker();
+            _fakeStrategy = new FakeStrategy();
             var strategyPicker = new StrategyPicker().Add("FakeStrategy", () => _fakeStrategy);
-            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _mockIStrategyInstanceStore.Object, _mockITradeHistoryStore.Object);
+            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _mockIStrategyInstanceStore.Object, _mockITradeHistoryStore.Object, fakeBroker);
         }
 
         [TearDown]
@@ -172,7 +171,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             await _strategyRunner.Process(forBackTest, beforeDate);
             var strategyContext = _fakeStrategy.DateRecievedValues.First();
             await _fakeStrategy.Buy(strategyContext,100);
-            await _strategyRunner.PostTransaction(strategyContext);
+            await _strategyRunner.PostTransaction(strategyContext.StrategyInstance);
             // assert
             strategyContext.StrategyInstance.Print();
             strategyContext.StrategyInstance.TotalActiveTrades.Should().Be(1);

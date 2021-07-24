@@ -2,19 +2,12 @@
 using System.Threading.Tasks;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public abstract class BaseStrategy : IStrategy
     {
-        private readonly IBrokerApi _broker;
-
-        protected BaseStrategy(IBrokerApi broker)
-        {
-            _broker = broker;
-        }
 
         #region Implementation of IBot
 
@@ -35,7 +28,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var estimatedQuantity = randValue / estimatedPrice;
             var addTrade = data.StrategyInstance.AddTrade(currentTrade.Date, estimatedPrice, estimatedQuantity, randValue);
             var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice , estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
-            var response = await _broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
+            var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
             BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
             addTrade.ApplyBuyInfo(tradeOrder);
             await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 0);
@@ -51,7 +44,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = activeTrade.BuyQuantity * estimatedPrice;
             var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
-            var response = await _broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
+            var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
             
             BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
             var close = BrokerUtils.Close(activeTrade, currentTradeDate, tradeOrder);

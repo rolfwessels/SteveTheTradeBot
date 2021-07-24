@@ -7,7 +7,6 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
@@ -27,12 +26,13 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
         public void Setup()
         {
-            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR));
+            _fakeBroker = new FakeBroker().With(x => x.BuyFeePercent = 0.0075m);
+            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker);
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
             _data.ByMinute.AddRange(tradeFeedCandles);
-            _fakeBroker = new FakeBroker().With(x=>x.BuyFeePercent = 0.0075m);
             
-            _fakeStrategy = new FakeStrategy(_fakeBroker);
+            
+            _fakeStrategy = new FakeStrategy();
         }
 
         #endregion
@@ -243,10 +243,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
     public class FakeStrategy : BaseStrategy
     {
         public List<StrategyContext> DateRecievedValues = new List<StrategyContext>();
-        public FakeStrategy(IBrokerApi broker) : base(broker)
-        {
-        }
-
+        
         #region Overrides of BaseBot
 
         public override Task DataReceived(StrategyContext data)

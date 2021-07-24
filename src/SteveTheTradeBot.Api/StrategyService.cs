@@ -42,7 +42,15 @@ namespace SteveTheTradeBot.Api
                 foreach (var strategyInstance in found)
                 {
                     if (token.IsCancellationRequested) return;
-                    await _runner.Process(strategyInstance, time);
+                    try
+                    {
+                        await _runner.Process(strategyInstance, time);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e,$"Error wile running {strategyInstance.Reference}:", e.Message);
+                    }
+                    
                 }
                 await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }

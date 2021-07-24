@@ -19,7 +19,6 @@ using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
-using SteveTheTradeBot.Core.Components.ThirdParty;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using IValidatorFactory = SteveTheTradeBot.Dal.Validation.IValidatorFactory;
 using ValidatorFactoryBase = SteveTheTradeBot.Dal.Validation.ValidatorFactoryBase;
@@ -123,9 +122,12 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<ParameterStore>().As<IParameterStore>();
             builder.RegisterType<StrategyInstanceStore>().As<IStrategyInstanceStore>();
             builder.RegisterType<StrategyRunner>().As<IStrategyRunner>();
+            builder.RegisterType<DynamicGraphs>().As<IDynamicGraphs>();
+
+            builder.Register(x=> new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret)).As<IBrokerApi>();
             builder.Register(x=>new StrategyPicker()
-                .Add(RSiStrategy.SimpleRsi, ()=> new RSiStrategy(x.Resolve<IBrokerApi>()))
-                .Add(NewRSiStrategy.NewRsi, () => new NewRSiStrategy(x.Resolve<IBrokerApi>()))
+                .Add(RSiStrategy.SimpleRsi, ()=> new RSiStrategy())
+                .Add(NewRSiStrategy.NewRsi, () => new NewRSiStrategy())
             ).As<StrategyPicker>();
             
             

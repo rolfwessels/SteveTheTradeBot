@@ -16,6 +16,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
     {
         
         protected readonly ITradePersistenceFactory _factory;
+        private int DefaultMax = 1000;
 
         protected StoreBase(ITradePersistenceFactory factory)
         {
@@ -82,9 +83,10 @@ namespace SteveTheTradeBot.Core.Components.Storage
             throw new NotImplementedException();
         }
 
-        public Task<List<T>> Find(Expression<Func<T, bool>> filter)
+        public async Task<List<T>> Find(Expression<Func<T, bool>> filter)
         {
-            throw new NotImplementedException();
+            await using var context = await _factory.GetTradePersistence();
+            return DbSet(context).AsQueryable().Where(filter).Take(DefaultMax).ToList();
         }
 
         public Task<T> FindOne(Expression<Func<T, bool>> filter)

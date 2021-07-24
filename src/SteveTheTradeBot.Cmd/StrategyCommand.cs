@@ -1,7 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using Skender.Stock.Indicators;
 using Spectre.Console;
@@ -41,9 +41,15 @@ namespace SteveTheTradeBot.Cmd
                     .AddChoice(CurrencyPair.BTCZAR)
                     .AddChoice(CurrencyPair.ETHZAR));
                 var amount = AnsiConsole.Prompt(new TextPrompt<int>("Pick a investment [green]amount[/]?"));
-                strategyStore.Add(StrategyInstance.From(strategy, pair, amount, PeriodSize.FiveMinutes)).Wait();
-                return 0;
+                var periodSizes = EnumHelper.ToArray<PeriodSize>();
+                var selectedPeriodSize = AnsiConsole.Prompt(new TextPrompt<string>("Pick a [green]PeriodSize[/]?")
+                    .InvalidChoiceMessage("[red]That's not a valid strategy[/]")
+                    .DefaultValue(PeriodSize.FiveMinutes.ToString())
+                    .AddChoices(periodSizes.Select(x=>x.ToString())));
 
+                var periodSize = Enum.Parse<PeriodSize>(selectedPeriodSize);
+                strategyStore.Add(StrategyInstance.From(strategy, pair, amount, periodSize)).Wait();
+                return 0;
             }
 
             #endregion
@@ -61,7 +67,17 @@ namespace SteveTheTradeBot.Cmd
 
             public override int Execute(CommandContext context, BaseCommandSettings settings)
             {
-                Console.Out.WriteLine(IocApi.Instance.Resolve<StrategyPicker>().List.Select(x=>new {Name = x}).ToTable());
+                var strategyInstanceStore = IocApi.Instance.Resolve<IStrategyInstanceStore>();
+                var strategyInstances = strategyInstanceStore.Find(x=>x.IsBackTest == false).Result;
+                if (!strategyInstances.Any())
+                {
+                    AnsiConsole.MarkupLine("No strategies yet, run [grey]`sttb stategy add`[/] to add one.");
+                    return 0;
+                }
+                var table = strategyInstances.Select(x=>new {Name = x.Reference, x.IsActive,x.InvestmentAmount, x.QuoteAmount, x.TotalProfit });
+                
+                
+                Console.Out.WriteLine(table.ToTable());
                 return 0;
             }
 

@@ -39,7 +39,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 470; // 209
-            await Test(@from, to, expected, t => new RSiStrategy(t), CurrencyPair.BTCZAR);
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR);
         }
 
         [Test]
@@ -51,7 +51,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2021-06-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 95; // 209
-            await Test(@from, to, expected, t => new NewRSiStrategy(t), CurrencyPair.BTCZAR);
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR);
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 95; // 209
-            await Test(@from, to, expected , t => new NewRSiStrategy(t), CurrencyPair.BTCZAR);
+            await Test(@from, to, expected , t => new NewRSiStrategy(), CurrencyPair.BTCZAR);
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 95; // 209
-            await Test(@from, to, expected , t => new NewRSiStrategy(t), CurrencyPair.ETHZAR);
+            await Test(@from, to, expected , t => new NewRSiStrategy(), CurrencyPair.ETHZAR);
         }
 
         private async Task Test(DateTime @from, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair)
@@ -93,7 +93,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
             var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
-            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker, strategyInstanceStore);
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker, strategyInstanceStore, fakeBroker);
             var cancellationTokenSource = new CancellationTokenSource();
 
             var trades = player.ReadHistoricalData(currencyPair, @from, to, strategyInstance.PeriodSize,cancellationTokenSource.Token);
