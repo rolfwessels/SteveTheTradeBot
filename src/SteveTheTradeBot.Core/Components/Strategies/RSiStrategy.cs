@@ -9,33 +9,9 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class TestBuySell : BaseStrategy
-    {
-        public const string N = nameof(TestBuySell);
-
-        #region Overrides of BaseStrategy
-
-        public override async Task DataReceived(StrategyContext data)
-        {
-            var activeTrade = data.ActiveTrade();
-            if (activeTrade == null)
-            {
-                await Buy(data,20);
-            }
-            else
-            {
-                await Sell(data, activeTrade);
-            }
-        }
-
-        public override string Name { get; } = N;
-
-        #endregion
-    }
-
     public class RSiStrategy : BaseStrategy
     {
-        public const string SimpleRsi = "SimpleRsi";
+        public const string Desc = "SimpleRsi";
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -101,7 +77,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
   
 
-        public override string Name => SimpleRsi;
+        public override string Name => Desc;
       
     }
 }

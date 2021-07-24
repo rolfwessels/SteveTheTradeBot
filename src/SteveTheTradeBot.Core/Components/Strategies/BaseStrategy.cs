@@ -1,5 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Hangfire.Logging;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -8,7 +11,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public abstract class BaseStrategy : IStrategy
     {
-
+        
         #region Implementation of IBot
 
         public abstract Task DataReceived(StrategyContext data);
@@ -44,16 +47,25 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = activeTrade.BuyQuantity * estimatedPrice;
             var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
-            var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
-            
-            BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
-            var close = BrokerUtils.Close(activeTrade, currentTradeDate, tradeOrder);
+            try
+            {
+                var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
 
-            await data.PlotRunData(currentTradeDate.AddMinutes(-1), "activeTrades", 1);
-            await data.PlotRunData(currentTradeDate, "activeTrades", 0);
+                BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
+                var close = BrokerUtils.Close(activeTrade, currentTradeDate, tradeOrder);
+
+                await data.PlotRunData(currentTradeDate.AddMinutes(-1), "activeTrades", 1);
+                await data.PlotRunData(currentTradeDate, "activeTrades", 0);
+
+                data.StrategyInstance.BaseAmount = close.SellValue;
+                await data.PlotRunData(currentTradeDate, "sellPrice", close.SellValue);
+            }
+            catch (Exception e)
+            {
+                tradeOrder.FailedReason = e.Message;
+                tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
+            }
             
-            data.StrategyInstance.BaseAmount = close.SellValue;
-            await data.PlotRunData(currentTradeDate, "sellPrice", close.SellValue);
         }
     }
 }

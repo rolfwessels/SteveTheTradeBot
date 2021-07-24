@@ -14,6 +14,7 @@ using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -94,7 +95,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
             var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
-            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker, strategyInstanceStore, fakeBroker);
+            _backTestRunner = new BackTestRunner(new DynamicGraphs(factory), picker, strategyInstanceStore, fakeBroker, Messenger.Default);
             var cancellationTokenSource = new CancellationTokenSource();
 
             var trades = player.ReadHistoricalData(currencyPair, @from, to, strategyInstance.PeriodSize,cancellationTokenSource.Token);

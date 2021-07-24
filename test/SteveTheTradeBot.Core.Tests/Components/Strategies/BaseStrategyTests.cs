@@ -9,6 +9,7 @@ using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -27,7 +28,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         public void Setup()
         {
             _fakeBroker = new FakeBroker().With(x => x.BuyFeePercent = 0.0075m);
-            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker);
+            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default);
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
             _data.ByMinute.AddRange(tradeFeedCandles);
             

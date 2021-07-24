@@ -9,6 +9,7 @@ using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Core.Tests.Components.Strategies;
 using SteveTheTradeBot.Core.Utils;
@@ -36,7 +37,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var fakeBroker = new FakeBroker();
             _fakeStrategy = new FakeStrategy();
             var strategyPicker = new StrategyPicker().Add("FakeStrategy", () => _fakeStrategy);
-            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _strategyInstanceStore, fakeBroker, _mockITradeHistoryStore.Object);
+            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _strategyInstanceStore, fakeBroker, _mockITradeHistoryStore.Object, Messenger.Default);
         }
 
         [TearDown]

@@ -12,7 +12,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public class NewRSiStrategy : BaseStrategy
     {
-        public const string NewRsi = "SimpleRsi2";
+        public const string Desc = "SimpleRsi2";
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -89,7 +89,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             return trade.StrategyInstance.Trades.FirstOrDefault(x => x.IsActive);
         }
 
-        public override string Name => NewRsi;
+        public override string Name => Desc;
 
     }
 }

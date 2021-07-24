@@ -9,6 +9,7 @@ using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -22,15 +23,17 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly IStrategyInstanceStore _strategyInstanceStore;
         private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
         private readonly IBrokerApi _broker;
+        private readonly IMessenger _messenger;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
-            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore)
+            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger)
         {
             _strategyPicker = strategyPicker;
             _dynamicGraphs = dynamicGraphs;
             _strategyInstanceStore = strategyInstanceStore;
             _broker = broker;
             _tradeFeedCandleStore = tradeFeedCandleStore;
+            _messenger = messenger;
         }
 
 
@@ -50,20 +53,20 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             
         }
 
-        private async Task ProcessStrategy(StrategyInstance strategyInstance, DateTime time, Stopwatch stopwatch)
+        private async Task ProcessStrategy(StrategyInstance instance, DateTime time, Stopwatch stopwatch)
         {
             try
             {
-                var strategy = _strategyPicker.Get(strategyInstance.StrategyName);
-                var strategyContext = await PopulateStrategyContext(strategyInstance, time);
-                PreRun(strategyInstance, strategyContext.ByMinute.Last());
+                var strategy = _strategyPicker.Get(instance.StrategyName);
+                var strategyContext = await PopulateStrategyContext(instance, time);
+                PreRun(instance, strategyContext.ByMinute.Last());
                 await strategy.DataReceived(strategyContext);
-                PostRun(strategyInstance, strategyContext.ByMinute.Last());
+                PostRun(instance, strategyContext.ByMinute.Last());
             }
             finally
             {
-                await PostTransaction(strategyInstance);
-                _log.Information($"Done processing {strategyInstance.Reference} in {stopwatch.Elapsed.ToShort()}");
+                await PostTransaction(instance);
+                _log.Information($"Done processing {instance.Reference} in {stopwatch.Elapsed.ToShort()}");
             }
         }
 
@@ -88,7 +91,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         private async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
         {
-            var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker);
+            var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger);
             var findRecentCandles =
                 await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time, 500, strategyInstance.Pair, strategyInstance.Feed);
             strategyContext.ByMinute.AddRange(findRecentCandles.OrderBy(x => x.Date));

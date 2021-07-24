@@ -65,7 +65,10 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         protected override IQueryable<StrategyInstance> WithFullData(IQueryable<StrategyInstance> query)
         {
-            return base.WithFullData(query).Include(r => r.Trades);
+            return base.WithFullData(query)
+                .Include(r => r.Trades)
+                .Include("Trades.Orders")
+                ;
         }
 
         #endregion
