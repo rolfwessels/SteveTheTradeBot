@@ -9,6 +9,30 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
+    public class TestBuySell : BaseStrategy
+    {
+        public const string N = nameof(TestBuySell);
+
+        #region Overrides of BaseStrategy
+
+        public override async Task DataReceived(StrategyContext data)
+        {
+            var activeTrade = data.ActiveTrade();
+            if (activeTrade == null)
+            {
+                await Buy(data,20);
+            }
+            else
+            {
+                await Sell(data, activeTrade);
+            }
+        }
+
+        public override string Name { get; } = N;
+
+        #endregion
+    }
+
     public class RSiStrategy : BaseStrategy
     {
         public const string SimpleRsi = "SimpleRsi";
@@ -36,7 +60,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         public override async Task DataReceived(StrategyContext data)
         {
             var currentTrade = data.ByMinute.Last();
-            var activeTrade = ActiveTrade(data);
+            var activeTrade = data.ActiveTrade();
             var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
             if (activeTrade == null)
@@ -75,10 +99,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _setMoveProfit = currentTrade.Close * _moveProfitPercent;
         }
 
-        private static StrategyTrade? ActiveTrade(StrategyContext trade)
-        {
-            return trade.StrategyInstance.Trades.FirstOrDefault(x=>x.IsActive);
-        }
+  
 
         public override string Name => SimpleRsi;
       

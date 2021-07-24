@@ -89,6 +89,11 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         {
             return ByMinute.Last();
         }
+
+        public StrategyTrade ActiveTrade()
+        {
+            return StrategyInstance.Trades.FirstOrDefault(x => x.IsActive);
+        }
     }
 }
 /*
