@@ -8,15 +8,15 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
     public class TestTradePersistenceFactory: TradePersistenceFactory
     {
         private static readonly Lazy<TestTradePersistenceFactory> _instance = new Lazy<TestTradePersistenceFactory>(() => new TestTradePersistenceFactory());
-        private TradePersistenceFactory _tradePersistenceFactory;
+        private readonly TradePersistenceFactory _tradePersistenceFactory;
 
 
-        protected TestTradePersistenceFactory() : base(DbContextOptions())
+        protected TestTradePersistenceFactory() : base(DbContextOptionsFor())
         {
             _tradePersistenceFactory = new TradePersistenceFactory("Host=localhost;Database=SteveTheTradeBotTests;Username=postgres;Password=GRES_password");
         }
 
-        private static DbContextOptions<TradePersistenceStoreContext> DbContextOptions(string databaseName = "TestDb")
+        private static DbContextOptions<TradePersistenceStoreContext> DbContextOptionsFor(string databaseName = "TestDb")
         {
             return new DbContextOptionsBuilder<TradePersistenceStoreContext>()
                 .UseInMemoryDatabase(databaseName)
@@ -26,17 +26,18 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
         #region Singleton
 
         public static TestTradePersistenceFactory InMemoryDb => _instance.Value;
+        public static TradePersistenceFactory PostgresTest => _instance.Value._tradePersistenceFactory;
 
         #endregion
 
-        public Task<TradePersistenceStoreContext> GetTestDb()
+        protected Task<TradePersistenceStoreContext> GetTestDb()
         {
             return _tradePersistenceFactory.GetTradePersistence();
         }
 
         public static ITradePersistenceFactory UniqueDb()
         {
-            return new TradePersistenceFactory(DbContextOptions(Guid.NewGuid().ToString("n")));
+            return new TradePersistenceFactory(DbContextOptionsFor(Guid.NewGuid().ToString("n")));
         }
 
         public static ITradePersistenceFactory RealDb()

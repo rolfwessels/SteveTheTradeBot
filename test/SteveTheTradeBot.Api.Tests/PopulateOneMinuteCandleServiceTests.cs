@@ -70,7 +70,8 @@ namespace SteveTheTradeBot.Api.Tests
         {
             _mockIHistoricalDataPlayer = new Mock<IHistoricalDataPlayer>();
             _factory = TestTradePersistenceFactory.UniqueDb();
-            _service = new PopulateOneMinuteCandleService(_factory, new HistoricalDataPlayer(new TradeHistoryStore(_factory)),new Messenger());
+            var tradeHistoryStore = new TradeHistoryStore(_factory);
+            _service = new PopulateOneMinuteCandleService(_factory, new HistoricalDataPlayer(tradeHistoryStore, new TradeFeedCandlesStore(_factory)),new Messenger());
         }
     }
 }

@@ -9,6 +9,7 @@ using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Core.Tests.Components.Strategies;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -20,9 +21,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
     {
         private StrategyRunner _strategyRunner;
         private Mock<IDynamicGraphs> _mockIDynamicGraphs;
-        private Mock<IStrategyInstanceStore> _mockIStrategyInstanceStore;
-        private Mock<ITradeHistoryStore> _mockITradeHistoryStore;
+        private Mock<ITradeFeedCandlesStore> _mockITradeHistoryStore;
         private FakeStrategy _fakeStrategy;
+        private StrategyInstanceStore _strategyInstanceStore;
 
 
         #region Setup/Teardown
@@ -30,12 +31,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public void Setup()
         {
             _mockIDynamicGraphs = new Mock<IDynamicGraphs>();
-            _mockIStrategyInstanceStore = new Mock<IStrategyInstanceStore>();
-            _mockITradeHistoryStore = new Mock<ITradeHistoryStore>();
+            _strategyInstanceStore = new StrategyInstanceStore(TestTradePersistenceFactory.UniqueDb());
+            _mockITradeHistoryStore = new Mock<ITradeFeedCandlesStore>();
             var fakeBroker = new FakeBroker();
             _fakeStrategy = new FakeStrategy();
             var strategyPicker = new StrategyPicker().Add("FakeStrategy", () => _fakeStrategy);
-            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _mockIStrategyInstanceStore.Object, _mockITradeHistoryStore.Object, fakeBroker);
+            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _strategyInstanceStore, fakeBroker, _mockITradeHistoryStore.Object);
         }
 
         [TearDown]
@@ -108,7 +109,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // action
             await _strategyRunner.Process(forBackTest, DateTime.Parse("2021-07-23T01:01:00"));
             // assert
-            _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, It.IsAny<DateTime>(), 500, forBackTest.Feed), Times.Never);
+            _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, It.IsAny<DateTime>(), 500, CurrencyPair.BTCZAR, forBackTest.Feed), Times.Never);
         }
 
 
@@ -123,7 +124,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // action
             await _strategyRunner.Process(forBackTest, beforeDate);
             // assert
-            _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, forBackTest.Feed),Times.Once);
+            _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, CurrencyPair.BTCZAR, forBackTest.Feed),Times.Once);
         }
 
         [Test]
@@ -138,7 +139,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             await _strategyRunner.Process(forBackTest, beforeDate);
             // assert
             _fakeStrategy.DateRecievedValues.Should().HaveCount(1);
-            _fakeStrategy.DateRecievedValues[0].StrategyInstance.Should().Be(forBackTest);
+            _fakeStrategy.DateRecievedValues[0].StrategyInstance.Id.Should().Be(forBackTest.Id);
             _fakeStrategy.DateRecievedValues[0].ByMinute.Should().HaveCount(100);
         }
 
@@ -188,7 +189,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // action
             await _strategyRunner.Process(forBackTest, beforeDate);
             // assert
-            _mockIStrategyInstanceStore.Verify(mc => mc.Update(It.IsAny<StrategyInstance>()), Times.Once);
+            var findById = await _strategyInstanceStore.FindById(forBackTest.Id);
+            findById.Should().HaveCount(1);
         }
 
         #region Private Methods
@@ -196,7 +198,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         private void SetupContext(DateTime beforeDate, StrategyInstance forBackTest)
         {
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(100).WithValidData().Build().ToList();
-            _mockITradeHistoryStore.Setup(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, forBackTest.Feed))
+            _strategyInstanceStore.Add(forBackTest).Wait();
+            _mockITradeHistoryStore.Setup(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, CurrencyPair.BTCZAR, forBackTest.Feed))
                 .ReturnsAsync(tradeFeedCandles);
         }
 

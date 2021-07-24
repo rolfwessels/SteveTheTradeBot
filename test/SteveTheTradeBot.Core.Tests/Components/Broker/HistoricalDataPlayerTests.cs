@@ -26,7 +26,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Broker
             var historicalTrades = Builder<HistoricalTrade>.CreateListOfSize(expected).WithValidData().Build().ForEach(x=> x.TradedAt = x.TradedAt.AddYears(-1)).ToList();
             await tradeHistoryStore.AddOrIgnoreFast(historicalTrades);
 
-            var historicalDataPlayer = new HistoricalDataPlayer(tradeHistoryStore);
+            var historicalDataPlayer = new HistoricalDataPlayer(tradeHistoryStore,null);
             // action
             var readHistoricalTrades = historicalDataPlayer.ReadHistoricalTrades(CurrencyPair.BTCZAR, historicalTrades.Last().TradedAt, historicalTrades.First().TradedAt,default, 2);
             // assert

@@ -20,17 +20,17 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly StrategyPicker _strategyPicker;
         private readonly IDynamicGraphs _dynamicGraphs;
         private readonly IStrategyInstanceStore _strategyInstanceStore;
-        private readonly ITradeHistoryStore _historyStore;
+        private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
         private readonly IBrokerApi _broker;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
-            IStrategyInstanceStore strategyInstanceStore, ITradeHistoryStore historyStore, IBrokerApi broker)
+            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore)
         {
             _strategyPicker = strategyPicker;
             _dynamicGraphs = dynamicGraphs;
             _strategyInstanceStore = strategyInstanceStore;
-            _historyStore = historyStore;
             _broker = broker;
+            _tradeFeedCandleStore = tradeFeedCandleStore;
         }
 
 
@@ -43,11 +43,19 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 throw new ArgumentException("Cannot process strategy that is marked as inactive!");
             if (!IsCorrectTime(strategyInstance.PeriodSize, time)) return;
             var stopwatch = new Stopwatch().With(x => x.Start());
+            await _strategyInstanceStore.EnsureUpdate(strategyInstance.Id, async (strategy) => {
+                await ProcessStrategy(strategy, time, stopwatch);
+                return true;
+            });
+            
+        }
+
+        private async Task ProcessStrategy(StrategyInstance strategyInstance, DateTime time, Stopwatch stopwatch)
+        {
             try
             {
                 var strategy = _strategyPicker.Get(strategyInstance.StrategyName);
                 var strategyContext = await PopulateStrategyContext(strategyInstance, time);
-                strategyContext.ByMinute.Dump("strategyContext.ByMinute");
                 PreRun(strategyInstance, strategyContext.ByMinute.Last());
                 await strategy.DataReceived(strategyContext);
                 PostRun(strategyInstance, strategyContext.ByMinute.Last());
@@ -76,15 +84,15 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         {
             await _dynamicGraphs.Flush();
             instance.Recalculate();
-            await _strategyInstanceStore.Update(instance);
         }
 
         private async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
         {
             var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker);
             var findRecentCandles =
-                await _historyStore.FindRecentCandles(strategyInstance.PeriodSize, time, 500, strategyInstance.Feed);
+                await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time, 500, strategyInstance.Pair, strategyInstance.Feed);
             strategyContext.ByMinute.AddRange(findRecentCandles.OrderBy(x => x.Date));
+            if (strategyContext.ByMinute.Count < 100) throw new Exception("Missing ByMinute data!");
             return strategyContext;
         }
 

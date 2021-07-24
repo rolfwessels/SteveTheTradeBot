@@ -59,19 +59,9 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public static StrategyInstance ForBackTest(string strategy, string pair)
         {
-            return new StrategyInstance() {
-                StrategyName = strategy,
-                IsActive = true,
-                IsBackTest = true,
-                Pair = pair,
-                PeriodSize = PeriodSize.FiveMinutes,
-                InvestmentAmount = 1000m,
-                BaseAmount = 1000m,
-                BaseAmountCurrency = pair.SideIn(Side.Sell),
-                QuoteAmount = 0,
-                QuoteAmountCurrency =  pair.SideIn(Side.Buy),
-                Reference = $"{strategy}_{pair}_{PeriodSize.FiveMinutes}_{DateTime.Now:yyyyMMdd}".ToLower()
-            };
+            var forBackTest = From( strategy,  pair, 1000, PeriodSize.FiveMinutes);
+            forBackTest.IsBackTest = true;
+            return forBackTest;
         }
 
 
@@ -97,6 +87,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 BaseAmountCurrency = pair.SideIn(Side.Sell),
                 QuoteAmount = 0,
                 QuoteAmountCurrency = pair.SideIn(Side.Buy),
+                Feed = "valr",
                 Reference = $"{strategy}_{pair}_{periodSize}_{DateTime.Now:yyyyMMdd}".ToLower()
             };
         }

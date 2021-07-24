@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -7,13 +8,6 @@ using SteveTheTradeBot.Dal.Persistence;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public interface IStrategyInstanceStore : IRepository<StrategyInstance>
-    {
-        Task RemoveByReference(string reference);
-        Task<List<StrategyInstance>> FindActiveStrategies();
-        Task<StrategyInstance> Update(StrategyInstance botDataStrategyInstance);
-    }
-
     public class StrategyInstanceStore : StoreWithIdBase<StrategyInstance>, IStrategyInstanceStore
     {
         public StrategyInstanceStore(ITradePersistenceFactory factory) : base(factory)
@@ -50,5 +44,30 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return DbSet(context).AsQueryable()
                 .Where(x =>  x.IsActive && !x.IsBackTest).ToList();
         }
+
+        public async Task<T> EnsureUpdate<T>(string id, Func<StrategyInstance,Task<T>> action)
+        {
+            await using var context = await _factory.GetTradePersistence();
+            var strategyInstance = WithFullData(DbSet(context).AsQueryable().Where(x=>x.Id == id)).FirstOrDefault().ExistsOrThrow(id);
+            try
+            {
+                var result = await action(strategyInstance);
+                return result;
+            }
+            finally
+            {
+                DbSet(context).Update(strategyInstance);
+                context.SaveChanges();
+            }
+        }
+
+        #region Overrides of StoreWithIdBase<StrategyInstance>
+
+        protected override IQueryable<StrategyInstance> WithFullData(IQueryable<StrategyInstance> query)
+        {
+            return base.WithFullData(query).Include(r => r.Trades);
+        }
+
+        #endregion
     }
 }
