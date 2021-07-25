@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -34,8 +35,9 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public async Task Clear(string feedName)
         {
+            ResetLazy();
             var context = await _contextLazy.Value;
-            var dynamicPlotters = context.DynamicPlots.Where(x => x.Feed == feedName);
+            var dynamicPlotters = context.DynamicPlots.AsQueryable().Where(x => x.Feed == feedName);
             context.DynamicPlots.RemoveRange(dynamicPlotters);
             await context.SaveChangesAsync();
         }
@@ -47,7 +49,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             {
                 await context.DynamicPlots.AddAsync(new DynamicPlotter()
                 {
-                    Date = date,
+                    Date = date.ToUniversalTime(),
                     Feed = feedName,
                     Label = label,
                     Value = value,

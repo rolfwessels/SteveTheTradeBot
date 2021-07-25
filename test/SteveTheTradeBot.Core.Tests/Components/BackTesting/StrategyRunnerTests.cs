@@ -125,7 +125,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // action
             await _strategyRunner.Process(forBackTest, beforeDate);
             // assert
-            _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, CurrencyPair.BTCZAR, forBackTest.Feed),Times.Once);
+            _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate.ToUniversalTime(), 500, CurrencyPair.BTCZAR, forBackTest.Feed),Times.Once);
         }
 
         [Test]
@@ -232,10 +232,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         private void SetupContext(DateTime beforeDate, StrategyInstance forBackTest, bool addMetric = true)
         {
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(100).WithValidData().Build().ToList();
-            if (addMetric)
-                tradeFeedCandles.ForEach(x=>x.Metric.With(r=>r.Add("test",1)).Add("1",2));
+            if (!addMetric)
+                tradeFeedCandles.ForEach(x=>x.Metric.Clear());
             _strategyInstanceStore.Add(forBackTest).Wait();
-            _mockITradeHistoryStore.Setup(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, CurrencyPair.BTCZAR, forBackTest.Feed))
+            _mockITradeHistoryStore.Setup(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate.ToUniversalTime(), 500, CurrencyPair.BTCZAR, forBackTest.Feed))
                 .ReturnsAsync(tradeFeedCandles);
         }
 

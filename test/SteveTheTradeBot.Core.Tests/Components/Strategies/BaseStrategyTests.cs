@@ -22,14 +22,20 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         private FakeStrategy _fakeStrategy;
         private StrategyContext _data;
         private FakeBroker _fakeBroker;
+        private DateTime _requestDate;
 
         #region Setup/Teardown
 
         public void Setup()
         {
+            _requestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc);
             _fakeBroker = new FakeBroker().With(x => x.BuyFeePercent = 0.0075m);
             _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
+            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4)
+                .WithValidData()
+                .All().With((x,r)=> x.Date = _requestDate.AddDays(-1 * r))
+                .Build();
+            
             _data.ByMinute.AddRange(tradeFeedCandles);
             _fakeStrategy = new FakeStrategy();
         }
@@ -154,9 +160,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             SetupTrade(close, buyValue);
             // action
             var trade = await _fakeStrategy.Buy(_data, buyValue);
+            
             var expectedOrder = new TradeOrder()
             {
-                RequestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc),
+                RequestDate = _requestDate,
                 OrderStatusType = OrderStatusTypes.Filled,
                 CurrencyPair = "BTCZAR",
                 OrderPrice = _fakeBroker.AskPrice,
@@ -190,7 +197,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var (dateTime, quantityBought, addTrade) = SetupSale();
             var expectedOrder = new TradeOrder()
             {
-                RequestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc),
+                RequestDate = _requestDate,
                 OrderStatusType = OrderStatusTypes.Filled,
                 CurrencyPair = "BTCZAR",
                 OrderPrice = _fakeBroker.BidPrice,
@@ -221,7 +228,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
         private StrategyTrade SetupTrade(int close, decimal buyValue)
         {
-            var tradeFeedCandle = AddCandle(close, new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc));
+            var tradeFeedCandle = AddCandle(close, _requestDate);
             var expectedTrade = new StrategyTrade(tradeFeedCandle.Date, close, buyValue / close, buyValue);
 
             return expectedTrade;

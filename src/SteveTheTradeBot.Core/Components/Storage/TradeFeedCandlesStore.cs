@@ -73,8 +73,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
         public async Task<List<TradeFeedCandle>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000)
         {
             await using var context = await _factory.GetTradePersistence();
-            return await context.TradeFeedCandles.AsNoTracking().AsQueryable()
-                
+            return await context.TradeFeedCandles.AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize && x.Date >= from && x.Date <= to)
                 .OrderBy(x => x.Date)
                 .Skip(skip)
@@ -88,7 +87,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
             if (feed == null) throw new ArgumentNullException(nameof(feed));
             await using var context = await _factory.GetTradePersistence();
-            return await context.TradeFeedCandles.AsNoTracking().AsQueryable()
+            return await context.TradeFeedCandles.AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize && x.Date < beforeDate)
                 .OrderByDescending(x => x.Date)
                 .Take(take)

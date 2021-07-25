@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using SteveTheTradeBot.Core.Framework.Mappers;
 using SteveTheTradeBot.Dal.Models.Projects;
@@ -65,6 +66,7 @@ namespace SteveTheTradeBot.Dal.Tests
                 tradeFeedCandle.PeriodSize = PeriodSize.OneMinute;
                 tradeFeedCandle.Date = DateTime.Now.AddMinutes(_counter * -1).ToUniversalTime();
                 tradeFeedCandle.Feed = "feed1";
+                tradeFeedCandle.Metric = new Dictionary<string, decimal?>() { { "ema", 12} , { "rsa", 3} };
             }
             
 
