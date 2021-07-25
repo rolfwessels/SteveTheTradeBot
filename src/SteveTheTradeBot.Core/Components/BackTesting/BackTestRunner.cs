@@ -95,7 +95,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public TradeFeedCandle LatestQuote()
         {
-            return ByMinute.Last();
+            return ByMinute.OrderBy(x=>x.Date).Last();
         }
 
         public StrategyTrade ActiveTrade()

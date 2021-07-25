@@ -48,5 +48,19 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             // assert
             strategyInstance.AverageTradesPerMonth.Should().Be(5);
         }
+
+        [Test]
+        public void Recalculate_GivenNoTrades_ShouldSetAverageTradesPerMonth()
+        {
+            // arrange
+            var strategyInstance = StrategyInstance.From("123", CurrencyPair.ETHZAR, 123, PeriodSize.OneMinute);
+            
+            strategyInstance.FirstStart = DateTime.Now.AddDays(-60);
+            strategyInstance.LastDate = DateTime.Now;
+            // action
+            strategyInstance.Recalculate();
+            // assert
+            strategyInstance.AverageTradesPerMonth.Should().Be(0);
+        }
     }
 }

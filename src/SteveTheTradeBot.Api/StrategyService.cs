@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
-using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
-using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 
@@ -20,6 +17,7 @@ namespace SteveTheTradeBot.Api
         private readonly IMessenger _messenger;
         private readonly IStrategyRunner _runner;
         readonly ManualResetEventSlim _delayWorker = new ManualResetEventSlim(false);
+        
 
         public StrategyService(IStrategyInstanceStore strategyStore, IMessenger messenger, IStrategyRunner runner)
         {
@@ -39,6 +37,7 @@ namespace SteveTheTradeBot.Api
                 _delayWorker.Wait(token);
                 var found = await _strategyStore.FindActiveStrategies();
                 var time = DateTime.Now.ToMinute();
+                
                 foreach (var strategyInstance in found)
                 {
                     if (token.IsCancellationRequested) return;
@@ -52,6 +51,7 @@ namespace SteveTheTradeBot.Api
                     }
                     
                 }
+                
                 await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }
         }

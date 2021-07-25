@@ -64,8 +64,6 @@ namespace SteveTheTradeBot.Sdk.RestApi
                 if (e.Content.Contains("errors"))
                 {
                     var graphQlResponse = JsonConvert.DeserializeObject<GraphQLResponse<T>>(e.Content);
-                    graphQlResponse.Dump("graphQlResponse");
-
                     if (graphQlResponse.Errors != null && graphQlResponse.Errors.Any())
                         throw new GraphQlResponseException<T>(graphQlResponse);
                 }

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using Slack.Webhooks;
@@ -26,6 +27,34 @@ namespace SteveTheTradeBot.Api.Components.Integration
             };
             await _slackClient.PostAsync(slackMessage);
         }
+
+        public Task PostSuccessAsync(string message)
+        {
+            var slackMessage = PostTextAttachment(message, "#49C39e");
+            return _slackClient.PostAsync(slackMessage);
+        }
+
+       
+        public Task PostFailedAsync(string message)
+        {
+            var slackMessage = PostTextAttachment(message, "#D00000");
+            return _slackClient.PostAsync(slackMessage);
+        }
+
+
+        private static SlackMessage PostTextAttachment(string message, string d00000)
+        {
+            var slackMessage = new SlackMessage();
+            var slackAttachment = new SlackAttachment
+            {
+                Fallback = message,
+                Text = message,
+                Color = d00000,
+            };
+            slackMessage.Attachments = new List<SlackAttachment> { slackAttachment };
+            return slackMessage;
+        }
+
 
         #endregion
 

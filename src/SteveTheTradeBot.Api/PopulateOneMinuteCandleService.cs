@@ -11,6 +11,7 @@ using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.Mappers;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -62,8 +63,6 @@ namespace SteveTheTradeBot.Api
             if (foundCandle != null)
             {
                 from = foundCandle.Date;
-                context.Remove(foundCandle);
-                context.SaveChanges();
             }
 
             var stopwatch = new Stopwatch().With(x => x.Start());
@@ -74,10 +73,21 @@ namespace SteveTheTradeBot.Api
             TradeFeedCandle lastCandle = null;
             foreach (var feedCandles in candles.BatchedBy())
             {
-                await using var saveContext = await _factory.GetTradePersistence();
+                
                 if (token.IsCancellationRequested) return null;
-                saveContext.TradeFeedCandles.AddRange(feedCandles);
-                var count = await saveContext.SaveChangesAsync(token);
+                foreach (var cdl in feedCandles)
+                {
+                    if (cdl.Date == foundCandle?.Date)
+                    {   
+                        context.TradeFeedCandles.Update(cdl.CopyValuesTo(foundCandle));
+                    }
+                    else
+                    {
+                        context.TradeFeedCandles.Add(cdl);
+                    }
+                }
+                
+                var count = await context.SaveChangesAsync(token);
                 _log.Information(
                     $"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
                 stopwatch.Restart();

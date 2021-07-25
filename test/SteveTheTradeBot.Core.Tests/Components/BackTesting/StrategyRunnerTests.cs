@@ -194,11 +194,46 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             findById.Should().HaveCount(1);
         }
 
+
+        [Test]
+        public async Task Process_GivenStaleData_ShouldSkipTrade()
+        {
+            // arrange
+            Setup();
+            var forBackTest = StrategyInstance.From("FakeStrategy", CurrencyPair.BTCZAR, 100, PeriodSize.FiveMinutes);
+            var beforeDate = DateTime.Parse("2021-07-23T00:00:00");
+            SetupContext(beforeDate, forBackTest);
+            var first = await _strategyRunner.Process(forBackTest, beforeDate);
+            // action
+            var process = await _strategyRunner.Process(forBackTest, beforeDate);
+            // assert
+            first.Should().BeTrue();
+            process.Should().BeFalse();
+        }
+
+
+        [Test]
+        public void Process_GivenDataThatIsMissing_ShouldThrowException()
+        {
+            // arrange
+            Setup();
+            var forBackTest = StrategyInstance.From("FakeStrategy", CurrencyPair.BTCZAR, 100, PeriodSize.FiveMinutes);
+            var beforeDate = DateTime.Parse("2021-07-23T00:00:00");
+            SetupContext(beforeDate, forBackTest,false);
+
+            // action
+            Action testCall = () => { _strategyRunner.Process(forBackTest, beforeDate).Wait(); };
+            testCall.Should().Throw<Exception>().WithMessage("Missing ByMinute data!");
+        }
+
+
         #region Private Methods
 
-        private void SetupContext(DateTime beforeDate, StrategyInstance forBackTest)
+        private void SetupContext(DateTime beforeDate, StrategyInstance forBackTest, bool addMetric = true)
         {
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(100).WithValidData().Build().ToList();
+            if (addMetric)
+                tradeFeedCandles.ForEach(x=>x.Metric.With(r=>r.Add("test",1)).Add("1",2));
             _strategyInstanceStore.Add(forBackTest).Wait();
             _mockITradeHistoryStore.Setup(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, beforeDate, 500, CurrencyPair.BTCZAR, forBackTest.Feed))
                 .ReturnsAsync(tradeFeedCandles);

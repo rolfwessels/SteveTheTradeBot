@@ -17,7 +17,7 @@ namespace SteveTheTradeBot.Core.Utils
                 strategyInstance.TotalActiveTrades = strategyInstance.Trades.Count(x => x.IsActive);
                 strategyInstance.TotalNumberOfTrades = strategyInstance.Trades.Count;
 
-                strategyInstance.AverageTradesPerMonth = Math.Round(strategyInstance.Trades.Count / ((strategyInstance.LastDate - strategyInstance.FirstStart).TotalDays / 30), 3);
+                strategyInstance.AverageTradesPerMonth = strategyInstance.TotalNumberOfTrades > 1? Math.Round(strategyInstance.Trades.Count / ((strategyInstance.LastDate - strategyInstance.FirstStart).TotalDays / 30), 3):0;
                 strategyInstance.NumberOfProfitableTrades = strategyInstance.Trades.Count(x => !x.IsActive && x.IsProfit());
                 strategyInstance.NumberOfLosingTrades = strategyInstance.Trades.Count(x => !x.IsActive && !x.IsProfit());
                 strategyInstance.PercentOfProfitableTrades = strategyInstance.TotalNumberOfTrades==0?0:Math.Round(strategyInstance.NumberOfProfitableTrades / strategyInstance.TotalNumberOfTrades * 100,2);

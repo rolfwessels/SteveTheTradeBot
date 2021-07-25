@@ -56,7 +56,9 @@ namespace SteveTheTradeBot.Core.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     StrategyInstanceId = table.Column<string>(type: "text", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     BuyQuantity = table.Column<decimal>(type: "numeric", nullable: false),
+                    BuyValue = table.Column<decimal>(type: "numeric", nullable: false),
                     BuyPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     SellValue = table.Column<decimal>(type: "numeric", nullable: false),
                     SellPrice = table.Column<decimal>(type: "numeric", nullable: false),

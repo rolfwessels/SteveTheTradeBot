@@ -58,39 +58,38 @@ namespace SteveTheTradeBot.Api
         {
             var required = 400;
             var key = $"metric_populate_{feed}_{currencyPair}_{periodSize}";
-            _log.Debug($"PopulateOtherMetrics:Populate {key}");
             var startDate = await _parameterStore.Get(key, new DateTime(2000,1,1));
             try
             {
-                var findAllBetween = _store.FindAllBetween(startDate, DateTime.Now, feed, currencyPair, periodSize);
+                var findAllBetween = _store.FindAllBetween(startDate, DateTime.Now.ToUniversalTime(), feed, currencyPair, periodSize);
                 var prevBatch = await _store.FindBefore(startDate, feed, currencyPair, periodSize, required);
                 foreach (var batch in findAllBetween.BatchedBy(required*2))
                 {
                     var values = new Dictionary<DateTime,Dictionary<string,decimal?>>();
                     if (token.IsCancellationRequested) return;
-                    var tradeFeedCandles = prevBatch.Concat(batch).OrderBy(x=>x.Date).ToList();
-                    if (tradeFeedCandles.Count < required)
+                    var currentBatch = prevBatch.Concat(batch).OrderBy(x=>x.Date).ToList();
+                    if (currentBatch.Count < required)
                     {
-                        _log.Debug($"Skip processing  {feed}, currencyPair {currencyPair} , periodSize {periodSize} because we only have {tradeFeedCandles.Count} historical items.");
+                        _log.Debug($"Skip processing  {feed}, currencyPair {currencyPair} , periodSize {periodSize} because we only have {currentBatch.Count} historical items.");
                         break;
                     }
 
-                    AddRsi(tradeFeedCandles, values);
-                    GetRoc(tradeFeedCandles, values);
-                    AddEmi(tradeFeedCandles, values);
-                    AddGetMacd(tradeFeedCandles, values);
-                    AddSuperTrend(tradeFeedCandles, values);
-                    var fromDate = startDate;
-                    var updateFeed = await _store.UpdateFeed(values.Where(x=>x.Key >= fromDate), feed, currencyPair, periodSize);
+                    AddRsi(currentBatch, values);
+                    GetRoc(currentBatch, values);
+                    AddEmi(currentBatch, values);
+                    AddGetMacd(currentBatch, values);
+                    AddSuperTrend(currentBatch, values);
+                    var keyValuePairs = values.Where(x=>x.Key.ToUniversalTime() >= startDate.AddHours(-1).ToUniversalTime()).ToList();
+                    var updateFeed = await _store.UpdateFeed(keyValuePairs, feed, currencyPair, periodSize);
                     await _parameterStore.Set(key, batch.Last().Date);
                     startDate = batch.Last().Date;
-                    prevBatch = tradeFeedCandles.TakeLast(required).ToList();
-                    _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed.Count} entries before LastDate:{startDate} {tradeFeedCandles.Count} records used from {tradeFeedCandles.Min(x=>x.Date)} to {tradeFeedCandles.Max(x => x.Date)}.");
+                    prevBatch = currentBatch.TakeLast(required).ToList();
+                    _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed.Count} / {keyValuePairs.Count} entries before LastDate:{startDate} {currentBatch.Count} records used from {currentBatch.Min(x=>x.Date)} to {currentBatch.Max(x => x.Date)} {values.Keys.Min()} {values.Keys.Max()}.");
                 }
             }
             catch (ArgumentOutOfRangeException e)
             {
-                _log.Warning($"PopulateOtherMetrics:Populate {e.Message}");
+                _log.Warning($"PopulateOtherMetrics:Populate {key} {e.Message}");
             }
         }
 

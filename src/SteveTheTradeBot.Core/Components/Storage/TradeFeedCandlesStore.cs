@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Utils;
@@ -36,8 +37,9 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
             
             await using var context = await _factory.GetTradePersistence();
-            var keyValuePairs = store.ToDictionary(x=>x.Key,x=>x.Value);
+            var keyValuePairs = store.ToDictionary(x=>x.Key.ToUniversalTime(),x=>x.Value);
             var dateTimes = keyValuePairs.Keys;
+            
             var candles = DbSet(context).AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize && dateTimes.Contains(x.Date))
                 .OrderByDescending(x => x.Date)
@@ -56,7 +58,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             PeriodSize periodSize,  int take)
         {
             await using var context = await _factory.GetTradePersistence();
-            var tradeFeedCandles = context.TradeFeedCandles.AsQueryable()
+            var tradeFeedCandles = context.TradeFeedCandles.AsNoTracking().AsQueryable()
                 .Where(x => x.Feed == feed && 
                             x.CurrencyPair == currencyPair 
                             && x.PeriodSize == periodSize &&
@@ -70,20 +72,23 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         public async Task<List<TradeFeedCandle>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000)
         {
-            var context = await _factory.GetTradePersistence();
-            return await context.TradeFeedCandles.AsQueryable()
+            await using var context = await _factory.GetTradePersistence();
+            return await context.TradeFeedCandles.AsNoTracking().AsQueryable()
+                
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize && x.Date >= from && x.Date <= to)
                 .OrderBy(x => x.Date)
                 .Skip(skip)
-                .Take(take).ToListAsync();
+                .Take(take)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
 
         public async Task<List<TradeFeedCandle>> FindRecentCandles(PeriodSize periodSize, DateTime beforeDate, int take, string currencyPair, string feed)
         {
             if (feed == null) throw new ArgumentNullException(nameof(feed));
-            var context = await _factory.GetTradePersistence();
-            return await context.TradeFeedCandles.AsQueryable()
+            await using var context = await _factory.GetTradePersistence();
+            return await context.TradeFeedCandles.AsNoTracking().AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize && x.Date < beforeDate)
                 .OrderByDescending(x => x.Date)
                 .Take(take)

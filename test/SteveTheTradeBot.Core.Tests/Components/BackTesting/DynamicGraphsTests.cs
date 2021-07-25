@@ -14,7 +14,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public async Task Plot_WhenCalledShouldSavePlotValuesToDb()
         {
             // arrange
-            var dynamicGraphs = new DynamicGraphs(TestTradePersistenceFactory.InMemoryDb);
+            var dynamicGraphs = new DynamicGraphs(TestTradePersistenceFactory.UniqueDb());
             // action
             for (int i = -5; i < 0; i++)
             {
@@ -32,7 +32,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public async Task Clear_WhenShouldClearDb()
         {
             // arrange
-            var dynamicGraphs = new DynamicGraphs(TestTradePersistenceFactory.InMemoryDb);
+            var dynamicGraphs = new DynamicGraphs(TestTradePersistenceFactory.UniqueDb());
             await dynamicGraphs.Plot("feed", DateTime.Now.AddMinutes(1), "test", 1);
             await dynamicGraphs.Flush();
             // action

@@ -39,29 +39,51 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         #region Implementation of IStrategyRunner
 
-        public async Task Process(StrategyInstance strategyInstance, DateTime time)
+        public async Task<bool> Process(StrategyInstance strategyInstance, DateTime time)
         {
             if (strategyInstance.IsBackTest) throw new ArgumentException("Cannot process back test strategy!");
             if (!strategyInstance.IsActive)
                 throw new ArgumentException("Cannot process strategy that is marked as inactive!");
-            if (!IsCorrectTime(strategyInstance.PeriodSize, time)) return;
+            if (!IsCorrectTime(strategyInstance.PeriodSize, time)) return false;
             var stopwatch = new Stopwatch().With(x => x.Start());
-            await _strategyInstanceStore.EnsureUpdate(strategyInstance.Id, async (strategy) => {
-                await ProcessStrategy(strategy, time, stopwatch);
-                return true;
+            return await _strategyInstanceStore.EnsureUpdate(strategyInstance.Id, async (strategy) => {
+                return await ProcessStrategy(strategy, time, stopwatch);
             });
             
         }
 
-        private async Task ProcessStrategy(StrategyInstance instance, DateTime time, Stopwatch stopwatch)
+        private async Task<bool> ProcessStrategy(StrategyInstance instance, DateTime time, Stopwatch stopwatch)
         {
             try
             {
                 var strategy = _strategyPicker.Get(instance.StrategyName);
                 var strategyContext = await PopulateStrategyContext(instance, time);
+                var lastQuoteDate = strategyContext.LatestQuote().Date.ToLocalTime();
+                var instanceLastDate = instance.LastDate.ToLocalTime();
+                if (lastQuoteDate < instanceLastDate)
+                {
+                    
+                    _log.Error($"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run a old trade of {lastQuoteDate} ! !");
+                    return false;
+                }
+
+                if (lastQuoteDate == instanceLastDate)
+                {
+                    var timeSinceLastRun = (DateTime.Now.ToLocalTime() - instanceLastDate);
+                    var allowedTime = (instance.PeriodSize.ToTimeSpan()*10);
+                    if (timeSinceLastRun > allowedTime)
+                        _log.Warning($"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
+                    else
+                    {
+                        _log.Debug($"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
+                    }
+                    return false;
+                }
+
                 PreRun(instance, strategyContext.ByMinute.Last());
                 await strategy.DataReceived(strategyContext);
                 PostRun(instance, strategyContext.ByMinute.Last());
+                return true;
             }
             finally
             {
@@ -93,8 +115,11 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         {
             var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger);
             var findRecentCandles =
-                await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time, 500, strategyInstance.Pair, strategyInstance.Feed);
-            strategyContext.ByMinute.AddRange(findRecentCandles.OrderBy(x => x.Date));
+                await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
+            
+            strategyContext.ByMinute.AddRange(findRecentCandles.OrderBy(x => x.Date).Where(x=>x.Metric.Count > 1));
+
+            _log.Debug($"StrategyRunner:PopulateStrategyContext Look for trades before: {time.ToUniversalTime()} and found {strategyContext.LatestQuote().Date}!");
             if (strategyContext.ByMinute.Count < 100) throw new Exception("Missing ByMinute data!");
             return strategyContext;
         }

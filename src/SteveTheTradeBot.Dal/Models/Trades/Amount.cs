@@ -14,8 +14,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public override string ToString()
         {
-            if (Currency == "ZAR") {
-                return $"R{Math.Round(Value,2)}";
+            if (Currency == "ZAR")
+            {
+                var round = Math.Round(Value,2);
+                return $"R{round}";
             }
             return $"{Value}{Currency}";
         }

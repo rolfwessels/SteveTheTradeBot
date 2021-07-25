@@ -23,18 +23,19 @@ namespace SteveTheTradeBot.Core.Components.Notifications
             if (tradeOrder.Order.OrderSide == Side.Buy)
             {
                 await _notification.PostAsync(
-                    $"{tradeOrder.StrategyInstance.StrategyName} just *bought* {buySell} for *{cost}* at {price}! :money_with_wings:");
+                    $"{tradeOrder.StrategyInstance.StrategyName} just *bought* {buySell} for *{cost}* at {price}! :robot_face:");
             }
             else
             {
+                price = Amount.From(tradeOrder.Order.OrderPrice, tradeOrder.Order.FeeCurrency);
                 if (tradeOrder.StrategyTrade.IsProfit())
                 {
-                    await _notification.PostAsync(
-                        $"{tradeOrder.StrategyInstance.StrategyName} just *sold* *{cost}* for {buySell} at {price}! We made {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :money_with_wings:");
+                    await _notification.PostSuccessAsync(
+                        $"{tradeOrder.StrategyInstance.StrategyName} just *sold* *{cost}* for {buySell} at {price}! We made {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :moneybag:");
                 }
                 else
                 {
-                    await _notification.PostAsync(
+                    await _notification.PostFailedAsync(
                         $"{tradeOrder.StrategyInstance.StrategyName} just *sold* *{cost}* for {buySell} at {price}! We lost {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :money_with_wings:");
                 }
             }
