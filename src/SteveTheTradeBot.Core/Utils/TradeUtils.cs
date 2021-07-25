@@ -14,10 +14,11 @@ namespace SteveTheTradeBot.Core.Utils
             return Math.Round((currentValue - fromValue) / fromValue * 100, decimals);
         }
 
-        public static ConsoleTables ToTable<T>(this IEnumerable<T> enumerable)
+        public static string ToTable<T>(this IEnumerable<T> enumerable)
         {
             var table = new Table().From(enumerable.ToList()).With(x => x.Config = TableConfiguration.UnicodeAlt());
-            return new ConsoleTables(table);
+            if (!table.Rows.Any()) return "No records found.\n";
+            return new ConsoleTables(table).ToString();
         }
 
 
