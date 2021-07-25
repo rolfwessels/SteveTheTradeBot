@@ -6,7 +6,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
     {
         public virtual bool CanRespond(MessageContext context)
         {
-            return MessageContextHelper.IsForBot(context);
+            return context.IsForBot();
         }
 
         public abstract BotMessage GetResponse(MessageContext context);

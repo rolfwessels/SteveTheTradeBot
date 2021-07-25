@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Hangfire.Logging;
+using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -11,7 +12,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public abstract class BaseStrategy : IStrategy
     {
-        
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         #region Implementation of IBot
 
         public abstract Task DataReceived(StrategyContext data);
@@ -31,19 +32,29 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var estimatedQuantity = randValue / estimatedPrice;
             var addTrade = data.StrategyInstance.AddTrade(currentTrade.Date, estimatedPrice, estimatedQuantity, randValue);
             var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice , estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
-            var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
-            BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
-            addTrade.ApplyBuyInfo(tradeOrder);
-            await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 0);
-            await data.PlotRunData(currentTrade.Date, "activeTrades", 1);
-            await data.PlotRunData(currentTrade.Date, "sellPrice", randValue);
+            try
+            {
+                var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
+                BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
+                addTrade.ApplyBuyInfo(tradeOrder);
+                await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 0);
+                await data.PlotRunData(currentTrade.Date, "activeTrades", 1);
+                await data.PlotRunData(currentTrade.Date, "sellPrice", randValue);
+                await data.Messenger.Send(tradeOrder);
+            }
+            catch (Exception e)
+            {
+                tradeOrder.FailedReason = e.Message;
+                tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
+                BrokerUtils.Close(addTrade, currentTrade.Date, tradeOrder);
+                _log.Error(e, $"Failed to add new trade order:{e.Message}");
+            }
             return addTrade;
         }
 
         public async Task Sell(StrategyContext data, StrategyTrade activeTrade)
         {
             var currentTrade = data.LatestQuote();
-            var currentTradeDate = currentTrade.Date;
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = activeTrade.BuyQuantity * estimatedPrice;
             var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
@@ -52,18 +63,20 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
 
                 BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
-                var close = BrokerUtils.Close(activeTrade, currentTradeDate, tradeOrder);
+                var close = BrokerUtils.Close(activeTrade, currentTrade.Date, tradeOrder);
 
-                await data.PlotRunData(currentTradeDate.AddMinutes(-1), "activeTrades", 1);
-                await data.PlotRunData(currentTradeDate, "activeTrades", 0);
+                await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 1);
+                await data.PlotRunData(currentTrade.Date, "activeTrades", 0);
 
                 data.StrategyInstance.BaseAmount = close.SellValue;
-                await data.PlotRunData(currentTradeDate, "sellPrice", close.SellValue);
+                await data.PlotRunData(currentTrade.Date, "sellPrice", close.SellValue);
+                await data.Messenger.Send(tradeOrder);
             }
             catch (Exception e)
             {
                 tradeOrder.FailedReason = e.Message;
                 tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
+                _log.Error(e, $"Failed to add close trade order:{e.Message}");
             }
             
         }

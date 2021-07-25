@@ -8,20 +8,18 @@ using SlackConnector.Models;
 namespace SteveTheTradeBot.Core.Framework.Slack
 {
     public class SlackService
-    {
-        
+    {   
         private readonly string _key;
         private ISlackConnector _connector;
         private ISlackConnection _connection;
         private readonly List<IResponder> _responders;
         public int ReconnectingCounter { get; set; }
 
-        public SlackService(string key)
+        public SlackService(string key, ResponseBuilder responseBuilder)
         {
             _key = key;
-
             _connector = new SlackConnector.SlackConnector();
-            _responders = ResponseBuilder.GetResponders();
+            _responders = responseBuilder.GetResponders();
         }
 
         public async Task Connect()
@@ -46,7 +44,6 @@ namespace SteveTheTradeBot.Core.Framework.Slack
             Log.Debug($"OnReconnecting {ReconnectingCounter}");
             if (ReconnectingCounter > 30)
             {
-                
                 Disconnected();
                 Log.Debug($"Wait a few minutes then reconnect...");
                 await Task.Delay(TimeSpan.FromMinutes(2));
@@ -96,7 +93,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
                 Log.Error(e.Message, e);
                 _connection.Say(new BotMessage()
                 {
-                    Text = string.Format("Ooops something went wrong ({0})", e.Message),
+                    Text = $"Ooops something went wrong ({e.Message})",
                     ChatHub = message.ChatHub
                 }).Wait();
             }
