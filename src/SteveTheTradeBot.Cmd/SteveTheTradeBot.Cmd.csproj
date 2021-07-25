@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.Slack" Version="2.0.3" />
     <PackageReference Include="Spectre.Console" Version="0.40.0" />
   </ItemGroup>
 

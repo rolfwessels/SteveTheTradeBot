@@ -2,8 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Hangfire.Logging;
-using Microsoft.EntityFrameworkCore;
+using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -21,7 +20,8 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly ITradePersistenceFactory _factory;
-        private Lazy<Task<TradePersistenceStoreContext>> _contextLazy; 
+        private Lazy<Task<TradePersistenceStoreContext>> _contextLazy;
+
         public DynamicGraphs(ITradePersistenceFactory factory)
         {
             _factory = factory;
@@ -35,9 +35,9 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public async Task Clear(string feedName)
         {
-            
+            ResetLazy();
             var context = await _contextLazy.Value;
-            var dynamicPlotters = context.DynamicPlots.Where(x=>x.Feed == feedName);
+            var dynamicPlotters = context.DynamicPlots.AsQueryable().Where(x => x.Feed == feedName);
             context.DynamicPlots.RemoveRange(dynamicPlotters);
             await context.SaveChangesAsync();
         }
@@ -49,7 +49,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             {
                 await context.DynamicPlots.AddAsync(new DynamicPlotter()
                 {
-                    Date = date,
+                    Date = date.ToUniversalTime(),
                     Feed = feedName,
                     Label = label,
                     Value = value,
@@ -57,7 +57,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             }
             catch (Exception e)
             {
-                _log.Warning($"DynamicGraphs:Plot save failed {e.Message}");
+                _log.Warning(e, $"DynamicGraphs:Plot add {e.Message}");
             }
         }
 
@@ -70,9 +70,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             }
             catch (Exception e)
             {
-                _log.Warning($"DynamicGraphs:Plot save failed {e.Message}");
+                _log.Warning(e, $"DynamicGraphs:Plot save failed {e.Message}");
             }
-            ResetLazy();
+            finally
+            {
+                ResetLazy();
+            }
         }
     }
 }

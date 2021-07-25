@@ -11,7 +11,6 @@ namespace SteveTheTradeBot.Core.Components.Storage
     public class TradePersistenceFactory : ITradePersistenceFactory
     {
         private readonly DbContextOptions<TradePersistenceStoreContext> _dbContextOptions;
-        private object _locker = new object();
         private bool _isInitialized = false;
         public TradePersistenceFactory(string connection)
         {
@@ -35,7 +34,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var context = new TradePersistenceStoreContext(_dbContextOptions);
             if (!_isInitialized)
             {
-                await context.Database.EnsureCreatedAsync();
+                //await context.Database.EnsureCreatedAsync();
                 if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
                 {
                     await context.Database.MigrateAsync();

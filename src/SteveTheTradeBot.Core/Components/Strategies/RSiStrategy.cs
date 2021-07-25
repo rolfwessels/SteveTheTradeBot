@@ -11,6 +11,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public class RSiStrategy : BaseStrategy
     {
+        public const string Desc = "SimpleRsi";
+
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
         private readonly int _buySignal;
@@ -22,7 +24,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly decimal _moveProfitPercent;
         private decimal _setMoveProfit;
 
-        public RSiStrategy(IBrokerApi api) : base(api)
+        public RSiStrategy() : base()
         {
             _initialStopRisk = 0.96m;
             _initialTakeProfit = 1.10m;
@@ -31,10 +33,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _buy200rocsma = 0.5m;
         }
         
-        public override async Task DataReceived(BackTestRunner.BotData data)
+        public override async Task DataReceived(StrategyContext data)
         {
             var currentTrade = data.ByMinute.Last();
-            var activeTrade = ActiveTrade(data);
+            var activeTrade = data.ActiveTrade();
             var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
             if (activeTrade == null)
@@ -73,12 +75,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _setMoveProfit = currentTrade.Close * _moveProfitPercent;
         }
 
-        private static StrategyTrade? ActiveTrade(BackTestRunner.BotData trade)
-        {
-            return trade.StrategyInstance.Trades.FirstOrDefault(x=>x.IsActive);
-        }
+  
 
-        public override string Name => "SimpleRsi";
+        public override string Name => Desc;
       
     }
 }

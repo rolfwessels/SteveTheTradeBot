@@ -13,9 +13,10 @@ namespace SteveTheTradeBot.Core.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     Reference = table.Column<string>(type: "text", nullable: true),
-                    StrategyName = table.Column<string>(type: "text", nullable: true),
+                    Feed = table.Column<string>(type: "text", nullable: true),
                     Pair = table.Column<string>(type: "text", nullable: true),
                     PeriodSize = table.Column<int>(type: "integer", nullable: false),
+                    StrategyName = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     IsBackTest = table.Column<bool>(type: "boolean", nullable: false),
                     InvestmentAmount = table.Column<decimal>(type: "numeric", nullable: false),
@@ -55,7 +56,9 @@ namespace SteveTheTradeBot.Core.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     StrategyInstanceId = table.Column<string>(type: "text", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     BuyQuantity = table.Column<decimal>(type: "numeric", nullable: false),
+                    BuyValue = table.Column<decimal>(type: "numeric", nullable: false),
                     BuyPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     SellValue = table.Column<decimal>(type: "numeric", nullable: false),
                     SellPrice = table.Column<decimal>(type: "numeric", nullable: false),

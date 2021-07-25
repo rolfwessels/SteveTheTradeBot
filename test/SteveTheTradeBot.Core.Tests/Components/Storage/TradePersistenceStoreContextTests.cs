@@ -21,7 +21,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         public void Setup()
         {
-            _tradePersistenceStoreContext = TestTradePersistenceFactory.InMemoryDb.GetTestDb().Result;
+            _tradePersistenceStoreContext = TestTradePersistenceFactory.PostgresTest.GetTradePersistence().Result;
         }
 
         #endregion

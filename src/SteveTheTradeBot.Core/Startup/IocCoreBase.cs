@@ -15,10 +15,13 @@ using SteveTheTradeBot.Dal.Persistence;
 using FluentValidation;
 using Serilog;
 using MediatR;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Notifications;
 using SteveTheTradeBot.Core.Components.Storage;
-using SteveTheTradeBot.Core.Components.ThirdParty;
+using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.Slack;
 using IValidatorFactory = SteveTheTradeBot.Dal.Validation.IValidatorFactory;
 using ValidatorFactoryBase = SteveTheTradeBot.Dal.Validation.ValidatorFactoryBase;
 
@@ -119,6 +122,18 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<TradeHistoryStore>().As<ITradeHistoryStore>();
             builder.RegisterType<TradeFeedCandlesStore>().As<ITradeFeedCandlesStore>();
             builder.RegisterType<ParameterStore>().As<IParameterStore>();
+            builder.RegisterType<StrategyInstanceStore>().As<IStrategyInstanceStore>();
+            builder.RegisterType<StrategyRunner>().As<IStrategyRunner>();
+            builder.RegisterType<DynamicGraphs>().As<IDynamicGraphs>();
+            builder.RegisterType<ResponseBuilder>();
+            builder.RegisterType<MessageToNotification>();
+
+            builder.Register(x=> new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret)).As<IBrokerApi>();
+            builder.Register(x=>new StrategyPicker()
+                .Add(RSiStrategy.Desc, ()=> new RSiStrategy())
+                .Add(NewRSiStrategy.Desc, () => new NewRSiStrategy())
+                .Add(TestBuySellStrategy.Desc, () => new TestBuySellStrategy())
+            ).As<StrategyPicker>();
             
             
             

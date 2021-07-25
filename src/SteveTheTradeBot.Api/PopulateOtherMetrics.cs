@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using GreenDonut;
+using Serilog;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -15,72 +18,78 @@ namespace SteveTheTradeBot.Api
 {
     public class PopulateOtherMetrics : BackgroundService
     {
-        public static bool IsFirstRunDone { get; private set; }
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+        
         private readonly ITradeFeedCandlesStore _store;
         private readonly IParameterStore _parameterStore;
+        private readonly IMessenger _messenger;
+        readonly ManualResetEventSlim _delayWorker = new ManualResetEventSlim(false);
 
-        public PopulateOtherMetrics(ITradeFeedCandlesStore store, IParameterStore parameterStore)
+        public PopulateOtherMetrics(ITradeFeedCandlesStore store, IParameterStore parameterStore, IMessenger messenger)
         {
             _store = store;
             _parameterStore = parameterStore;
+            _messenger = messenger;
         }
 
         #region Overrides of BackgroundService
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
+            _messenger.Register<PopulateOneMinuteCandleService.Updated>(this, x => _delayWorker.Set());
             while (!token.IsCancellationRequested)
             {
-                if (!PopulateOtherCandlesService.IsFirstRunDone)
-                {
-                    _log.Debug("PopulateOtherMetrics: Waiting for feed to be populated.");
-                    await Task.Delay(TimeSpan.FromSeconds(2), token);
-                    continue;
-                }
+                _delayWorker.Wait(token);
                 foreach (var (period,feed) in ValrFeeds.AllWithPeriods())
                 {
                     await Populate(token, feed.Name, feed.CurrencyPair, period);
                 }
-                IsFirstRunDone = true;
-                await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().AddSeconds(1).TimeTill(), token);
+
+                await _messenger.Send(new Updated());
+                await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }
+        }
+
+        public class Updated
+        {
         }
 
         private async Task Populate(CancellationToken token, string feed, string currencyPair, PeriodSize periodSize)
         {
-            var statName = "rsi14";
-            var statName2 = "ema200";
             var required = 400;
-            var key = $"metric_populate_{statName}_{feed}_{currencyPair}_{periodSize}";
-
-            _log.Information($"Populate metrics for feed {feed}, currencyPair {currencyPair} , periodSize {periodSize}");
-            var startDate = await _parameterStore.Get(key, DateTime.MinValue); 
+            var key = $"metric_populate_{feed}_{currencyPair}_{periodSize}";
+            var startDate = await _parameterStore.Get(key, new DateTime(2000,1,1));
             try
             {
-                var findAllBetween = _store.FindAllBetween(startDate.Add(periodSize.ToTimeSpan()*required), DateTime.Now, feed, currencyPair, periodSize);
-                List<TradeFeedCandle> prevBatch = new List<TradeFeedCandle>();
-                foreach (var batch in findAllBetween.BatchedBy(required))
+                var findAllBetween = _store.FindAllBetween(startDate, DateTime.Now.ToUniversalTime(), feed, currencyPair, periodSize);
+                var prevBatch = await _store.FindBefore(startDate, feed, currencyPair, periodSize, required);
+                foreach (var batch in findAllBetween.BatchedBy(required*2))
                 {
                     var values = new Dictionary<DateTime,Dictionary<string,decimal?>>();
                     if (token.IsCancellationRequested) return;
-                    var tradeFeedCandles = prevBatch.Concat(batch).ToList();
-                    AddRsi(tradeFeedCandles, values);
-                    GetRoc(tradeFeedCandles, values);
-                    AddEmi(tradeFeedCandles, values);
-                    AddGetMacd(tradeFeedCandles, values);
-                    AddSuperTrend(tradeFeedCandles, values);
-                    var fromDate = startDate;
-                    var updateFeed = await _store.UpdateFeed(values.Where(x=>x.Key >= fromDate), feed, currencyPair, periodSize, statName);
+                    var currentBatch = prevBatch.Concat(batch).OrderBy(x=>x.Date).ToList();
+                    if (currentBatch.Count < required)
+                    {
+                        _log.Debug($"Skip processing  {feed}, currencyPair {currencyPair} , periodSize {periodSize} because we only have {currentBatch.Count} historical items.");
+                        break;
+                    }
+
+                    AddRsi(currentBatch, values);
+                    GetRoc(currentBatch, values);
+                    AddEmi(currentBatch, values);
+                    AddGetMacd(currentBatch, values);
+                    AddSuperTrend(currentBatch, values);
+                    var keyValuePairs = values.Where(x=>x.Key.ToUniversalTime() >= startDate.AddHours(-1).ToUniversalTime()).ToList();
+                    var updateFeed = await _store.UpdateFeed(keyValuePairs, feed, currencyPair, periodSize);
                     await _parameterStore.Set(key, batch.Last().Date);
-                    
                     startDate = batch.Last().Date;
-                    prevBatch = batch;
-                    _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed} entries LastDate:{startDate}");
+                    prevBatch = currentBatch.TakeLast(required).ToList();
+                    _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed.Count} / {keyValuePairs.Count} entries before LastDate:{startDate} {currentBatch.Count} records used from {currentBatch.Min(x=>x.Date)} to {currentBatch.Max(x => x.Date)} {values.Keys.Min()} {values.Keys.Max()}.");
                 }
             }
             catch (ArgumentOutOfRangeException e)
             {
-                _log.Warning($"PopulateOtherMetrics:Populate {e.Message}");
+                _log.Warning($"PopulateOtherMetrics:Populate {key} {e.Message}");
             }
         }
 

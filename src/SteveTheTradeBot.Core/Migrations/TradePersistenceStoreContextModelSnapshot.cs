@@ -123,6 +123,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<string>("Feed")
+                        .HasColumnType("text");
+
                     b.Property<decimal>("FirstClose")
                         .HasColumnType("numeric");
 
@@ -217,6 +220,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<decimal>("BuyQuantity")
                         .HasColumnType("numeric");
 
+                    b.Property<decimal>("BuyValue")
+                        .HasColumnType("numeric");
+
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -240,6 +246,9 @@ namespace SteveTheTradeBot.Core.Migrations
 
                     b.Property<decimal>("SellValue")
                         .HasColumnType("numeric");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("StrategyInstanceId")
                         .HasColumnType("text");

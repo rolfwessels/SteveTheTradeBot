@@ -13,7 +13,7 @@ namespace SteveTheTradeBot.Api
 {
     public abstract class BackgroundService : IHostedService, IDisposable
     {
-        protected static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private Task _currentTask;
         private readonly CancellationTokenSource _tokenSource =
             new CancellationTokenSource();

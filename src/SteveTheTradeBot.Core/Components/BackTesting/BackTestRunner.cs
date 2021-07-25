@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tools;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -19,13 +22,17 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly DynamicGraphs _dynamicGraphs;
         private readonly StrategyPicker _picker;
         private readonly StrategyInstanceStore _strategyInstanceStore;
+        private readonly IBrokerApi _broker;
+        private readonly IMessenger _messenger;
 
-        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore)
+        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore, IBrokerApi broker, IMessenger messenger)
         {
             _candleBuilder = new CandleBuilder();
             _dynamicGraphs = dynamicGraphs;
             _picker = picker;
             _strategyInstanceStore = strategyInstanceStore;
+            _broker = broker;
+            _messenger = messenger;
         }
 
         public async Task<StrategyInstance> Run(StrategyInstance strategyInstance,
@@ -35,55 +42,65 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             
             await _dynamicGraphs.Clear(strategyInstance.Reference);
             var strategy = _picker.Get(strategyInstance.StrategyName);
-            var botData = new BotData(_dynamicGraphs, strategyInstance);
+            var context = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger);
             foreach (var trade in enumerable)
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                if (botData.StrategyInstance.FirstClose == 0)
+                if (context.StrategyInstance.FirstClose == 0)
                 {
-                    botData.StrategyInstance.FirstClose = trade.Close;
-                    botData.StrategyInstance.FirstStart = trade.Date;
+                    context.StrategyInstance.FirstClose = trade.Close;
+                    context.StrategyInstance.FirstStart = trade.Date;
                 }
 
-                botData.ByMinute.Push(trade);
-                await strategy.DataReceived(botData);
-                botData.StrategyInstance.LastClose = trade.Close;
-                botData.StrategyInstance.LastDate = trade.Date;
+                context.ByMinute.Push(trade);
+                await strategy.DataReceived(context);
+                context.StrategyInstance.LastClose = trade.Close;
+                context.StrategyInstance.LastDate = trade.Date;
 
             }
             await _dynamicGraphs.Flush();
-            await strategy.SellAll(botData);
-            TradeUtils.Recalculate(botData.StrategyInstance);
-            await _strategyInstanceStore.Update(botData.StrategyInstance);
-            return botData.StrategyInstance;
+            await strategy.SellAll(context);
+            context.StrategyInstance.Recalculate();
+            await _strategyInstanceStore.Update(context.StrategyInstance);
+            return context.StrategyInstance;
+        }
+    }
+
+    public class StrategyContext
+    {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly IDynamicGraphs _dynamicGraphs;
+        private readonly StrategyInstance _strategyInstance;
+        
+        public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance, IBrokerApi broker, IMessenger messenger)
+        {
+            _dynamicGraphs = dynamicGraphs;
+            _strategyInstance = strategyInstance;
+            Messenger = messenger;
+            ByMinute = new Recent<TradeFeedCandle>(1000);
+            Broker = broker;
+
         }
 
-        public class BotData
+        public Recent<TradeFeedCandle> ByMinute { get; }
+        public StrategyInstance StrategyInstance => _strategyInstance;
+        public IBrokerApi Broker { get; }
+        public IMessenger Messenger { get; }
+
+        public async Task PlotRunData(DateTime date, string label, decimal value)
         {
-            private readonly IDynamicGraphs _dynamicGraphs;
-            private readonly StrategyInstance _strategyInstance;
-      
+            _log.Debug($"StrategyContext:PlotRunData {_strategyInstance.Reference} {date}, {label}, {value}");
+            await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
+        }
 
-            public BotData(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance)
-            {
-                _dynamicGraphs = dynamicGraphs;
-                _strategyInstance = strategyInstance;
-                ByMinute = new Recent<TradeFeedCandle>(1000);
-            }
+        public TradeFeedCandle LatestQuote()
+        {
+            return ByMinute.Last();
+        }
 
-            public Recent<TradeFeedCandle> ByMinute { get; }
-            public StrategyInstance StrategyInstance => _strategyInstance;
-            
-
-            public async Task PlotRunData(DateTime date, string label, decimal value)
-            {
-                await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
-            }
-
-            public TradeFeedCandle LatestQuote()
-            {
-                return ByMinute.Last();
-            }
+        public StrategyTrade ActiveTrade()
+        {
+            return StrategyInstance.Trades.FirstOrDefault(x => x.IsActive);
         }
     }
 }

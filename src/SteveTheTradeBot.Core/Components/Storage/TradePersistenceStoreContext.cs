@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteveTheTradeBot.Dal.Models.Base;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -30,12 +31,12 @@ namespace SteveTheTradeBot.Core.Components.Storage
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             _isInMemoryContainer = optionsBuilder.Options.Extensions.Select(x => x.GetType().Name).Contains("InMemoryOptionsExtension");
-            
-            
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+          
+
             modelBuilder.Entity<HistoricalTrade>()
                 .HasKey(c => c.Id);
             modelBuilder.Entity<StrategyInstance>()
@@ -63,7 +64,39 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .HasKey(b => new { b.Feed, b.Label, b.Date });
             modelBuilder.Entity<SimpleParam>()
                 .HasKey(b => b.Key);
+            EnsureAllDatesAreUtc(modelBuilder);
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static void EnsureAllDatesAreUtc(ModelBuilder modelBuilder)
+        {
+            var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+                v => v.ToUniversalTime(),
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+            var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? v.Value.ToUniversalTime() : v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (entityType.IsKeyless)
+                {
+                    continue;
+                }
+
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(dateTimeConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(nullableDateTimeConverter);
+                    }
+                }
+            }
         }
 
         public override int SaveChanges()

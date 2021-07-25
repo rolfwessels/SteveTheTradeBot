@@ -11,6 +11,7 @@ using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
@@ -69,7 +70,8 @@ namespace SteveTheTradeBot.Api.Tests
         {
             _mockIHistoricalDataPlayer = new Mock<IHistoricalDataPlayer>();
             _factory = TestTradePersistenceFactory.UniqueDb();
-            _service = new PopulateOneMinuteCandleService(_factory, new HistoricalDataPlayer(new TradeHistoryStore(_factory)));
+            var tradeHistoryStore = new TradeHistoryStore(_factory);
+            _service = new PopulateOneMinuteCandleService(_factory, new HistoricalDataPlayer(tradeHistoryStore, new TradeFeedCandlesStore(_factory)),new Messenger());
         }
     }
 }

@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Bumbershoot.Utilities;
+using Bumbershoot.Utilities.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
+using SteveTheTradeBot.Core.Framework.Settings;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Tests;
 
@@ -47,6 +50,24 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             var value = _sampleSettings.ReadEncryptedValue("three",encryptString );
             // assert
             value.Should().Be(expected);
+        }
+
+
+        [Test]
+        [Explicit]
+        public void EncryptAValue()
+        {
+            // arrange
+            var expected = "xo";
+            var sampleSettings = new SampleSettings(new ConfigurationBuilder().AddJsonFilesAndEnvironment("develop").Build());
+            // action
+            var encryptString = sampleSettings.EncryptString(expected);
+
+            // assert
+            Console.Out.WriteLine("----------------");
+            Console.Out.WriteLine(encryptString);
+            Console.Out.WriteLine("----------------");
+            
         }
 
         private void Setup()

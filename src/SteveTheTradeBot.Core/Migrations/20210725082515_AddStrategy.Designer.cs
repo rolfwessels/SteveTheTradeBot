@@ -11,7 +11,7 @@ using SteveTheTradeBot.Core.Components.Storage;
 namespace SteveTheTradeBot.Core.Migrations
 {
     [DbContext(typeof(TradePersistenceStoreContext))]
-    [Migration("20210723044055_AddStrategy")]
+    [Migration("20210725082515_AddStrategy")]
     partial class AddStrategy
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -125,6 +125,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<string>("Feed")
+                        .HasColumnType("text");
+
                     b.Property<decimal>("FirstClose")
                         .HasColumnType("numeric");
 
@@ -219,6 +222,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<decimal>("BuyQuantity")
                         .HasColumnType("numeric");
 
+                    b.Property<decimal>("BuyValue")
+                        .HasColumnType("numeric");
+
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -242,6 +248,9 @@ namespace SteveTheTradeBot.Core.Migrations
 
                     b.Property<decimal>("SellValue")
                         .HasColumnType("numeric");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("StrategyInstanceId")
                         .HasColumnType("text");

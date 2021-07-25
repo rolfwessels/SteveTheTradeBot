@@ -10,7 +10,9 @@ namespace SteveTheTradeBot.Core.Utils
     public static class Retry
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-        public static async Task Run(Func<Task> action, CancellationToken token = default, int delaySeconds = 1, int maxDelay = 500)
+
+        public static async Task Run(Func<Task> action, CancellationToken token = default, int delaySeconds = 1,
+            int maxDelay = 500)
         {
             var seconds = delaySeconds;
             while (!token.IsCancellationRequested)
@@ -20,14 +22,15 @@ namespace SteveTheTradeBot.Core.Utils
                     await action();
                     break;
                 }
-                catch (ApiResponseException e)
-                {
-                    var fromSeconds = TimeSpan.FromSeconds(Math.Min(seconds, 60));
-                    await LogAndDelay(token, e, fromSeconds);
-                }
+
                 catch (Exception e)
                 {
                     var fromSeconds = TimeSpan.FromSeconds(seconds);
+                    if (e.Message.Contains("TooManyRequests"))
+                    {
+                        var oneMinFromNow = DateTime.Now.AddMinutes(1).ToMinute().AddSeconds(1).TimeTill();
+                        fromSeconds = TimeSpan.FromSeconds(Math.Max(seconds, oneMinFromNow.TotalSeconds));
+                    }
                     await LogAndDelay(token, e, fromSeconds);
                 }
 
@@ -38,7 +41,7 @@ namespace SteveTheTradeBot.Core.Utils
         private static async Task LogAndDelay(CancellationToken token, Exception e, TimeSpan fromSeconds)
         {
             _log.Warning(
-                $"Action failed with {e.GetType().Namespace} {e.Message}. Trying again in {fromSeconds.ToShort()}");
+                $"Action failed with {e.GetType().Name} {e.Message}. Trying again in {fromSeconds.ToShort()}");
             await Task.Delay(fromSeconds, token);
         }
     }

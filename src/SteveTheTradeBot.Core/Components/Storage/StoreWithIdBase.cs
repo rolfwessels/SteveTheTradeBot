@@ -15,7 +15,12 @@ namespace SteveTheTradeBot.Core.Components.Storage
         public async Task<List<T>> FindById(params string[] ids)
         {
             await using var context = await _factory.GetTradePersistence();
-            return DbSet(context).AsQueryable().Where(x => ids.Contains(x.Id)).ToList();
+            return WithFullData( DbSet(context).AsQueryable().Where(x => ids.Contains(x.Id))).ToList();
+        }
+
+        protected virtual IQueryable<T> WithFullData(IQueryable<T> query)
+        {
+            return query;
         }
 
         public async Task<int> AddOrIgnoreFast(List<T> trades)

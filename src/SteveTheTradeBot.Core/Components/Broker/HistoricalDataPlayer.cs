@@ -16,10 +16,12 @@ namespace SteveTheTradeBot.Core.Components.Broker
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType); 
         private readonly ITradeHistoryStore _tradeHistoryStore;
+        private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
 
-        public HistoricalDataPlayer(ITradeHistoryStore tradeHistoryStore)
+        public HistoricalDataPlayer(ITradeHistoryStore tradeHistoryStore, ITradeFeedCandlesStore tradeFeedCandleStore)
         {
             _tradeHistoryStore = tradeHistoryStore;
+            _tradeFeedCandleStore = tradeFeedCandleStore;
         }
 
         #region Implementation of IHistoricalDataPlayer
@@ -54,7 +56,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
             {
                 counter = 0;
                 if (cancellationToken.IsCancellationRequested) break;
-                var historicalTrades = _tradeHistoryStore.FindCandlesByDate(currencyPair,@from, to,periodSize,skip:skip,take: batchSize).Result;
+                var historicalTrades = _tradeFeedCandleStore.FindCandlesByDate(currencyPair,@from, to,periodSize,skip:skip,take: batchSize).Result;
                 skip += batchSize;
                 foreach (var historicalTrade in historicalTrades.TakeWhile(historicalTrade => !cancellationToken.IsCancellationRequested))
                 {

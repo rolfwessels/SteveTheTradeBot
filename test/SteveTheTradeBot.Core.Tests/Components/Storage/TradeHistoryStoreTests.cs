@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
+using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -52,6 +53,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             var findById = await _tradeHistoryStore.FindById(historicalTrades.Select(x => x.Id).ToArray());
             findById.Should().HaveCount(4);
         }
+
+
+        
 
 
     }

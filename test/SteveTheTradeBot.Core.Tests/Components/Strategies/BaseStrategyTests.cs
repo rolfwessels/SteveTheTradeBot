@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
@@ -6,10 +7,9 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Components.Broker;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -20,19 +20,24 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
     public class BaseStrategyTests
     {
         private FakeStrategy _fakeStrategy;
-        private BackTestRunner.BotData _data;
+        private StrategyContext _data;
         private FakeBroker _fakeBroker;
+        private DateTime _requestDate;
 
         #region Setup/Teardown
 
         public void Setup()
         {
-            _data = new BackTestRunner.BotData(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR));
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
-            _data.ByMinute.AddRange(tradeFeedCandles);
-            _fakeBroker = new FakeBroker().With(x=>x.BuyFeePercent = 0.0075m);
+            _requestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc);
+            _fakeBroker = new FakeBroker().With(x => x.BuyFeePercent = 0.0075m);
+            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default);
+            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4)
+                .WithValidData()
+                .All().With((x,r)=> x.Date = _requestDate.AddDays(-1 * r))
+                .Build();
             
-            _fakeStrategy = new FakeStrategy(_fakeBroker);
+            _data.ByMinute.AddRange(tradeFeedCandles);
+            _fakeStrategy = new FakeStrategy();
         }
 
         #endregion
@@ -81,7 +86,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // action
             await _fakeStrategy.Sell(_data, trade);
             // assert
-            trade.Dump("asd");
             trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
             trade.SellValue.Should().Be(98.59m);
             trade.SellPrice.Should().BeApproximately(100100,1m);
@@ -156,9 +160,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             SetupTrade(close, buyValue);
             // action
             var trade = await _fakeStrategy.Buy(_data, buyValue);
+            
             var expectedOrder = new TradeOrder()
             {
-                RequestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc),
+                RequestDate = _requestDate,
                 OrderStatusType = OrderStatusTypes.Filled,
                 CurrencyPair = "BTCZAR",
                 OrderPrice = _fakeBroker.AskPrice,
@@ -192,7 +197,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var (dateTime, quantityBought, addTrade) = SetupSale();
             var expectedOrder = new TradeOrder()
             {
-                RequestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc),
+                RequestDate = _requestDate,
                 OrderStatusType = OrderStatusTypes.Filled,
                 CurrencyPair = "BTCZAR",
                 OrderPrice = _fakeBroker.BidPrice,
@@ -223,7 +228,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
         private StrategyTrade SetupTrade(int close, decimal buyValue)
         {
-            var tradeFeedCandle = AddCandle(close, new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc));
+            var tradeFeedCandle = AddCandle(close, _requestDate);
             var expectedTrade = new StrategyTrade(tradeFeedCandle.Date, close, buyValue / close, buyValue);
 
             return expectedTrade;
@@ -243,15 +248,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
     public class FakeStrategy : BaseStrategy
     {
-        public FakeStrategy(IBrokerApi broker) : base(broker)
-        {
-        }
-
+        public List<StrategyContext> DateRecievedValues = new List<StrategyContext>();
+        
         #region Overrides of BaseBot
 
-        public override Task DataReceived(BackTestRunner.BotData data)
+        public override Task DataReceived(StrategyContext data)
         {
-            throw new System.NotImplementedException();
+            DateRecievedValues.Add(data);
+            return Task.CompletedTask;
         }
 
         public override string Name { get; } = "Test";

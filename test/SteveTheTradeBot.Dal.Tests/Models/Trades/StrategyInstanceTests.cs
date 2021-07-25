@@ -51,8 +51,10 @@ namespace SteveTheTradeBot.Dal.Tests.Models.Trades
             // action
             var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
             // assert
-            forBackTest.Reference.Should().Be("123_btczar_fiveminutes_20210723");
+            forBackTest.Reference.Should().StartWith("123_btczar_fiveminutes_202");
         }
+
+       
 
     }
 }
