@@ -6,9 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using RestSharp;
 using Serilog;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Utils;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {
@@ -42,8 +44,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             return await ExecuteAsync<OrderHistorySummaryResponse>(request);
         }
 
-
-
         public async Task<IdResponse> SimpleOrder(SimpleOrderRequest simpleOrderRequest)
         {
             _log.Information($"SimpleOrder {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
@@ -66,6 +66,16 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         {
             var simpleOrder = await SimpleOrder(simpleOrderRequest);
             return await SimpleOrderStatus(simpleOrderRequest.CurrencyPair, simpleOrder.Id);
+        }
+
+        public Task CancelOrder(string brokerOrderId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<QuoteResponse> Quote(SimpleOrderRequest simpleOrderRequest)

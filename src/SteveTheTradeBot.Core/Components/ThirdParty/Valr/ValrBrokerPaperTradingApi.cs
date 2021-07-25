@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -49,6 +50,16 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                 FeeCurrency = quoteResponse.FeeCurrency,
                 OrderExecutedAt = quoteResponse.CreatedAt,
             };
+        }
+
+        public Task CancelOrder(string brokerOrderId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

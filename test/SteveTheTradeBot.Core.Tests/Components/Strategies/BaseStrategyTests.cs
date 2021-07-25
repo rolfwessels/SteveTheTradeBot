@@ -165,6 +165,42 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
 
         [Test]
+        public async Task SetStopLoss_GivenFailedApiCall_ShouldFailTheOrder()
+        {
+            // arrange
+            Setup();
+            var (dateTime, quantityBought, addTrade) = SetupSale();
+            var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
+            _fakeBroker.Throw(new Exception("nope"));
+            // action
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
+            // assert
+            var last = _data.ActiveTrade().Orders.Last();
+            last.OrderStatusType.Should().Be(OrderStatusTypes.Failed);
+            last.FailedReason.Should().Be("nope");
+        }
+
+
+        [Test]
+        public async Task SetStopLoss_GivenAnExistingStopLoss_ShouldCancelThatStopLoss()
+        {
+            // arrange
+            Setup();
+            var (dateTime, quantityBought, addTrade) = SetupSale();
+            var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount*0.9m);
+            var prev = _data.ActiveTrade().GetValidStopLoss();
+            // action
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
+            // assert
+            var last = _data.ActiveTrade().GetValidStopLoss();
+
+            prev.OrderStatusType.Should().Be(OrderStatusTypes.Cancelled);
+            last.OrderPrice.Should().Be(90000.0m);
+            
+        }
+
+        [Test]
         public async Task SetStopLoss_GivenWhenSet_ShouldAddOrder()
         {
             // arrange
@@ -174,10 +210,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // action
             await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
             // assert
-            var last = _data.ActiveTrade().Orders.Last();
-            last.Dump("last");
-            
-           
+            var last = _data.ActiveTrade().GetValidStopLoss();
+
             last.CurrencyPair.Should().Be("BTCZAR");
             last.OrderPrice.Should().Be(90000.0m);
             last.RemainingQuantity.Should().Be(0);

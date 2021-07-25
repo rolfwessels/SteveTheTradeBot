@@ -17,17 +17,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         
         private readonly int _buySignal;
         private readonly decimal _initialStopRisk;
-        private decimal? _setStopLoss;
         private readonly decimal _buy200rocsma;
-        private readonly decimal _initialTakeProfit;
-        private decimal _setTakeProfit;
         private readonly decimal _moveProfitPercent;
-        private decimal _setMoveProfit;
-
+        
         public RSiStrategy() : base()
         {
             _initialStopRisk = 0.96m;
-            _initialTakeProfit = 1.10m;
             _moveProfitPercent = 1.05m;
             _buySignal = 30;
             _buy200rocsma = 0.5m;
@@ -51,40 +46,34 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                if (currentTrade.Close > GetMoveProfit())
+                if (currentTrade.Close > GetMoveProfit(activeTrade))
                 {
-                    ResetStops(currentTrade, data);
+                    await SetStopLoss(data, currentTrade.Close * _initialStopRisk);
                 }
 
-                if (currentTrade.Close >= GetTakeProfit())
-                {
-                    _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
-
-                    await Sell(data, activeTrade);
-                    _setStopLoss = null;
-                }
+                // var validStopLoss = activeTrade.GetValidStopLoss();
+                // if (validStopLoss!= null && currentTrade.Close <= validStopLoss.OrderPrice)
+                // {
+                //     _log.Information(
+                //         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
+                //
+                //     await Sell(data, activeTrade);
+                //     _setStopLoss = null;
+                // }
             }
         }
 
-        private decimal GetTakeProfit()
+
+        private decimal GetMoveProfit(StrategyTrade activeTrade)
         {
-            throw new System.NotImplementedException();
+            var validStopLoss = activeTrade.GetValidStopLoss();
+            if (validStopLoss != null)
+            {
+                return validStopLoss.OrderPrice * (_moveProfitPercent + (100 - _initialStopRisk));
+            }
+            return activeTrade.BuyPrice;
         }
 
-        private decimal GetMoveProfit()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        private void ResetStops(TradeFeedCandle currentTrade, StrategyContext data)
-        {
-            _setStopLoss = currentTrade.Close * _initialStopRisk;
-            _setTakeProfit = currentTrade.Close * _initialTakeProfit;
-            _setMoveProfit = currentTrade.Close * _moveProfitPercent;
-        }
-
-  
 
         public override string Name => Desc;
       

@@ -124,6 +124,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public decimal AskPrice { get; set; } = 100010;
         public int BidPrice { get; set; } = 100100;
         private readonly ITradeHistoryStore _tradeHistoryStore;
+        private Exception _exception;
         public List<object> Requests { get; }
         
         public FakeBroker(ITradeHistoryStore tradeHistoryStore = null)
@@ -163,6 +164,26 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 FeeCurrency = request.CurrencyPair.SideIn(request.Side),
                 OrderExecutedAt = request.RequestDate.AddSeconds(1),
             };
+        }
+
+        public Task CancelOrder(string brokerOrderId)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        {
+            var activeTrades = instance.ActiveTrade();
+            if (activeTrades != null)
+            {
+                var validStopLoss = activeTrades.GetValidStopLoss();
+                if (strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
+                {
+                    activeTrades.ActivateStopLoss(validStopLoss);
+                }
+            }
+
+            return Task.CompletedTask;
         }
 
         private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side, string currencyPair)
@@ -216,6 +237,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         public Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)
         {
+            if (_exception != null) throw _exception;
             Requests.Add(request);
             return Task.FromResult(new IdResponse() { Id = request.CustomerOrderId+"-req"});
         }
@@ -223,5 +245,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
        
 
         #endregion
+
+        public void Throw(Exception exception)
+        {
+            _exception = exception;
+        }
     }
 }

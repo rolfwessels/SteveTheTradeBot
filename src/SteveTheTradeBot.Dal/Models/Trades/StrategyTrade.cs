@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
     public class StrategyTrade : BaseDalModelWithGuid
     {
+        public const string OrderTypeStopLoss = "stop-loss";
+
         public StrategyTrade()
         {
         }
@@ -75,6 +78,22 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public bool IsProfit()
         {
             return Profit > 0;
+        }
+
+        public TradeOrder GetValidStopLoss()
+        {
+            return Orders.FirstOrDefault(x =>
+                x.OrderType == OrderTypeStopLoss && x.OrderStatusType == OrderStatusTypes.Placed);
+        }
+
+        public void ActivateStopLoss(TradeOrder validStopLoss)
+        {
+            validStopLoss.OrderStatusType = OrderStatusTypes.Placed;
+            BuyPrice = validStopLoss.OrderPrice;
+            BuyQuantity = validStopLoss.OriginalQuantity;
+            FeeCurrency = validStopLoss.OutCurrency;
+            FeeAmount = validStopLoss.SwapFeeAmount(FeeCurrency);
+            IsActive = false;
         }
     }
 }

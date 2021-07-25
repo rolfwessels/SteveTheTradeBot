@@ -101,5 +101,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 Pair, currentTradeDate);
             return (addTrade, tradeOrder);
         }
+
+        public StrategyTrade ActiveTrade()
+        {
+            return Trades.FirstOrDefault(x => x.IsActive);
+        }
     }
 }

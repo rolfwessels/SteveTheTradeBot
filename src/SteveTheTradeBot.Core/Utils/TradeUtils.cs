@@ -49,19 +49,12 @@ namespace SteveTheTradeBot.Core.Utils
             Console.Out.WriteLine("TradesActive: " + backTestResult.TotalActiveTrades);
             Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket.ToShort());
             Console.Out.WriteLine("AverageTradesPerMonth: " + backTestResult.AverageTradesPerMonth);
-            var tradeValues = backTestResult.Trades
-                .Select(x => new
-                {
-                    x.StartDate, x.Profit, Value = x.SellValue - x.BuyValue,
-                    MarketMoved = TradeUtils.MovementPercent(x.SellPrice, x.BuyPrice)
-                })
-                .OrderByDescending(x => x.Value).ToArray();
-            Console.Write(tradeValues.Take(10).Concat(tradeValues.TakeLast(10)).ToTable().ToString());
+            
             Console.Write(backTestResult.Trades
-                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice}).ToTable()
+                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit}).ToTable()
                 .ToString());
             Console.Write(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
-                    new {x.OrderSide, x.PriceAtRequest, x.OrderPrice, x.OutQuantity, x.OriginalQuantity, x.CurrencyPair})
+                    new {x.OrderSide, x.OrderStatusType, x.OrderType, x.PriceAtRequest, x.OrderPrice, x.OutQuantity, x.OriginalQuantity, x.CurrencyPair})
                 .ToTable()
                 .ToString());
         }

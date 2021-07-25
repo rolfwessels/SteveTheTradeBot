@@ -55,16 +55,42 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public async Task SetStopLoss(StrategyContext data, decimal stopLossAmount)
         {
+            
             var activeTrade = data.ActiveTrade();
+            if (activeTrade.GetValidStopLoss() != null) await CancelStopLoss(data, activeTrade.GetValidStopLoss());
             var currentTrade = data.LatestQuote();
             var estimatedQuantity = 0;
             var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, stopLossAmount, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
-            tradeOrder.OrderType = "stop-loss";
+            tradeOrder.OrderType = StrategyTrade.OrderTypeStopLoss;
             var lossAmount = stopLossAmount * 0.99m;
             tradeOrder.PriceAtRequest = lossAmount;
+            try
+            {
+                var response = await data.Broker.StopLimitOrder(new StopLimitOrderRequest(tradeOrder.OrderSide, activeTrade.BuyQuantity, stopLossAmount, data.StrategyInstance.Pair, tradeOrder.Id, TimeEnforce.FillOrKill, lossAmount, StopLimitOrderRequest.Types.StopLossLimit));
+                tradeOrder.BrokerOrderId = response.Id;
+            }
+            catch (Exception e)
+            {
+                tradeOrder.FailedReason = e.Message;
+                tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
+                _log.Error(e, $"Failed to SetStopLoss order:{e.Message}");
+            }
+            
+        }
 
-            var response = await data.Broker.StopLimitOrder(new StopLimitOrderRequest(tradeOrder.OrderSide,activeTrade.BuyQuantity, stopLossAmount, data.StrategyInstance.Pair, tradeOrder.Id,TimeEnforce.FillOrKill, lossAmount, StopLimitOrderRequest.Types.StopLossLimit) );
-            tradeOrder.BrokerOrderId = response.Id;
+        private async Task CancelStopLoss(StrategyContext data, TradeOrder tradeOrder)
+        {
+            try
+            {
+                await data.Broker.CancelOrder(tradeOrder.BrokerOrderId);
+                tradeOrder.OrderStatusType = OrderStatusTypes.Cancelled;
+            }
+            catch (Exception e)
+            {
+                tradeOrder.FailedReason = e.Message;
+                tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
+                _log.Error(e, $"Failed to CancelStopLoss order:{e.Message}");
+            }
         }
 
 
