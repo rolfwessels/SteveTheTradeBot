@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
@@ -66,6 +68,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
     public class StrategyContext
     {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IDynamicGraphs _dynamicGraphs;
         private readonly StrategyInstance _strategyInstance;
         
@@ -86,6 +89,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public async Task PlotRunData(DateTime date, string label, decimal value)
         {
+            _log.Debug($"StrategyContext:PlotRunData {_strategyInstance.Reference} {date}, {label}, {value}");
             await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
         }
 

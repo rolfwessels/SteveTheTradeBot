@@ -65,7 +65,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         }
 
 
-        public StrategyTrade AddTrade(in DateTime date, in decimal price, decimal quantity, decimal randValue)
+        public StrategyTrade AddTrade( DateTime date, in decimal price, decimal quantity, decimal randValue)
         {
             var addTrade = new StrategyTrade(date, price, quantity, randValue);
             Trades.Add(addTrade);

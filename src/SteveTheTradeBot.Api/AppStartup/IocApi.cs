@@ -16,6 +16,8 @@ using HotChocolate;
 using Serilog;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using SteveTheTradeBot.Api.Components.Integration;
+using SteveTheTradeBot.Core.Components.Notifications;
 
 namespace SteveTheTradeBot.Api.AppStartup
 {
@@ -104,6 +106,7 @@ namespace SteveTheTradeBot.Api.AppStartup
         private void SetupTools(ContainerBuilder builder)
         {
             builder.RegisterType<ObjectIdGenerator>().As<IIdGenerator>().SingleInstance();
+            builder.RegisterType<SlackNotification>().As<INotificationChannel>().SingleInstance();
         }
 
         #endregion

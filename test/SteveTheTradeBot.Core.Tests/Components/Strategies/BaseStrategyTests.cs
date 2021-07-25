@@ -31,8 +31,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default);
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4).WithValidData().Build();
             _data.ByMinute.AddRange(tradeFeedCandles);
-            
-            
             _fakeStrategy = new FakeStrategy();
         }
 

@@ -37,10 +37,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
                 BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
                 addTrade.ApplyBuyInfo(tradeOrder);
-                await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 0);
                 await data.PlotRunData(currentTrade.Date, "activeTrades", 1);
                 await data.PlotRunData(currentTrade.Date, "sellPrice", randValue);
-                await data.Messenger.Send(tradeOrder);
+                await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, addTrade, tradeOrder));
             }
             catch (Exception e)
             {
@@ -61,16 +60,13 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             try
             {
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
-
                 BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
                 var close = BrokerUtils.Close(activeTrade, currentTrade.Date, tradeOrder);
-
-                await data.PlotRunData(currentTrade.Date.AddMinutes(-1), "activeTrades", 1);
                 await data.PlotRunData(currentTrade.Date, "activeTrades", 0);
 
                 data.StrategyInstance.BaseAmount = close.SellValue;
                 await data.PlotRunData(currentTrade.Date, "sellPrice", close.SellValue);
-                await data.Messenger.Send(tradeOrder);
+                await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, activeTrade, tradeOrder));
             }
             catch (Exception e)
             {

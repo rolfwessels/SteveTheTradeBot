@@ -23,10 +23,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string StrategyInstanceId { get; set; }
         public List<TradeOrder> Orders { get; set; }
         
-        public DateTime StartDate { get; }
+        public DateTime StartDate { get; set; }
         
         public decimal BuyQuantity { get; set; }
-        public decimal BuyValue { get; }
+        public decimal BuyValue { get; set; }
         public decimal BuyPrice { get; set; }
 
         public decimal SellValue { get; set; }
@@ -53,6 +53,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 OriginalQuantity = estimatedQuantity,
                 OutQuantity = outQuantity,
                 OutCurrency = currencyPair.SideOut(side),
+                FeeCurrency = currencyPair.SideIn(side)
             };
             Orders.Add(tradeOrder);
             return tradeOrder;
@@ -64,6 +65,16 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             BuyQuantity = tradeOrder.OriginalQuantity;
             FeeCurrency = tradeOrder.OutCurrency;
             FeeAmount = tradeOrder.SwapFeeAmount(FeeCurrency);
+        }
+
+        public decimal PriceDifference()
+        {
+            return Math.Abs(BuyValue-SellValue);
+        }
+
+        public bool IsProfit()
+        {
+            return Profit > 0;
         }
     }
 }

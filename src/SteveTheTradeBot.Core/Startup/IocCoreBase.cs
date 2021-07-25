@@ -17,6 +17,7 @@ using Serilog;
 using MediatR;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Notifications;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
@@ -125,6 +126,7 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<StrategyRunner>().As<IStrategyRunner>();
             builder.RegisterType<DynamicGraphs>().As<IDynamicGraphs>();
             builder.RegisterType<ResponseBuilder>();
+            builder.RegisterType<MessageToNotification>();
 
             builder.Register(x=> new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret)).As<IBrokerApi>();
             builder.Register(x=>new StrategyPicker()
