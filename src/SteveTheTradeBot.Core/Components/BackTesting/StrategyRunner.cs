@@ -63,7 +63,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                 if (lastQuoteDate < instanceLastDate)
                 {
                     
-                    _log.Error($"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run a old trade of {lastQuoteDate} ! !");
+                    _log.Debug($"[ERR] ! StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run a old trade of {lastQuoteDate} ! !");
                     return false;
                 }
 
