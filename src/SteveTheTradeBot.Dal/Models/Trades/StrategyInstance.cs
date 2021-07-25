@@ -91,5 +91,15 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 Reference = $"{strategy}_{pair}_{periodSize}_{DateTime.Now:yyyyMMdd}".ToLower()
             };
         }
+
+        public (StrategyTrade addTrade, TradeOrder tradeOrder) AddBuyTradeOrder(decimal randValue,
+            decimal estimatedPrice, DateTime currentTradeDate)
+        {
+            var estimatedQuantity = randValue / estimatedPrice;
+            var addTrade = AddTrade(currentTradeDate, estimatedPrice, estimatedQuantity, randValue);
+            var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice, estimatedQuantity,
+                Pair, currentTradeDate);
+            return (addTrade, tradeOrder);
+        }
     }
 }

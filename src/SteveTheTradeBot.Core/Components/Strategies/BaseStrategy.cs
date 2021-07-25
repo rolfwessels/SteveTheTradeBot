@@ -7,6 +7,7 @@ using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -30,27 +31,42 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
-            var estimatedQuantity = randValue / estimatedPrice;
-            var addTrade = data.StrategyInstance.AddTrade(currentTrade.Date, estimatedPrice, estimatedQuantity, randValue);
-            var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice , estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
+            var currentTradeDate = currentTrade.Date;
+            var (addTrade, tradeOrder) = data.StrategyInstance.AddBuyTradeOrder(randValue, estimatedPrice, currentTradeDate);
             try
             {
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
                 BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
                 addTrade.ApplyBuyInfo(tradeOrder);
-                await data.PlotRunData(currentTrade.Date, "activeTrades", 1);
-                await data.PlotRunData(currentTrade.Date, "sellPrice", randValue);
+                await data.PlotRunData(currentTradeDate, "activeTrades", 1);
+                await data.PlotRunData(currentTradeDate, "sellPrice", randValue);
                 await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, addTrade, tradeOrder));
             }
             catch (Exception e)
             {
                 tradeOrder.FailedReason = e.Message;
                 tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
-                BrokerUtils.Close(addTrade, currentTrade.Date, tradeOrder);
+                BrokerUtils.Close(addTrade, currentTradeDate, tradeOrder);
                 _log.Error(e, $"Failed to add new trade order:{e.Message}");
             }
             return addTrade;
         }
+
+
+        public async Task SetStopLoss(StrategyContext data, decimal stopLossAmount)
+        {
+            var activeTrade = data.ActiveTrade();
+            var currentTrade = data.LatestQuote();
+            var estimatedQuantity = 0;
+            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, stopLossAmount, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
+            tradeOrder.OrderType = "stop-loss";
+            var lossAmount = stopLossAmount * 0.99m;
+            tradeOrder.PriceAtRequest = lossAmount;
+
+            var response = await data.Broker.StopLimitOrder(new StopLimitOrderRequest(tradeOrder.OrderSide,activeTrade.BuyQuantity, stopLossAmount, data.StrategyInstance.Pair, tradeOrder.Id,TimeEnforce.FillOrKill, lossAmount, StopLimitOrderRequest.Types.StopLossLimit) );
+            tradeOrder.BrokerOrderId = response.Id;
+        }
+
 
         public async Task Sell(StrategyContext data, StrategyTrade activeTrade)
         {

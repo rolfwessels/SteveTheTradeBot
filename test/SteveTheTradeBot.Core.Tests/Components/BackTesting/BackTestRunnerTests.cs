@@ -49,37 +49,24 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
             // arrange
             Setup();
-            var from = DateTime.Parse("2021-06-01T00:00:00");
-            var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 95; // 209
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 49; // 209
             await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR);
         }
 
         [Test]
         [Timeout(240000)]
-        public async Task Run_GivenRSiBot2_ShouldOver1YearsShouldMake200PlusProfit()
+        public async Task Run_GivenRSiBot_ShouldOver1YearsShouldMake200PlusProfit()
         {
             // arrange
             Setup();
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 95; // 209
-            await Test(@from, to, expected , t => new NewRSiStrategy(), CurrencyPair.BTCZAR);
+            var expected = 94; // 
+            await Test(@from, to, expected , t => new RSiStrategy(), CurrencyPair.BTCZAR);
         }
-
-        [Test]
-        [Timeout(240000)]
-        [Ignore("Needs more work to get it working on ETH")]
-        public async Task Run_GivenRSiBot2OnETHZAR_ShouldOver1YearsMake200PlusProfit()
-        {
-            // arrange
-            Setup();
-            var from = DateTime.Parse("2020-11-01T00:00:00");
-            var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 95; // 209
-            await Test(@from, to, expected , t => new NewRSiStrategy(), CurrencyPair.ETHZAR);
-        }
-
+        
         private async Task Test(DateTime @from, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair)
         {
             var factory = TestTradePersistenceFactory.RealDb();
@@ -229,7 +216,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         public Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)
         {
-            throw new NotImplementedException();
+            Requests.Add(request);
+            return Task.FromResult(new IdResponse() { Id = request.CustomerOrderId+"-req"});
         }
 
        

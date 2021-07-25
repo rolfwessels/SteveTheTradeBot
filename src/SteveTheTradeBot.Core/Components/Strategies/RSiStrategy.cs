@@ -46,18 +46,17 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
                     await Buy(data, data.StrategyInstance.BaseAmount);
-                    ResetStops(currentTrade);
+                    await SetStopLoss(data, currentTrade.Close * _initialStopRisk);
                 }
             }
             else
             {
-                //if ( (rsiResults > _sellSignal && activeTrade.BuyPrice < currentTrade.Close) || currentTrade.Close <= _setStopLoss)
-                if (currentTrade.Close > _setMoveProfit)
+                if (currentTrade.Close > GetMoveProfit())
                 {
-                    ResetStops(currentTrade);
+                    ResetStops(currentTrade, data);
                 }
 
-                if ( currentTrade.Close <= _setStopLoss || currentTrade.Close >= _setTakeProfit)
+                if (currentTrade.Close >= GetTakeProfit())
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
@@ -68,7 +67,17 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
         }
 
-        private void ResetStops(TradeFeedCandle currentTrade)
+        private decimal GetTakeProfit()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        private decimal GetMoveProfit()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        private void ResetStops(TradeFeedCandle currentTrade, StrategyContext data)
         {
             _setStopLoss = currentTrade.Close * _initialStopRisk;
             _setTakeProfit = currentTrade.Close * _initialTakeProfit;

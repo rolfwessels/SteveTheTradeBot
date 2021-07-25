@@ -11,6 +11,8 @@ namespace SteveTheTradeBot.Core.Utils
 
         public static string ToShort(this TimeSpan stopwatchElapsed, int decimals = 1)
         {
+            if (stopwatchElapsed.TotalDays > 30) return $"{Math.Round(stopwatchElapsed.TotalDays/30, decimals)}m";
+            if (stopwatchElapsed.TotalDays > 1) return $"{Math.Round(stopwatchElapsed.TotalDays, decimals)}d";
             if (stopwatchElapsed.TotalHours > 1) return $"{Math.Round(stopwatchElapsed.TotalHours, decimals)}h";
             if (stopwatchElapsed.TotalMinutes > 1) return $"{Math.Round(stopwatchElapsed.TotalMinutes, decimals)}m";
             if (stopwatchElapsed.TotalSeconds > 1) return $"{Math.Round(stopwatchElapsed.TotalSeconds, decimals)}s";

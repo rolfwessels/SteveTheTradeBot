@@ -47,7 +47,8 @@ namespace SteveTheTradeBot.Core.Utils
             Console.Out.WriteLine("TradesSuccesses: " + backTestResult.NumberOfProfitableTrades);
             Console.Out.WriteLine("TradesSuccessesPercent: " + backTestResult.PercentOfProfitableTrades);
             Console.Out.WriteLine("TradesActive: " + backTestResult.TotalActiveTrades);
-            Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket);
+            Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket.ToShort());
+            Console.Out.WriteLine("AverageTradesPerMonth: " + backTestResult.AverageTradesPerMonth);
             var tradeValues = backTestResult.Trades
                 .Select(x => new
                 {

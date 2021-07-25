@@ -131,7 +131,6 @@ namespace SteveTheTradeBot.Core.Startup
             builder.Register(x=> new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret)).As<IBrokerApi>();
             builder.Register(x=>new StrategyPicker()
                 .Add(RSiStrategy.Desc, ()=> new RSiStrategy())
-                .Add(NewRSiStrategy.Desc, () => new NewRSiStrategy())
                 .Add(TestBuySellStrategy.Desc, () => new TestBuySellStrategy())
             ).As<StrategyPicker>();
             
