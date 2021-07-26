@@ -7,6 +7,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
+using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
@@ -165,6 +166,61 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
 
         [Test]
+        public async Task SetStopLoss_Given100Rand_ShouldIfStopLossWasASuccessUpdateTheTradeRecord()
+        {
+            // arrange
+            Setup();
+            var (dateTime, quantityBought, addTrade) = SetupSale();
+            var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
+            var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
+            var activeTrade = _data.ActiveTrade();
+            // action
+            _fakeBroker.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss);
+            // assert
+            
+            activeTrade.IsActive.Should().BeFalse();
+            validStopLoss.RequestDate.Should().Be(_requestDate);
+            validStopLoss.OrderStatusType.Should().Be(OrderStatusTypes.Filled);
+            validStopLoss.CurrencyPair.Should().Be("BTCZAR");
+            validStopLoss.OrderPrice.Should().Be(90000.0M);
+            validStopLoss.RemainingQuantity.Should().Be(0);
+            validStopLoss.OriginalQuantity.Should().Be(88.43M);
+            validStopLoss.OrderSide.Should().Be(Side.Sell);
+            validStopLoss.OrderType.Should().Be("stop-loss");
+            validStopLoss.FailedReason.Should().Be(null);
+            validStopLoss.PriceAtRequest.Should().Be(89100);
+            validStopLoss.OutQuantity.Should().Be(quantityBought);
+            validStopLoss.OutCurrency.Should().Be("BTC");
+            validStopLoss.FeeCurrency.Should().Be("ZAR");
+            validStopLoss.FeeAmount.Should().Be(0.67M);
+        }
+
+
+        [Test]
+        public async Task SetStopLoss_Given100Rand_ShouldIfStopLossWasASuccessUpdateActiveTrade()
+        {
+            // arrange
+            Setup();
+            var (dateTime, quantityBought, addTrade) = SetupSale();
+            var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
+            var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
+            var trade = _data.ActiveTrade();
+            // action
+            _fakeBroker.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss);
+            // assert
+            trade.IsActive.Should().BeFalse();
+            trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc));
+            trade.SellValue.Should().Be(88.43m);
+            trade.SellPrice.Should().BeApproximately(90000, 1m);
+            trade.Profit.Should().Be(-11.57m);
+            trade.IsActive.Should().Be(false);
+            trade.FeeCurrency.Should().Be("ZAR");
+            trade.FeeAmount.Should().BeApproximately(1.57m, 0.01m);
+        }
+
+        [Test]
         public async Task SetStopLoss_GivenFailedApiCall_ShouldFailTheOrder()
         {
             // arrange
@@ -188,7 +244,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var (dateTime, quantityBought, addTrade) = SetupSale();
             var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
-            await _fakeStrategy.SetStopLoss(_data, stopLossAmount*0.9m);
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount * 0.9m);
             var prev = _data.ActiveTrade().GetValidStopLoss();
             // action
             await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
@@ -197,7 +253,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
             prev.OrderStatusType.Should().Be(OrderStatusTypes.Cancelled);
             last.OrderPrice.Should().Be(90000.0m);
-            
+
         }
 
         [Test]
@@ -235,6 +291,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             SetupTrade(close, buyValue);
             var dateTime = DateTime.Parse("2001-01-01T01:02:03Z");
             var (addTrade, tradeOrder) = _data.StrategyInstance.AddBuyTradeOrder(buyValue, close, dateTime);
+            addTrade.FeeAmount = 0.9m;
             return (dateTime, tradeOrder.OriginalQuantity, addTrade);
         }
 

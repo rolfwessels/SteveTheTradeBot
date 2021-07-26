@@ -22,7 +22,7 @@ namespace SteveTheTradeBot.Core
 
         public string MongoConnection => ReadConfigValue("MongoConnection", "mongodb://localhost:27022/");
         public string MongoDatabase => ReadConfigValue("MongoDatabase", "SteveTheTradeBotSample");
-        public string NpgsqlConnection => ReadConfigValue("NpgsqlConnection", "Host=localhost;Database=SteveTheTradeBotSample;Username=postgres;Password=GRES_password");
+        public string NpgsqlConnection => ReadConfigValue("NpgsqlConnection", "Host=localhost;Database=SteveTheTradeBotSample;Username=postgres;Password=GRES_password;Port=15432");
         public string WebBasePath => ReadConfigValue("WebBasePath", null);
         public string RedisHost => ReadConfigValue("RedisHost", "localhost:6391");
         public string SlackBotKey => ReadEncryptedValue("SlackBotKey", "ENC:U2FsdGVkX18yL23DTXaiC3o+A+ITplG3beoAPrnfOnVi1sN9p0hhzw66pTf7OvL/+/zKJpiRGkRLBVRADq1ODsOwVRP/BKilNikvqJMLon8=");

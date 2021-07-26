@@ -13,7 +13,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         protected TestTradePersistenceFactory() : base(DbContextOptionsFor())
         {
-            _tradePersistenceFactory = new TradePersistenceFactory("Host=localhost;Database=SteveTheTradeBotTests;Username=postgres;Password=GRES_password");
+            _tradePersistenceFactory = new TradePersistenceFactory("Host=localhost;Database=SteveTheTradeBotTests;Username=postgres;Password=GRES_password;Port=15432");
         }
 
         private static DbContextOptions<TradePersistenceStoreContext> DbContextOptionsFor(string databaseName = "TestDb")

@@ -1,6 +1,8 @@
 version: "3.5"
 networks:
-  dev-network:volumes:  grafana_data:
+  dev-network:
+volumes:
+  grafana_data:
 
 services:
   db:
@@ -17,7 +19,7 @@ services:
   sql:
     image: postgres:13.3-buster
     ports:
-      - 5432:5432
+      - 15432:5432
     environment:
       POSTGRES_PASSWORD: GRES_password
 
@@ -49,8 +51,9 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin!!
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=webdav      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=ilgizar-candlestick-panel
-    
+      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=webdav
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=ilgizar-candlestick-panel
+
   src:
     depends_on:
       - redis

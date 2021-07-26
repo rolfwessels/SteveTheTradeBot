@@ -1,4 +1,5 @@
 ﻿using System;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
@@ -8,7 +9,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
 {
     public class BrokerUtils
     {
-        public static StrategyTrade Close(StrategyTrade trade, DateTime endDate, TradeOrder tradeOrder)
+        public static StrategyTrade ApplyCloseToActiveTrade(StrategyTrade trade, DateTime endDate, TradeOrder tradeOrder)
         {
             trade.EndDate = tradeOrder.RequestDate;
             trade.SellValue = tradeOrder.OriginalQuantity;
@@ -16,6 +17,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
             trade.Profit = TradeUtils.MovementPercent(tradeOrder.OriginalQuantity, trade.BuyValue);
             trade.IsActive = false;
             trade.FeeAmount += tradeOrder.SwapFeeAmount(trade.FeeCurrency);
+
             return trade;
         }
 
@@ -42,6 +44,12 @@ namespace SteveTheTradeBot.Core.Components.Broker
             return SimpleOrderRequest.From(tradeOrder.OrderSide, tradeOrder.OutQuantity, tradeOrder.OutCurrency, tradeOrder.RequestDate, tradeOrder.Id, tradeOrder.CurrencyPair);
         }
 
+        public static void ActivateStopLoss(StrategyTrade trade, DateTime endDate, TradeOrder tradeOrder)
+        {
+            tradeOrder.OrderStatusType = OrderStatusTypes.Filled;
+            ApplyCloseToActiveTrade(trade, endDate, tradeOrder);
+        }
+
         public static void ApplyValue(TradeOrder tradeOrder, SimpleOrderStatusResponse response, Side sell)
         {
             tradeOrder.BrokerOrderId = response.OrderId;
@@ -52,6 +60,11 @@ namespace SteveTheTradeBot.Core.Components.Broker
             tradeOrder.OrderType = "simple";
             tradeOrder.FeeAmount = response.FeeAmount;
             tradeOrder.FeeCurrency = response.FeeCurrency;
+        }
+
+        public static void ApplyCloseToStrategy(StrategyContext data, StrategyTrade close)
+        {
+            data.StrategyInstance.BaseAmount = close.SellValue;
         }
     }
 }

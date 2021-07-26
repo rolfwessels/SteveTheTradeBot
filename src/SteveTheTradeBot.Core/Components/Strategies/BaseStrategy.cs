@@ -46,7 +46,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 tradeOrder.FailedReason = e.Message;
                 tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
-                BrokerUtils.Close(addTrade, currentTradeDate, tradeOrder);
+                BrokerUtils.ApplyCloseToActiveTrade(addTrade, currentTradeDate, tradeOrder);
                 _log.Error(e, $"Failed to add new trade order:{e.Message}");
             }
             return addTrade;
@@ -104,10 +104,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
                 BrokerUtils.ApplyValue(tradeOrder, response, Side.Buy);
-                var close = BrokerUtils.Close(activeTrade, currentTrade.Date, tradeOrder);
+                var close = BrokerUtils.ApplyCloseToActiveTrade(activeTrade, currentTrade.Date, tradeOrder);
+                BrokerUtils.ApplyCloseToStrategy(data, close);
                 await data.PlotRunData(currentTrade.Date, "activeTrades", 0);
-
-                data.StrategyInstance.BaseAmount = close.SellValue;
                 await data.PlotRunData(currentTrade.Date, "sellPrice", close.SellValue);
                 await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, activeTrade, tradeOrder));
             }

@@ -86,14 +86,6 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 x.OrderType == OrderTypeStopLoss && x.OrderStatusType == OrderStatusTypes.Placed);
         }
 
-        public void ActivateStopLoss(TradeOrder validStopLoss)
-        {
-            validStopLoss.OrderStatusType = OrderStatusTypes.Placed;
-            BuyPrice = validStopLoss.OrderPrice;
-            BuyQuantity = validStopLoss.OriginalQuantity;
-            FeeCurrency = validStopLoss.OutCurrency;
-            FeeAmount = validStopLoss.SwapFeeAmount(FeeCurrency);
-            IsActive = false;
-        }
+        
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
@@ -22,7 +23,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         
         public RSiStrategy() : base()
         {
-            _initialStopRisk = 0.96m;
+            _initialStopRisk = 0.98m;
             _moveProfitPercent = 1.05m;
             _buySignal = 30;
             _buy200rocsma = 0.5m;
@@ -40,8 +41,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
-                    await Buy(data, data.StrategyInstance.BaseAmount);
-                    await SetStopLoss(data, currentTrade.Close * _initialStopRisk);
+                    var strategyTrade = await Buy(data, data.StrategyInstance.BaseAmount);
+                    await SetStopLoss(data, strategyTrade.BuyPrice * _initialStopRisk);
                 }
             }
             else
@@ -52,13 +53,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 }
 
                 // var validStopLoss = activeTrade.GetValidStopLoss();
-                // if (validStopLoss!= null && currentTrade.Close <= validStopLoss.OrderPrice)
+                // if (validStopLoss != null && currentTrade.Low <= validStopLoss.OrderPrice)
                 // {
                 //     _log.Information(
                 //         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
                 //
                 //     await Sell(data, activeTrade);
-                //     _setStopLoss = null;
                 // }
             }
         }
@@ -69,7 +69,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var validStopLoss = activeTrade.GetValidStopLoss();
             if (validStopLoss != null)
             {
-                return validStopLoss.OrderPrice * (_moveProfitPercent + (100 - _initialStopRisk));
+                var moveProfitPercent = validStopLoss.OrderPrice * (_moveProfitPercent + (1 - _initialStopRisk));
+                return moveProfitPercent;
             }
             return activeTrade.BuyPrice;
         }
