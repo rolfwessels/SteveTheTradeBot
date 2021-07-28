@@ -23,7 +23,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
 
         public static MarketOrderRequest ToMarketOrderRequest(TradeOrder tradeOrder)
         {
-            return new MarketOrderRequest(tradeOrder.OrderSide, tradeOrder.OriginalQuantity, tradeOrder.CurrencyPair, tradeOrder.Id, tradeOrder.RequestDate);
+            return new MarketOrderRequest(tradeOrder.OrderSide,null, tradeOrder.OriginalQuantity, tradeOrder.CurrencyPair, tradeOrder.Id, tradeOrder.RequestDate);
         }
 
         public static void Apply(TradeOrder tradeOrder, OrderStatusResponse response)
@@ -61,10 +61,30 @@ namespace SteveTheTradeBot.Core.Components.Broker
             tradeOrder.FeeAmount = response.FeeAmount;
             tradeOrder.FeeCurrency = response.FeeCurrency;
         }
+        
+        public static void ActivateStopLoss(StrategyContext strategyContext, StrategyTrade activeTrades,
+            TradeOrder validStopLoss, decimal buyFeePercent)
+        {
+            var totalAmount = validStopLoss.OutQuantity * validStopLoss.StopPrice;
+            var feeAmount = Math.Round(totalAmount * buyFeePercent, 2);
+            var receivedAmount = Math.Round(totalAmount - feeAmount, 2);
+            validStopLoss.OriginalQuantity = receivedAmount;
+            validStopLoss.FeeAmount = feeAmount;
+            activeTrades.FeeCurrency = validStopLoss.FeeCurrency;
+            ActivateStopLoss(activeTrades, strategyContext.LatestQuote().Date, validStopLoss);
+            ApplyCloseToStrategy(strategyContext, activeTrades);
+        }
 
         public static void ApplyCloseToStrategy(StrategyContext data, StrategyTrade close)
         {
-            data.StrategyInstance.BaseAmount = close.SellValue;
+            data.StrategyInstance.BaseAmount += close.SellValue;
+            data.StrategyInstance.QuoteAmount -= close.BuyQuantity;
+        }
+
+        public static void ApplyBuyToStrategy(StrategyContext data, TradeOrder tradeOrder)
+        {
+            data.StrategyInstance.BaseAmount -= tradeOrder.OutQuantity;
+            data.StrategyInstance.QuoteAmount += tradeOrder.OriginalQuantity;
         }
     }
 }

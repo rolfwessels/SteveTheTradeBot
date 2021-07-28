@@ -79,6 +79,18 @@ namespace SteveTheTradeBot.Cmd
                 [CommandOption("--days")]
                 [Description("How many days to go back into.")]
                 public int Days { get; set; } = 0;
+
+                [CommandOption("-t")]
+                [Description("Reset histotrical trades.")]
+                public bool ResetHistoricalTrades { get; set; } = false;
+
+                [CommandOption("-c")]
+                [Description("Reset histotrical candles.")]
+                public bool ResetHistoricalCandles { get; set; } = false;
+
+                [CommandOption("-m")]
+                [Description("Reset histotrical metrics.")]
+                public bool ResetHistoricalMetrics { get; set; } = false;
             }
 
             #region Overrides of Command<Settings>
@@ -89,10 +101,34 @@ namespace SteveTheTradeBot.Cmd
                 var persistence = await IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence();
                 var dateTime = DateTime.Now.Date.AddDays(-settings.Days);
                 AnsiConsole.MarkupLine($"Resetting date to be re-processed after [yellow]{dateTime}[/].");
-                persistence.HistoricalTrades.RemoveRange(persistence.HistoricalTrades.AsQueryable().Where(x => x.TradedAt > dateTime));
-                persistence.TradeFeedCandles.RemoveRange(persistence.TradeFeedCandles.AsQueryable().Where(x => x.Date > dateTime));
-                var simpleParams = persistence.SimpleParam.AsQueryable().Where(x => x.Key.StartsWith("metric_populate")).ToList();
-                simpleParams.ForEach(x=>x.Value = dateTime.AddDays(-settings.Days).ToIsoDateString());
+                if (!settings.ResetHistoricalTrades && !settings.ResetHistoricalCandles &&
+                    !settings.ResetHistoricalMetrics)
+                {
+                    AnsiConsole.MarkupLine($"Please select something to reset [yellow]add --help to see options[/].");
+                }
+
+                if (settings.ResetHistoricalTrades)
+                {
+                    AnsiConsole.MarkupLine($"Resetting [yellow]historical trades[/].");
+                    persistence.HistoricalTrades.RemoveRange(persistence.HistoricalTrades.AsQueryable()
+                        .Where(x => x.TradedAt > dateTime));
+                }
+
+                if (settings.ResetHistoricalCandles)
+                {
+                    AnsiConsole.MarkupLine($"Resetting [yellow]historical candles[/].");
+                    persistence.TradeFeedCandles.RemoveRange(persistence.TradeFeedCandles.AsQueryable()
+                        .Where(x => x.Date > dateTime));
+                }
+
+                if (settings.ResetHistoricalMetrics)
+                {
+                    AnsiConsole.MarkupLine($"Resetting [yellow]historical metrics[/].");
+                    var simpleParams = persistence.SimpleParam.AsQueryable()
+                        .Where(x => x.Key.StartsWith("metric_populate")).ToList();
+                    simpleParams.ForEach(x => x.Value = dateTime.AddDays(-settings.Days).ToIsoDateString());
+                }
+
                 persistence.SaveChanges();
                 AnsiConsole.MarkupLine($"[green]Done[/] 👍.");
             }

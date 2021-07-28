@@ -101,6 +101,7 @@ namespace SteveTheTradeBot.Core.Migrations
                     OutCurrency = table.Column<string>(type: "text", nullable: true),
                     FeeAmount = table.Column<decimal>(type: "numeric", nullable: false),
                     FeeCurrency = table.Column<string>(type: "text", nullable: true),
+                    StopPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     StrategyTradeId = table.Column<string>(type: "text", nullable: true),
                     CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     UpdateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)

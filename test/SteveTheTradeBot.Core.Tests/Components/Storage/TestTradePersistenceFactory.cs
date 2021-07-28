@@ -5,7 +5,7 @@ using SteveTheTradeBot.Core.Components.Storage;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Storage
 {
-    public class TestTradePersistenceFactory: TradePersistenceFactory
+    public class TestTradePersistenceFactory : TradePersistenceFactory
     {
         private static readonly Lazy<TestTradePersistenceFactory> _instance = new Lazy<TestTradePersistenceFactory>(() => new TestTradePersistenceFactory());
         private readonly TradePersistenceFactory _tradePersistenceFactory;
@@ -13,7 +13,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         protected TestTradePersistenceFactory() : base(DbContextOptionsFor())
         {
-            _tradePersistenceFactory = new TradePersistenceFactory("Host=localhost;Database=SteveTheTradeBotTests;Username=postgres;Password=GRES_password;Port=15432");
+            var lookup = "Database=";
+            if (!Settings.Instance.NpgsqlConnection.Contains(lookup)) throw new Exception("Please check connection string.");
+            _tradePersistenceFactory = new TradePersistenceFactory(Settings.Instance.NpgsqlConnection.Replace(lookup,"Database=Tests"));
         }
 
         private static DbContextOptions<TradePersistenceStoreContext> DbContextOptionsFor(string databaseName = "TestDb")

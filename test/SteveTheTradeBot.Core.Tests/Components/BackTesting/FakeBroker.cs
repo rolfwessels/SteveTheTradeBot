@@ -7,6 +7,7 @@ using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
@@ -18,12 +19,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public int BidPrice { get; set; } = 100100;
         private readonly ITradeHistoryStore _tradeHistoryStore;
         private Exception _exception;
+        private IMessenger _messenger;
         public List<object> Requests { get; }
         
-        public FakeBroker(ITradeHistoryStore tradeHistoryStore = null)
+        public FakeBroker(IMessenger messenger, ITradeHistoryStore tradeHistoryStore = null)
         {
             _tradeHistoryStore = tradeHistoryStore;
             Requests = new List<object>();
+            _messenger = messenger;
         }
 
         #region Implementation of IBrokerApi
@@ -67,29 +70,13 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
             var activeTrades = instance.ActiveTrade();
-            if (activeTrades != null)
+            var validStopLoss = activeTrades?.GetValidStopLoss();
+            if (validStopLoss != null && strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
             {
-                var validStopLoss = activeTrades.GetValidStopLoss();
-                if (strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
-                {
-                    ActivateStopLoss(strategyContext, activeTrades, validStopLoss);
-                }
+                BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, BuyFeePercent);
+
             }
-
             return Task.CompletedTask;
-        }
-
-        public void ActivateStopLoss(StrategyContext strategyContext, StrategyTrade activeTrades,
-            TradeOrder validStopLoss)
-        {
-            var totalAmount = validStopLoss.OutQuantity * validStopLoss.PriceAtRequest;
-            var feeAmount = Math.Round(totalAmount * BuyFeePercent, 2);
-            var receivedAmount = Math.Round(totalAmount - feeAmount, 2);
-            validStopLoss.OriginalQuantity = receivedAmount;
-            validStopLoss.FeeAmount = feeAmount;
-            activeTrades.FeeCurrency = validStopLoss.FeeCurrency;
-            BrokerUtils.ActivateStopLoss(activeTrades, strategyContext.LatestQuote().Date, validStopLoss);
-            BrokerUtils.ApplyCloseToStrategy(strategyContext, activeTrades);
         }
 
         private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side, string currencyPair)
@@ -135,7 +122,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 OriginalPrice = await GetAskPrice(request.DateTime, Side.Buy, request.Pair),
                 OrderSide = request.Side,
                 RemainingQuantity = 0,
-                OriginalQuantity = request.Quantity,
+                OriginalQuantity = request.QuoteAmount.Value,
                 OrderType = "market",
                 OrderId = request.CustomerOrderId+"_broker"
             };

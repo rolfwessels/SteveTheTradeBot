@@ -359,6 +359,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<DateTime>("RequestDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<decimal>("StopPrice")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("StrategyTradeId")
                         .HasColumnType("text");
 

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Broker;
@@ -57,7 +58,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             await Test(@from, to, expected , t => new RSiStrategy(), CurrencyPair.BTCZAR);
         }
         
-        private async Task Test(DateTime @from, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair)
+        private async Task Test(DateTime fromDate, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair)
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
@@ -65,20 +66,23 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var strategyInstanceStore = new StrategyInstanceStore(factory);
             var player = new HistoricalDataPlayer(tradeHistoryStore, tradeFeedCandleStore);
             
-            var fakeBroker = new FakeBroker(tradeHistoryStore);
+            var fakeBroker = new FakeBroker(Messenger.Default, tradeHistoryStore);
             var strategy = getStrategy(fakeBroker);
             var picker = new StrategyPicker().Add(strategy.Name, () => strategy);
 
 
             var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
+            strategyInstance.PeriodSize = PeriodSize.OneMinute;
+            strategyInstance.Reference += $"{fromDate:yyMM}-{to:yyMM}";
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
             await strategyInstanceStore.Add(strategyInstance);
+
             var dynamicGraphs = new DynamicGraphs(factory);
             var strategyRunner = new StrategyRunner(picker, dynamicGraphs, strategyInstanceStore, fakeBroker, tradeFeedCandleStore, Messenger.Default);
             _backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore, fakeBroker, Messenger.Default, strategyRunner);
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var trades = player.ReadHistoricalData(currencyPair, @from, to, strategyInstance.PeriodSize,cancellationTokenSource.Token);
+            var trades = player.ReadHistoricalData(currencyPair, fromDate, to, strategyInstance.PeriodSize,cancellationTokenSource.Token);
             // action
             
             var backTestResult = await _backTestRunner.Run(strategyInstance, trades,  CancellationToken.None);

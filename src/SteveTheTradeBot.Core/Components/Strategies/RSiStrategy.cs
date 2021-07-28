@@ -6,6 +6,7 @@ using AutoMapper.Internal;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Framework.Slack;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -20,11 +21,13 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly decimal _initialStopRisk;
         private readonly decimal _buy200rocsma;
         private readonly decimal _moveProfitPercent;
-        
-        public RSiStrategy() : base()
+        private readonly decimal _secondStopRisk;
+
+        public RSiStrategy()
         {
-            _initialStopRisk = 0.98m;
-            _moveProfitPercent = 1.05m;
+            _initialStopRisk = 0.94m;
+            _secondStopRisk = 0.94m;
+            _moveProfitPercent = 1.15m;
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }
@@ -42,24 +45,30 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.BaseAmount);
-                    await SetStopLoss(data, strategyTrade.BuyPrice * _initialStopRisk);
+                    var lossAmount = strategyTrade.BuyPrice * _initialStopRisk;
+                    await data.Messenger.Send(new PostSlackMessage()
+                        { Message = $"{data.StrategyInstance.Reference} set stop loss to {lossAmount}." });
+                    await SetStopLoss(data, lossAmount);
                 }
             }
             else
             {
                 if (currentTrade.Close > GetMoveProfit(activeTrade))
                 {
-                    await SetStopLoss(data, currentTrade.Close * _initialStopRisk);
+                    var lossAmount = currentTrade.Close * _secondStopRisk;
+                    await data.Messenger.Send(new PostSlackMessage()
+                        { Message = $"{data.StrategyInstance.Reference} update stop loss to {lossAmount}." });
+                    await SetStopLoss(data, lossAmount);
                 }
 
-                // var validStopLoss = activeTrade.GetValidStopLoss();
-                // if (validStopLoss != null && currentTrade.Low <= validStopLoss.OrderPrice)
-                // {
-                //     _log.Information(
-                //         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
-                //
-                //     await Sell(data, activeTrade);
-                // }
+                var validStopLoss = activeTrade.GetValidStopLoss();
+                if (validStopLoss != null && currentTrade.Low <= validStopLoss.OrderPrice)
+                {
+                    _log.Information(
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
+                
+                    await Sell(data, activeTrade);
+                }
             }
         }
 

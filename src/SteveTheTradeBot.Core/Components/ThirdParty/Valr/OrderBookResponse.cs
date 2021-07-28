@@ -17,6 +17,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             public Side Side { get; set; }
             public Decimal Quantity { get; set; }
             public Decimal Price { get; set; }
+            public Decimal Value => Quantity * Price;
             public string CurrencyPair { get; set; }
             public int OrderCount { get; set; }
         }

@@ -3,6 +3,8 @@ networks:
   dev-network:
 volumes:
   grafana_data:
+  mongo_data:
+  postgres_data:
 
 services:
   db:
@@ -10,6 +12,8 @@ services:
     environment:
       - MONGO_DATA_DIR=/data/db
       - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - mongo_data:/data/db
     ports:
       - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
@@ -26,6 +30,8 @@ services:
   pgadmin:
     container_name: pgadmin4_container
     image: dpage/pgadmin4
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: GRES_password
@@ -38,6 +44,7 @@ services:
       - 6391:6379
     networks:
       - dev-network
+
   grafana:
     image: grafana/grafana:latest
     container_name: "grafana"
@@ -92,6 +99,7 @@ services:
       - DOTNET_ENVIRONMENT=Development
       - MongoConnection=mongodb://db:27017/steve-the-trade-bot
       - MongoDatabase=steve-the-trade-bot
+      - NpgsqlConnection=Host=sql;Database=SteveTheTradeBotSample;Username=postgres;Password=GRES_password;Port=5432
       - RedisHost=redis
       - App__HostUrl=http://localhost:5000
       - OpenId__Origins=http://localhost:5000,http://localhost:84,http://localhost:3000

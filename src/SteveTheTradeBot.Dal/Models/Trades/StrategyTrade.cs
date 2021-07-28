@@ -25,9 +25,9 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public string StrategyInstanceId { get; set; }
         public List<TradeOrder> Orders { get; set; }
-        
+
         public DateTime StartDate { get; set; }
-        
+
         public decimal BuyQuantity { get; set; }
         public decimal BuyValue { get; set; }
         public decimal BuyPrice { get; set; }
@@ -41,16 +41,18 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string FeeCurrency { get; set; }
         public decimal FeeAmount { get; set; }
 
-        public TradeOrder AddOrderRequest(Side side, decimal outQuantity, decimal estimatedPrice, decimal estimatedQuantity,
-            string currencyPair, in DateTime requestDate)
+        public TradeOrder AddOrderRequest(Side side, decimal outQuantity, decimal estimatedPrice,
+            decimal estimatedQuantity,
+            string currencyPair, in DateTime requestDate, decimal priceAtRequest)
         {
             var tradeOrder = new TradeOrder()
             {
                 RequestDate = requestDate,
                 OrderStatusType = OrderStatusTypes.Placed,
                 CurrencyPair = currencyPair,
-                PriceAtRequest = estimatedPrice,
+                PriceAtRequest = priceAtRequest,
                 OrderPrice = estimatedPrice,
+                StopPrice = 0,
                 OrderSide = side,
                 RemainingQuantity = 0,
                 OriginalQuantity = estimatedQuantity,
@@ -72,7 +74,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public decimal PriceDifference()
         {
-            return Math.Abs(BuyValue-SellValue);
+            return Math.Abs(BuyValue - SellValue);
         }
 
         public bool IsProfit()
@@ -85,7 +87,5 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             return Orders.FirstOrDefault(x =>
                 x.OrderType == OrderTypeStopLoss && x.OrderStatusType == OrderStatusTypes.Placed);
         }
-
-        
     }
 }

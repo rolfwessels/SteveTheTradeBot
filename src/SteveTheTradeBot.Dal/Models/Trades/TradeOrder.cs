@@ -20,6 +20,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string OutCurrency { get; set; }
         public decimal FeeAmount { get; set; }
         public string FeeCurrency { get; set; }
+        public decimal StopPrice { get; set; }
 
         public decimal SwapFeeAmount(string feeCurrency)
         {

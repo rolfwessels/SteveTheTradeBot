@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -27,6 +28,9 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                 ContractResolver = new DefaultContractResolver
                 {
                     NamingStrategy = new CamelCaseNamingStrategy()
+                },
+                Converters = new List<JsonConverter>() {
+                    new Newtonsoft.Json.Converters.StringEnumConverter()
                 },
                 Formatting = Formatting.None
             };

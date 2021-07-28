@@ -43,7 +43,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public TimeSpan AverageTimeInMarket { get; set; }
         public DateTime FirstStart { get; set; }
         public DateTime LastDate { get; set; }
-        
+
         // public decimal MaximumDrawDown { get; set; }
         // public decimal MaximumDrawDownMonteCarlo { get; set; }
         // public decimal StandardDeviation { get; set; }
@@ -59,9 +59,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public static StrategyInstance ForBackTest(string strategy, string pair)
         {
-            var forBackTest = From( strategy,  pair, 1000, PeriodSize.FiveMinutes);
-            forBackTest.IsBackTest = true;
-            return forBackTest;
+            var instance = From( strategy,  pair, 1000, PeriodSize.FiveMinutes);
+            instance.IsBackTest = true;
+            instance.Reference += "_backtest";
+            return instance;
         }
 
 
@@ -95,10 +96,11 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public (StrategyTrade addTrade, TradeOrder tradeOrder) AddBuyTradeOrder(decimal randValue,
             decimal estimatedPrice, DateTime currentTradeDate)
         {
-            var estimatedQuantity = randValue / estimatedPrice;
+            var estimatedQuantity = Math.Round(randValue / estimatedPrice, 8);
+
             var addTrade = AddTrade(currentTradeDate, estimatedPrice, estimatedQuantity, randValue);
             var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice, estimatedQuantity,
-                Pair, currentTradeDate);
+                Pair, currentTradeDate, estimatedPrice);
             return (addTrade, tradeOrder);
         }
 

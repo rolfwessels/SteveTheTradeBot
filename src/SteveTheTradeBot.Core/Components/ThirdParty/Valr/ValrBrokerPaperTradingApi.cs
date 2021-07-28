@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
@@ -10,10 +12,12 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
     public class ValrBrokerPaperTradingApi : IBrokerApi
     {
         private ValrBrokerApi _valrBrokerApi;
+        private IMessenger _messenger;
 
-        public ValrBrokerPaperTradingApi(string apiKey, string secret)
+        public ValrBrokerPaperTradingApi(string apiKey, string secret, IMessenger messenger)
         {
             _valrBrokerApi = new ValrBrokerApi( apiKey,  secret);
+            _messenger = messenger;
         }
 
         #region Implementation of IBrokerApi
@@ -28,9 +32,10 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             throw new NotImplementedException();
         }
 
-        public Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)
+        public async Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)
         {
-            throw new NotImplementedException();
+            await Task.Delay(1000);
+            return new IdResponse() {  Id = Guid.NewGuid().ToString( )};
         }
 
         public async Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest simpleOrderRequest)
@@ -52,14 +57,21 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             };
         }
 
-        public Task CancelOrder(string brokerOrderId)
+        public async Task CancelOrder(string brokerOrderId)
         {
-            throw new NotImplementedException();
+            await Task.Delay(1000);
         }
 
         public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
-            throw new NotImplementedException();
+            var activeTrades = instance.ActiveTrade();
+            var validStopLoss = activeTrades?.GetValidStopLoss();
+            if (validStopLoss != null && strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
+            {
+                BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, 0.001m);
+                _messenger.Send(new TradeOrderMadeMessage(instance, activeTrades, validStopLoss));
+            }
+            return Task.CompletedTask;
         }
 
         #endregion

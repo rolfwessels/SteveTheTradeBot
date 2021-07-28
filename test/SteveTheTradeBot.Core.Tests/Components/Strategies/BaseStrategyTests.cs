@@ -31,7 +31,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         public void Setup()
         {
             _requestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc);
-            _fakeBroker = new FakeBroker().With(x => x.BuyFeePercent = 0.0075m);
+            _fakeBroker = new FakeBroker(Messenger.Default).With(x => x.BuyFeePercent = 0.0075m);
             _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default);
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4)
                 .WithValidData()
@@ -176,7 +176,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
             var activeTrade = _data.ActiveTrade();
             // action
-            _fakeBroker.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss);
+            BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
             // assert
             
             activeTrade.IsActive.Should().BeFalse();
@@ -189,7 +189,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             validStopLoss.OrderSide.Should().Be(Side.Sell);
             validStopLoss.OrderType.Should().Be("stop-loss");
             validStopLoss.FailedReason.Should().Be(null);
-            validStopLoss.PriceAtRequest.Should().Be(89100);
+            validStopLoss.PriceAtRequest.Should().Be(100000M);
             validStopLoss.OutQuantity.Should().Be(quantityBought);
             validStopLoss.OutCurrency.Should().Be("BTC");
             validStopLoss.FeeCurrency.Should().Be("ZAR");
@@ -208,7 +208,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
             var trade = _data.ActiveTrade();
             // action
-            _fakeBroker.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss);
+            BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
             // assert
             trade.IsActive.Should().BeFalse();
             trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc));
@@ -270,13 +270,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
             last.CurrencyPair.Should().Be("BTCZAR");
             last.OrderPrice.Should().Be(90000.0m);
+            last.StopPrice.Should().Be(89100M);
             last.RemainingQuantity.Should().Be(0);
             last.OriginalQuantity.Should().Be(0);
             last.OrderSide.Should().Be(0);
             last.OrderType.Should().Be("stop-loss");
             last.BrokerOrderId.Should().EndWith("-req");
             last.FailedReason.Should().Be(null);
-            last.PriceAtRequest.Should().Be(89100M);
+            last.PriceAtRequest.Should().Be(100000M);
             last.OutQuantity.Should().Be(0.001m);
             last.OutCurrency.Should().Be("BTC");
             last.FeeAmount.Should().Be(0);
@@ -334,6 +335,40 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                     .Excluding(x => x.UpdateDate));
         }
 
+        [Test]
+        public async Task Buy_Given100Rand_ShouldUpdateTheStrategyInstanceTo()
+        {
+            // arrange
+            Setup();
+            var close = 100000;
+            var buyValue = 100m;
+
+            SetupTrade(close, buyValue);
+            // action
+            await _fakeStrategy.Buy(_data, buyValue);
+            // assert
+            _data.StrategyInstance.InvestmentAmount.Should().Be(1000);
+            _data.StrategyInstance.BaseAmount.Should().Be(900);
+            _data.StrategyInstance.QuoteAmount.Should().Be(0.00099240m);
+        }
+
+        [Test]
+        public async Task Sell_Given100Rand_ShouldUpdateTheStrategyInstanceTo()
+        {
+            // arrange
+            Setup();
+            var close = 100000;
+            var buyValue = 100m;
+
+            SetupTrade(close, buyValue);
+            await _fakeStrategy.Buy(_data, buyValue);
+            // action
+            await _fakeStrategy.Sell(_data, _data.ActiveTrade());
+            // assert
+            _data.StrategyInstance.InvestmentAmount.Should().Be(1000);
+            _data.StrategyInstance.BaseAmount.Should().Be(998.59m);
+            _data.StrategyInstance.QuoteAmount.Should().Be(0.00000000m);
+        }
 
         [Test]
         public async Task Sell_Given100Rand_ShouldAddOrder()
@@ -371,6 +406,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                     .Excluding(x => x.UpdateDate));
             addTrade.Orders.Last().FeeAmount.Should().BeApproximately(expectedOrder.FeeAmount, 0.1m);
         }
+
+ 
 
         private StrategyTrade SetupTrade(int close, decimal buyValue)
         {

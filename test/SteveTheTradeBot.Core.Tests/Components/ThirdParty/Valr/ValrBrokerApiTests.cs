@@ -5,6 +5,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -21,7 +22,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
         [Test]
         public async Task SimpleOrder_GivenFakeBroker_ShouldGetFeeAndAmountsCorrect()
         {
-            var fakeBroker = new FakeBroker {AskPrice = 461786, BuyFeePercent = 0.0075m};
+            var fakeBroker = new FakeBroker(Messenger.Default) {AskPrice = 461786, BuyFeePercent = 0.0075m};
             // action
             var response = await fakeBroker.Order(SimpleOrderRequest.From(Side.Buy, 100m, "ZAR", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR));
             // assert
@@ -38,7 +39,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
         [Test]
         public async Task SimpleOrder_GivenFakeBrokerAndSellOrder_ShouldGetFeeAndAmountsCorrect()
         {
-            var fakeBroker = new FakeBroker { BidPrice = 460001, BuyFeePercent = 0.0075m };
+            var fakeBroker = new FakeBroker(Messenger.Default) { BidPrice = 460001, BuyFeePercent = 0.0075m };
             // action
             var response = await fakeBroker.Order(SimpleOrderRequest.From(Side.Sell, 0.0001m, "BTC", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR));
             // assert
@@ -52,7 +53,99 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
             response.OrderId.Should().HaveLength(39);
         }
 
+        [Test]
+        public async Task BuildLimitOrderRequest_GivenSimpleOrderRequest_ShouldBuildRequestWithSameValuesAsQuotes()
+        {
+            Setup();
+            await TestHelper.TestEveryNowAndThen(async () =>
+            {
+                if (!ValrSettings.Instance.ApiKey.StartsWith("ENC"))
+                {
+                    ValrSettings.Instance.Secret.Should().NotStartWith("ENC");
+                    // action
+                    var simpleOrderRequest = SimpleOrderRequest.From(Side.Buy, 10000m, "ZAR", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR);
+                    var response = await _api.BuildLimitOrderRequest(simpleOrderRequest);
+                    var quote = await _api.Quote(simpleOrderRequest);
+                    // assert
 
+                    response.Side.Should().Be(Side.Buy);
+                    // todo: Rolf This needs more work but we are going to use the market order
+                    response.Quantity.Should().BeApproximately(quote.ReceiveAmount + quote.Fee,0.0003m);
+                    response.Price.Should().BeApproximately(quote.PayAmount/(quote.ReceiveAmount+quote.Fee),1000m);
+                    response.Pair.Should().Be(simpleOrderRequest.CurrencyPair);
+                    response.CustomerOrderId.Should().Be(simpleOrderRequest.CustomerOrderId);
+                    response.CustomerOrderId.Should().Be(simpleOrderRequest.CustomerOrderId);
+                    response.DateTime.Should().Be(simpleOrderRequest.RequestDate);
+                    response.PostOnly.Should().Be(true);
+                    response.TimeInForce.Should().Be(TimeEnforce.FillOrKill);
+                }
+            });
+        }
+
+
+        [Test]
+        public void ToMarketOrder_GivenSimpleOrderRequestToSell_ShouldBuildMarketOrder()
+        {
+            Setup();
+            var simpleOrderRequest = SimpleOrderRequest.From(Side.Sell, 0.0001m, "BTC", DateTime.Now, Gu.Id(),
+                CurrencyPair.BTCZAR);
+            var response = _api.ToMarketOrder(simpleOrderRequest);
+            // assert
+
+            response.Side.Should().Be(Side.Sell);
+            response.BaseAmount.Should().Be(0.0001m);
+            response.QuoteAmount.Should().Be(null);
+            response.Pair.Should().Be(simpleOrderRequest.CurrencyPair);
+            response.CustomerOrderId.Should().Be(simpleOrderRequest.CustomerOrderId);
+            response.CustomerOrderId.Should().Be(simpleOrderRequest.CustomerOrderId);
+            response.DateTime.Should().Be(simpleOrderRequest.RequestDate);
+        }
+
+        [Test]
+        public void ToMarketOrder_GivenSimpleOrderRequest_ShouldBuildMarketOrder()
+        {
+            Setup();
+            var simpleOrderRequest = SimpleOrderRequest.From(Side.Buy, 10000m, "ZAR", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR);
+            var response = _api.ToMarketOrder(simpleOrderRequest);
+            // assert
+
+            response.Side.Should().Be(Side.Buy);
+            response.BaseAmount.Should().Be(null);
+            response.QuoteAmount.Should().Be(10000m);
+            response.Pair.Should().Be(simpleOrderRequest.CurrencyPair);
+            response.CustomerOrderId.Should().Be(simpleOrderRequest.CustomerOrderId);
+            response.CustomerOrderId.Should().Be(simpleOrderRequest.CustomerOrderId);
+            response.DateTime.Should().Be(simpleOrderRequest.RequestDate);
+        }
+
+        [Test]
+        [Explicit]
+        public async Task MarketOrder_GivenSimpleOrderRequest_ShouldTakeAllTheStepsToMakeALimitOrder()
+        {
+            Setup();
+            if (!ValrSettings.Instance.ApiKey.StartsWith("ENC"))
+            {
+                ValrSettings.Instance.Secret.Should().NotStartWith("ENC");
+                var simpleOrderRequest = SimpleOrderRequest.From(Side.Buy, 20m, "ZAR", DateTime.Now, Gu.Id(), CurrencyPair.BTCZAR);
+                simpleOrderRequest.CustomerOrderId = "bfa0315f28a44106bd7b3fa65e235420";
+                // action
+
+                var response = await _api.MarketOrder(simpleOrderRequest);
+                // assert
+                
+                response.PaidCurrency.Should().Be("ZAR");
+                response.FeeCurrency.Should().Be("BTC");
+                response.ReceivedCurrency.Should().Be("BTC");
+                response.OrderId.Should().HaveLength(36);
+
+                response.PaidAmount.Should().Be(20);
+                response.ReceivedAmount.Should().BeApproximately(0.00003486m, 0.00001m);
+                response.FeeAmount.Should().BeApproximately(0.0000000348m, 0.000000001m);
+                response.OrderExecutedAt.Should().BeCloseTo(DateTime.Parse("2021-07-27 16:31:14"), 5000);
+
+            }
+
+        }
 
         [Test]
         public async Task OrderBook_GivenRequest_ShouldExecute()
@@ -68,6 +161,29 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
                     var result = await _api.OrderBook(CurrencyPair.BTCZAR);
                     // assert
                     result.Asks.Count.Should().BeGreaterThan(40);
+                }
+            });
+        }
+
+        [Test]
+        public async Task OrderHistorySummary_GivenRequest_ShouldExecute()
+        {
+            // arrange
+            Setup();
+            await TestHelper.TestEveryNowAndThen(async () =>
+            {
+                if (!ValrSettings.Instance.ApiKey.StartsWith("ENC"))
+                {
+                    ValrSettings.Instance.Secret.Should().NotStartWith("ENC");
+                    // action
+                    var response = await _api.OrderHistorySummary("bfa0315f28a44106bd7b3fa65e235420");
+                    // assert
+                    response.FeeCurrency.Should().Be("BTC");
+                    response.OrderId.Should().HaveLength(36);
+                    response.OriginalPrice.Should().Be(20);
+                    response.OriginalQuantity.Should().BeApproximately(0.00003486m, 0.00001m);
+                    response.TotalFee.Should().BeApproximately(0.0000000348m, 0.000000001m);
+                    response.OrderCreatedAt.Should().BeCloseTo(DateTime.Parse("2021-07-27 16:31:14"), 5000);
                 }
             });
         }

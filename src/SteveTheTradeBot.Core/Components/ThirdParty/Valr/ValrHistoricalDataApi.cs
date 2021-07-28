@@ -21,7 +21,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public async Task<MarketSummaryResponse> GetMarketSummary(string currencyPair)
         {
-            _log.Debug($"GetMarketsummary {currencyPair} ");
             var request = new RestRequest("{currencyPair}/marketsummary", DataFormat.Json) { Method = Method.GET };
             request.AddUrlSegment("currencyPair", currencyPair);
             await _rateLimit;
@@ -30,7 +29,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,int skip = 0, int limit = 100)
         {
-            _log.Debug($"GetTradeHistory {currencyPair} skip={skip} limit={limit}");
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json) { Method = Method.GET };
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("skip", skip.ToString());
@@ -41,7 +39,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,string beforeId, int limit = 100)
         {
-            _log.Debug($"GetTradeHistory {currencyPair} beforeId={beforeId} limit={limit}");
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json) { Method = Method.GET };
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("beforeId", beforeId);
@@ -71,7 +68,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public async Task<TradeResponseDto[]> GetTradeHistory(string currencyPair,DateTime startDateTime,DateTime endDateTime, int skip = 0, int limit = 100)
         {
-            _log.Debug($"GetTradeHistory {currencyPair} from {startDateTime.ToUniversalTime().ToIsoDateString()} to {endDateTime.ToUniversalTime().ToIsoDateString()}  skip={skip} limit={limit}");
             var request = new RestRequest("{currencyPair}/trades", DataFormat.Json);
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddQueryParameter("startTime", startDateTime.ToUniversalTime().ToIsoDateString());

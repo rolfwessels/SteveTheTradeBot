@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
-using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
@@ -38,6 +36,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));
                 BrokerUtils.ApplyValue(tradeOrder, response, Side.Sell);
                 addTrade.ApplyBuyInfo(tradeOrder);
+                BrokerUtils.ApplyBuyToStrategy(data, tradeOrder);
                 await data.PlotRunData(currentTradeDate, "activeTrades", 1);
                 await data.PlotRunData(currentTradeDate, "sellPrice", randValue);
                 await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, addTrade, tradeOrder));
@@ -60,10 +59,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             if (activeTrade.GetValidStopLoss() != null) await CancelStopLoss(data, activeTrade.GetValidStopLoss());
             var currentTrade = data.LatestQuote();
             var estimatedQuantity = 0;
-            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, stopLossAmount, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
+            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, stopLossAmount, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date, currentTrade.Close);
             tradeOrder.OrderType = StrategyTrade.OrderTypeStopLoss;
             var lossAmount = stopLossAmount * 0.99m;
-            tradeOrder.PriceAtRequest = lossAmount;
+            tradeOrder.StopPrice = lossAmount;
             try
             {
                 var response = await data.Broker.StopLimitOrder(new StopLimitOrderRequest(tradeOrder.OrderSide, activeTrade.BuyQuantity, stopLossAmount, data.StrategyInstance.Pair, tradeOrder.Id, TimeEnforce.FillOrKill, lossAmount, StopLimitOrderRequest.Types.StopLossLimit));
@@ -99,7 +98,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = activeTrade.BuyQuantity * estimatedPrice;
-            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date);
+            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date, estimatedPrice);
             try
             {
                 var response = await data.Broker.Order(BrokerUtils.ToOrderRequest(tradeOrder));

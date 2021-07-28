@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
@@ -42,7 +43,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
         private void Setup()
         {
             TestLoggingHelper.EnsureExists();
-            _valrBrokerApi = new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret);
+            _valrBrokerApi = new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret, Messenger.Default);
         }
     }
 }

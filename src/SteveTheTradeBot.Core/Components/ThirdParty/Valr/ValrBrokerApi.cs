@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using RestSharp;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
@@ -40,7 +42,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         {
             _log.Information($"OrderHistorySummary customerOrderId {customerOrderId}");
             var request = new RestRequest("orders/history/summary/customerorderid/{customerOrderId}", DataFormat.Json) {Method = Method.GET};
-            request.AddUrlSegment("currencyPair", customerOrderId);
+            request.AddUrlSegment("customerOrderId", customerOrderId);
             return await ExecuteAsync<OrderHistorySummaryResponse>(request);
         }
 
@@ -78,6 +80,72 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             throw new NotImplementedException();
         }
 
+        public async Task<SimpleOrderStatusResponse> MarketOrder(SimpleOrderRequest request)
+        {
+
+            var limitOrderRequest = await MarketOrderInternal(ToMarketOrder(request));
+            //var limitOrderRequest = new IdResponse {Id = "883b35dc-263f-4252-9222-41012ce7bfb8"};
+            var orderHistorySummary = await OrderHistorySummary(request.CustomerOrderId);
+            return new SimpleOrderStatusResponse()
+            {
+                OrderId = orderHistorySummary.OrderId,
+                Success = orderHistorySummary.OrderStatusType == "Filled",
+                Processing = orderHistorySummary.OrderStatusType != "Filled",
+                PaidAmount = orderHistorySummary.OriginalPrice,
+                PaidCurrency = request.CurrencyPair.QuoteCurrency(),
+                ReceivedAmount = orderHistorySummary.OriginalQuantity,
+                ReceivedCurrency = request.CurrencyPair.BaseCurrency(),
+                FeeAmount = orderHistorySummary.TotalFee,
+                FeeCurrency = orderHistorySummary.FeeCurrency,
+                FailedReason = orderHistorySummary.FailedReason,
+                OrderExecutedAt = orderHistorySummary.OrderCreatedAt,
+            };
+        }
+
+        private async Task<IdResponse> MarketOrderInternal(MarketOrderRequest toMarketOrder)
+        {
+            
+            var request = new RestRequest("/orders/market", DataFormat.Json) { Method = Method.POST };
+            request.AddJsonBody(toMarketOrder);
+            var quoteResponse = await ExecuteAsync<IdResponse>(request);
+            return quoteResponse;
+        }
+
+        public MarketOrderRequest ToMarketOrder(SimpleOrderRequest request)
+        {
+            var isBase = request.CurrencyPair.BaseCurrency() == request.PayInCurrency;
+
+            decimal? baseAmount = null;
+            decimal? quoteAmount = null;
+            if (isBase)
+            {
+                baseAmount = request.PayAmount;
+            }
+            else
+            {
+                quoteAmount = request.PayAmount;
+            }
+            return new MarketOrderRequest(request.Side, quoteAmount, baseAmount, request.CurrencyPair,request.CustomerOrderId,request.RequestDate);
+        }
+
+        public async Task<LimitOrderRequest> BuildLimitOrderRequest(SimpleOrderRequest request)
+        {
+            var orderBookResponse = await OrderBook(request.CurrencyPair);
+            var remaining = request.PayAmount ;
+           
+            var placeOrderFor= orderBookResponse.Asks
+                .OrderBy(x => x.Price)
+                .Where(x => remaining  >= 0)
+                .ForAll(x=> remaining = (remaining - x.Value))
+                .ToList().Dump("Values");
+            remaining.Dump("remaining");
+            
+            var price = placeOrderFor.Average(x => x.Price);
+            var quantity = Math.Round(request.PayAmount / price,8);
+            var limitOrderRequest = new LimitOrderRequest(request.Side,quantity, price,request.CurrencyPair, request.CustomerOrderId, request.RequestDate,true);
+            return limitOrderRequest;
+        }
+
         public async Task<QuoteResponse> Quote(SimpleOrderRequest simpleOrderRequest)
         {
             _log.Information($"SimpleOrderQuote {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
@@ -107,6 +175,24 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         {
             throw new System.NotImplementedException();
         }
+
+        public async Task<OrderStatusResponse> OrderStatus(string currencyPair,string customerOrderId)
+        {
+            var request = new RestRequest("/orders/{currencyPair}/customerorderid/{customerOrderId}", DataFormat.Json) { Method = Method.GET };
+            request.AddUrlSegment("currencyPair", currencyPair);
+            request.AddUrlSegment("customerOrderId", customerOrderId);
+            return await ExecuteAsync<OrderStatusResponse>(request);
+        }
+
+        public async Task<OrderStatusResponse> OrderStatusByOrderId(string currencyPair, string orderId)
+        {
+            var request = new RestRequest("/orders/{currencyPair}/orderid/{orderId}", DataFormat.Json) { Method = Method.GET };
+            request.AddUrlSegment("currencyPair", currencyPair);
+            request.AddUrlSegment("orderId", orderId);
+            return await ExecuteAsync<OrderStatusResponse>(request);
+        }
+
+
 
         public Task<OrderStatusResponse> MarketOrder(MarketOrderRequest request)
         {
@@ -170,5 +256,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         }
 
         #endregion
+
+       
     }
 }
