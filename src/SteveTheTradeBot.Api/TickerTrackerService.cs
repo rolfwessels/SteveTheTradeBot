@@ -28,12 +28,12 @@ namespace SteveTheTradeBot.Api
             {
                 var enumerable = ValrFeeds.All.Select(x=> RunWithRetry(() => _historicalData.PopulateNewData(x.CurrencyPair, token), token));
                 await Task.WhenAll(enumerable);
-                await _messenger.Send(new UpdatedMessage());
+                await _messenger.Send(new TickerUpdatedMessage());
                 await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
             }
         }
 
-        public class UpdatedMessage
+        public class TickerUpdatedMessage
         {
         }
 

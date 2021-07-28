@@ -2,22 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using RateLimiter;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
-using Serilog;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {
     public class ApiBase
     {
-        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+        
         protected RestClient _client;
         
         private readonly JsonSerializerSettings _options;
+        private readonly HttpStatusCode[] _validStatusCodes = new [] {HttpStatusCode.OK,HttpStatusCode.Accepted,HttpStatusCode.Created};
 
         public ApiBase(string baseUrl)
         {
@@ -38,7 +36,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             _client.UseNewtonsoftJson(_options);
         }
 
-        protected string? GetBody(RestRequest request)
+        protected string GetBody(RestRequest request)
         {
             return request.Parameters.Where(x => x.ContentType == "application/json")
                 .Select(x => JsonConvert.SerializeObject(x.Value, _options))
@@ -48,13 +46,13 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public virtual T ValidateResponse<T>(IRestResponse<T> result)
         {
-            if (result.StatusCode != HttpStatusCode.OK)
+            if (!_validStatusCodes.Contains(result.StatusCode))
             {
                 if (string.IsNullOrEmpty(result.Content))
                     throw new ApplicationException(
                         $"{_client.BuildUri(result.Request)} {result.StatusCode} response contains no data.");
                 var errorMessage = JsonConvert.DeserializeObject<ErrorMessage>(result.Content);
-                throw new ApiResponseException(errorMessage.Message, result);
+                throw new ApiResponseException(errorMessage.Message, result, result.StatusCode);
             }
             return result.Data;
         }
@@ -62,10 +60,12 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
     public class ApiResponseException : Exception
     {
+        public HttpStatusCode StatusCode { get; }
         public IRestResponse Response { get; }
 
-        public ApiResponseException(string message, IRestResponse response) : base(message)
+        public ApiResponseException(string message, IRestResponse response, HttpStatusCode statusCode) : base(message)
         {
+            StatusCode = statusCode;
             Response = response;
         }
     }

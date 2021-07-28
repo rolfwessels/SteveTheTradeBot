@@ -43,6 +43,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public TimeSpan AverageTimeInMarket { get; set; }
         public DateTime FirstStart { get; set; }
         public DateTime LastDate { get; set; }
+        public string Status { get; set; }
 
         // public decimal MaximumDrawDown { get; set; }
         // public decimal MaximumDrawDownMonteCarlo { get; set; }

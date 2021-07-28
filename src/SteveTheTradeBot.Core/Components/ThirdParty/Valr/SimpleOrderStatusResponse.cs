@@ -19,7 +19,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public decimal OriginalPrice(Side sell)
         {
-            if (sell == Side.Sell)
+            if (sell != Side.Sell)
             {
                 return Math.Floor(PaidAmount / (ReceivedAmount + FeeAmount));
             }

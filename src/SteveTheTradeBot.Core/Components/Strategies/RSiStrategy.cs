@@ -49,25 +49,29 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     await data.Messenger.Send(new PostSlackMessage()
                         { Message = $"{data.StrategyInstance.Reference} set stop loss to {lossAmount}." });
                     await SetStopLoss(data, lossAmount);
+                    data.StrategyInstance.Status =
+                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {lossAmount}]";
+                }
+                else
+                {
+                    data.StrategyInstance.Status =
+                        $"Waiting to buy ![{rsiResults} < {_buySignal}] [{roc200sma} > {_buy200rocsma}]";
                 }
             }
             else
             {
-                if (currentTrade.Close > GetMoveProfit(activeTrade))
+                var moveProfit = GetMoveProfit(activeTrade);
+                if (currentTrade.Close > moveProfit)
                 {
                     var lossAmount = currentTrade.Close * _secondStopRisk;
                     await data.Messenger.Send(new PostSlackMessage()
                         { Message = $"{data.StrategyInstance.Reference} update stop loss to {lossAmount}." });
                     await SetStopLoss(data, lossAmount);
+                    data.StrategyInstance.Status = $"Update stop loss to {lossAmount}";
                 }
-
-                var validStopLoss = activeTrade.GetValidStopLoss();
-                if (validStopLoss != null && currentTrade.Low <= validStopLoss.OrderPrice)
+                else
                 {
-                    _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
-                
-                    await Sell(data, activeTrade);
+                    data.StrategyInstance.Status = $"Waiting for price above {moveProfit} or stop loss {activeTrade.GetValidStopLoss()?.OrderPrice}]";
                 }
             }
         }

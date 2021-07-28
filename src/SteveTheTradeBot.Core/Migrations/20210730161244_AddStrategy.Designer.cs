@@ -11,7 +11,7 @@ using SteveTheTradeBot.Core.Components.Storage;
 namespace SteveTheTradeBot.Core.Migrations
 {
     [DbContext(typeof(TradePersistenceStoreContext))]
-    [Migration("20210726152009_AddStrategy")]
+    [Migration("20210730161244_AddStrategy")]
     partial class AddStrategy
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -185,6 +185,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<string>("Reference")
                         .HasColumnType("text");
 
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
                     b.Property<string>("StrategyName")
                         .HasColumnType("text");
 
@@ -325,9 +328,6 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<string>("FailedReason")
                         .HasColumnType("text");
 
-                    b.Property<decimal>("FeeAmount")
-                        .HasColumnType("numeric");
-
                     b.Property<string>("FeeCurrency")
                         .HasColumnType("text");
 
@@ -346,12 +346,6 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<decimal>("OriginalQuantity")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("OutCurrency")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("OutQuantity")
-                        .HasColumnType("numeric");
-
                     b.Property<decimal>("PriceAtRequest")
                         .HasColumnType("numeric");
 
@@ -366,6 +360,12 @@ namespace SteveTheTradeBot.Core.Migrations
 
                     b.Property<string>("StrategyTradeId")
                         .HasColumnType("text");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TotalFee")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("timestamp without time zone");

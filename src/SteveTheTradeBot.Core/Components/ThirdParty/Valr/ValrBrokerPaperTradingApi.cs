@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
-using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -22,14 +22,32 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         #region Implementation of IBrokerApi
 
-        public Task<OrderStatusResponse> LimitOrder(LimitOrderRequest request)
+        public async Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request)
         {
-            throw new NotImplementedException();
+            var orderHistorySummary = await Order(request);
+            return ToHistorySummary(orderHistorySummary, request);
         }
 
-        public Task<OrderStatusResponse> MarketOrder(MarketOrderRequest request)
+        public static OrderHistorySummaryResponse ToHistorySummary(SimpleOrderStatusResponse simpleResponse, SimpleOrderRequest request)
         {
-            throw new NotImplementedException();
+            simpleResponse.Dump("simpleResponse");
+            
+            return new OrderHistorySummaryResponse
+            {
+                OrderId = simpleResponse.OrderId,
+                OrderStatusType = simpleResponse.Success ? "Filled" : "Failed",
+                CustomerOrderId = simpleResponse.OrderId,
+                CurrencyPair = request.CurrencyPair,
+                AveragePrice = simpleResponse.OriginalPrice(request.Side),
+                OriginalPrice = simpleResponse.PaidAmount,
+                Total = simpleResponse.PaidAmount,
+                OriginalQuantity = simpleResponse.ReceivedAmount,
+                FeeCurrency = simpleResponse.ReceivedCurrency,
+                TotalFee = simpleResponse.FeeAmount,
+                OrderType = "simple",
+                FailedReason = simpleResponse.FailedReason,
+                OrderUpdatedAt = simpleResponse.OrderExecutedAt,
+            };
         }
 
         public async Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)
@@ -57,21 +75,19 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             };
         }
 
-        public async Task CancelOrder(string brokerOrderId)
+        public async Task CancelOrder(string brokerOrderId, string pair)
         {
             await Task.Delay(1000);
         }
 
-        public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        public async Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
             var activeTrades = instance.ActiveTrade();
             var validStopLoss = activeTrades?.GetValidStopLoss();
             if (validStopLoss != null && strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
             {
-                BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, 0.001m);
-                _messenger.Send(new TradeOrderMadeMessage(instance, activeTrades, validStopLoss));
+                await BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, 0.001m);
             }
-            return Task.CompletedTask;
         }
 
         #endregion

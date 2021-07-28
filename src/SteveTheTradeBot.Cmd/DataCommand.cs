@@ -1,9 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using CsvHelper;
 using Serilog;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -29,23 +32,21 @@ namespace SteveTheTradeBot.Cmd
 
             #region Overrides of Command<Settings>
 
-            public override async Task ExecuteAsync(Settings settings)
+            public override async Task ExecuteAsync(Settings settings, CancellationToken token)
             {
-                var cancellationTokenSource = ConsoleHelper.BindToCancelKey();
-
                 foreach (var feed in ValrFeeds.All)
                 {
                     AnsiConsole.MarkupLine($"Start processing {feed.CurrencyPair}!.");
                     // ReSharper disable once MethodSupportsCancellation
-                    await Process(feed, cancellationTokenSource.Token);
-                    if (cancellationTokenSource.IsCancellationRequested)
+                    await Process(feed, token);
+                    if (token.IsCancellationRequested)
                     {
                         break;
                     }
                     AnsiConsole.MarkupLine($"Done {feed.CurrencyPair}!.");
                 }
 
-                if (cancellationTokenSource.IsCancellationRequested) AnsiConsole.MarkupLine("Stopped");
+                if (token.IsCancellationRequested) AnsiConsole.MarkupLine("Stopped");
             }
 
             public async Task Process(ValrFeeds.Feed feed, CancellationToken token)
@@ -67,6 +68,49 @@ namespace SteveTheTradeBot.Cmd
                     }
                 }
                 
+            }
+
+            #endregion
+        }
+
+        public class Export : CommandSync<BaseCommandSettings>
+        {
+            #region Overrides of CommandSync<BaseCommandSettings>
+
+            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
+            {
+                foreach (var x in ValrFeeds.All)
+                {
+                    var fileName = $"{x.Name}_{x.CurrencyPair}.csv".ToLower();
+                    AnsiConsole.MarkupLine($"Exporting trades to csv [yellow]{fileName}[/].");
+                    await using (var writer = new StreamWriter(fileName))
+                    {
+                        var count = 0;
+                        var take = 10000;
+                        await using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                        {
+                            var tradeHistoryStore = IocApi.Instance.Resolve<ITradeHistoryStore>();
+                            var skip = 0;
+                            
+                            do
+                            {
+                                var findByDate = await tradeHistoryStore.FindByDate(x.CurrencyPair, DateTime.UtcNow.AddYears(-5),
+                                    DateTime.UtcNow, skip, take);
+                                csv.WriteRecords(findByDate);
+                                count += findByDate.Count;
+                                skip += take;
+                                await csv.FlushAsync();
+                                if (findByDate.Count == 0) break;
+                            } while (!token.IsCancellationRequested);
+                        }
+
+                        AnsiConsole.MarkupLine(token.IsCancellationRequested
+                            ? $"Partial export [yellow]{fileName}[/] {count} lines."
+                            : $"Done exporting [green]{fileName}[/] {count} lines.");
+                    }
+
+                   
+                }
             }
 
             #endregion
@@ -95,7 +139,7 @@ namespace SteveTheTradeBot.Cmd
 
             #region Overrides of Command<Settings>
             
-            public override async Task ExecuteAsync(Settings settings)
+            public override async Task ExecuteAsync(Settings settings, CancellationToken token)
             {
                 
                 var persistence = await IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence();

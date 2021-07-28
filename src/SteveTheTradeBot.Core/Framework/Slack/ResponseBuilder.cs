@@ -45,7 +45,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
         public override BotMessage GetResponse(MessageContext context)
         {
             context.Say("Hi!");
-            _messenger.Register<TradeOrder>(this,x=> context.Say($"Order placed {x.OrderSide} for {x.OutQuantity} {x.OutCurrency} with value of {x.OriginalQuantity} {x.FeeCurrency}."));
+            _messenger.Register<TradeOrder>(this,x=> context.Say($"Order placed {x.OrderSide} for {x.Total} {x.FeeCurrency} with value of {x.OriginalQuantity} {x.FeeCurrency}."));
             return null;
         }
 

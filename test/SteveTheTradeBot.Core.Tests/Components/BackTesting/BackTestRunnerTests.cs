@@ -82,7 +82,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             _backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore, fakeBroker, Messenger.Default, strategyRunner);
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var trades = player.ReadHistoricalData(currencyPair, fromDate, to, strategyInstance.PeriodSize,cancellationTokenSource.Token);
+            var trades = player.ReadHistoricalData(currencyPair, fromDate.ToUniversalTime(), to.ToUniversalTime(), strategyInstance.PeriodSize,cancellationTokenSource.Token);
             // action
             
             var backTestResult = await _backTestRunner.Run(strategyInstance, trades,  CancellationToken.None);

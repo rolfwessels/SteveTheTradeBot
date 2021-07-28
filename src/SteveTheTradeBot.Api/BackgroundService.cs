@@ -2,11 +2,8 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using SteveTheTradeBot.Api.WebApi.Exceptions;
-using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Api

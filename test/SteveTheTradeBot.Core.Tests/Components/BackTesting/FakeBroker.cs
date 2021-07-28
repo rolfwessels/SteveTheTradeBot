@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
@@ -36,6 +38,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
             Requests.Add(request);
             var price = await GetAskPrice(request.RequestDate, request.Side, request.CurrencyPair);
+            
+            
             var totalAmount = Math.Round(request.PayAmount/ price,8);
             var feeAmount = Math.Round(totalAmount * BuyFeePercent, 12);
             var receivedAmount = Math.Round(totalAmount - feeAmount, 8);
@@ -46,6 +50,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 receivedAmount = Math.Round(totalAmount - feeAmount, 2);
             }
 
+    
             
             return new SimpleOrderStatusResponse()
             {
@@ -58,25 +63,23 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 ReceivedCurrency = request.CurrencyPair.SideIn(request.Side),
                 FeeAmount = feeAmount,
                 FeeCurrency = request.CurrencyPair.SideIn(request.Side),
-                OrderExecutedAt = request.RequestDate.AddSeconds(1),
+                OrderExecutedAt = request.RequestDate.AddSeconds(1),   
             };
         }
 
-        public Task CancelOrder(string brokerOrderId)
+        public Task CancelOrder(string brokerOrderId, string pair)
         {
             return Task.CompletedTask;
         }
 
-        public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        public async Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
             var activeTrades = instance.ActiveTrade();
             var validStopLoss = activeTrades?.GetValidStopLoss();
-            if (validStopLoss != null && strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
+            if (validStopLoss != null && strategyContext.LatestQuote().Low <= validStopLoss.OrderPrice)
             {
-                BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, BuyFeePercent);
-
+                await BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, BuyFeePercent);
             }
-            return Task.CompletedTask;
         }
 
         private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side, string currencyPair)
@@ -126,6 +129,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 OrderType = "market",
                 OrderId = request.CustomerOrderId+"_broker"
             };
+        }
+
+        public async Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request)
+        {
+            var order = await Order(request);
+            return ValrBrokerPaperTradingApi.ToHistorySummary(order, request);
         }
 
         public Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)

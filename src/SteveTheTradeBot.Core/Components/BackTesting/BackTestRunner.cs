@@ -44,7 +44,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             await _dynamicGraphs.Clear(instance.Reference);
             var strategy = _picker.Get(instance.StrategyName);
             return await _strategyInstanceStore.EnsureUpdate(instance.Id, async si => {
-                var context = await _strategyRunner.PopulateStrategyContext(si, DateTime.Now);
+                var context = await _strategyRunner.PopulateStrategyContext(si, DateTime.UtcNow);
                 context.ByMinute.Clear();
                 
                 foreach (var trade in enumerable)

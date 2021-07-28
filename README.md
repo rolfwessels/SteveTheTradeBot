@@ -79,8 +79,9 @@ cd src\SteveTheTradeBot.Core
 dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj add AddStrategy
 dotnet ef database  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj update
 dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj list
-#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 
 #dotnet ef database update  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 20210719165547_AddMetricMapping
+#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 
+
 ```
 
 ## Deploy docker files

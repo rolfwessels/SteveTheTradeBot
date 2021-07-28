@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -41,15 +43,38 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         public async Task<OrderHistorySummaryResponse> OrderHistorySummary(string customerOrderId)
         {
             _log.Information($"OrderHistorySummary customerOrderId {customerOrderId}");
-            var request = new RestRequest("orders/history/summary/customerorderid/{customerOrderId}", DataFormat.Json) {Method = Method.GET};
+            var request = new RestRequest("orders/history/summary/customerorderid/{customerOrderId}", DataFormat.Json)
+                {Method = Method.GET};
             request.AddUrlSegment("customerOrderId", customerOrderId);
             return await ExecuteAsync<OrderHistorySummaryResponse>(request);
         }
 
+
+        public async Task<OrderHistorySummaryResponse> OrderHistorySummaryById(string orderId)
+        {
+            
+            var request = new RestRequest("orders/history/summary/orderid/{orderId}", DataFormat.Json)
+                { Method = Method.GET };
+            request.AddUrlSegment("orderId", orderId);
+            return await ExecuteAsync<OrderHistorySummaryResponse>(request);
+        }
+
+
+        public async Task<List<OrderHistorySummaryResponse>> OrderHistory()
+        {
+            var request = new RestRequest("/orders/history", DataFormat.Json)
+                { Method = Method.GET };
+            request.AddParameter("skip", 0);
+            request.AddParameter("limit",10);
+            return await ExecuteAsync<List<OrderHistorySummaryResponse>>(request);
+        }
+
+
         public async Task<IdResponse> SimpleOrder(SimpleOrderRequest simpleOrderRequest)
         {
-            _log.Information($"SimpleOrder {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
-            var request = new RestRequest("/simple/{currencyPair}/order", DataFormat.Json) { Method = Method.POST };
+            _log.Information(
+                $"SimpleOrder {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
+            var request = new RestRequest("/simple/{currencyPair}/order", DataFormat.Json) {Method = Method.POST};
             request.AddUrlSegment("currencyPair", simpleOrderRequest.CurrencyPair);
             request.AddJsonBody(simpleOrderRequest);
             return await ExecuteAsync<IdResponse>(request);
@@ -58,11 +83,19 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         public async Task<SimpleOrderStatusResponse> SimpleOrderStatus(string currencyPair, string orderId)
         {
             _log.Information($"OrderBook {currencyPair}");
-            var request = new RestRequest("/simple/{currencyPair}/order/{id}", DataFormat.Json) { Method = Method.GET };
+            var request = new RestRequest("/simple/{currencyPair}/order/{id}", DataFormat.Json) {Method = Method.GET};
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddUrlSegment("id", orderId);
             return await ExecuteAsync<SimpleOrderStatusResponse>(request);
         }
+
+        public async Task<IdResponse> StopLimitOrder(StopLimitOrderRequest stopLimitOrderRequest)
+        {
+            var request = new RestRequest("/orders/stop/limit", DataFormat.Json) {Method = Method.POST};
+            request.AddJsonBody(AsRequest(stopLimitOrderRequest));
+            return await ExecuteAsync<IdResponse>(request);
+        }
+
 
         public async Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest simpleOrderRequest)
         {
@@ -70,42 +103,47 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             return await SimpleOrderStatus(simpleOrderRequest.CurrencyPair, simpleOrder.Id);
         }
 
-        public Task CancelOrder(string brokerOrderId)
+        public async Task CancelOrder(string brokerOrderId, string pair)
         {
-            throw new NotImplementedException();
+            var request = new RestRequest("/orders/order", DataFormat.Json) { Method = Method.DELETE };
+            request.AddJsonBody(
+                new
+                {
+                    OrderId = brokerOrderId,
+                    Pair = pair
+                });
+            await ExecuteAsync<IdResponse>(request);
         }
 
-        public Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        public async Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<SimpleOrderStatusResponse> MarketOrder(SimpleOrderRequest request)
-        {
-
-            var limitOrderRequest = await MarketOrderInternal(ToMarketOrder(request));
-            //var limitOrderRequest = new IdResponse {Id = "883b35dc-263f-4252-9222-41012ce7bfb8"};
-            var orderHistorySummary = await OrderHistorySummary(request.CustomerOrderId);
-            return new SimpleOrderStatusResponse()
+            var activeTrades = instance.ActiveTrade();
+            var validStopLoss = activeTrades?.GetValidStopLoss();
+            if (validStopLoss != null )
             {
-                OrderId = orderHistorySummary.OrderId,
-                Success = orderHistorySummary.OrderStatusType == "Filled",
-                Processing = orderHistorySummary.OrderStatusType != "Filled",
-                PaidAmount = orderHistorySummary.OriginalPrice,
-                PaidCurrency = request.CurrencyPair.QuoteCurrency(),
-                ReceivedAmount = orderHistorySummary.OriginalQuantity,
-                ReceivedCurrency = request.CurrencyPair.BaseCurrency(),
-                FeeAmount = orderHistorySummary.TotalFee,
-                FeeCurrency = orderHistorySummary.FeeCurrency,
-                FailedReason = orderHistorySummary.FailedReason,
-                OrderExecutedAt = orderHistorySummary.OrderCreatedAt,
-            };
+                var orderStatusById = await OrderHistorySummaryById(validStopLoss.BrokerOrderId);
+                await BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, orderStatusById);   
+            }
+            
+        }
+
+        public async Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request)
+        {
+            var orderExists = await OrderExists(request.CurrencyPair, request.CustomerOrderId);
+            if (!orderExists)
+            {
+                await MarketOrderInternal(ToMarketOrder(request));
+            }
+
+            //var limitOrderRequest = new IdResponse {Id = "883b35dc-263f-4252-9222-41012ce7bfb8"};
+            return await OrderHistorySummary(request.CustomerOrderId);
+            
         }
 
         private async Task<IdResponse> MarketOrderInternal(MarketOrderRequest toMarketOrder)
         {
-            
-            var request = new RestRequest("/orders/market", DataFormat.Json) { Method = Method.POST };
+
+            var request = new RestRequest("/orders/market", DataFormat.Json) {Method = Method.POST};
             request.AddJsonBody(toMarketOrder);
             var quoteResponse = await ExecuteAsync<IdResponse>(request);
             return quoteResponse;
@@ -125,30 +163,34 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             {
                 quoteAmount = request.PayAmount;
             }
-            return new MarketOrderRequest(request.Side, quoteAmount, baseAmount, request.CurrencyPair,request.CustomerOrderId,request.RequestDate);
+
+            return new MarketOrderRequest(request.Side, quoteAmount, baseAmount, request.CurrencyPair,
+                request.CustomerOrderId, request.RequestDate);
         }
 
         public async Task<LimitOrderRequest> BuildLimitOrderRequest(SimpleOrderRequest request)
         {
             var orderBookResponse = await OrderBook(request.CurrencyPair);
-            var remaining = request.PayAmount ;
-           
-            var placeOrderFor= orderBookResponse.Asks
+            var remaining = request.PayAmount;
+
+            var placeOrderFor = orderBookResponse.Asks
                 .OrderBy(x => x.Price)
-                .Where(x => remaining  >= 0)
-                .ForAll(x=> remaining = (remaining - x.Value))
+                .Where(x => remaining >= 0)
+                .ForAll(x => remaining = (remaining - x.Value))
                 .ToList().Dump("Values");
             remaining.Dump("remaining");
-            
+
             var price = placeOrderFor.Average(x => x.Price);
-            var quantity = Math.Round(request.PayAmount / price,8);
-            var limitOrderRequest = new LimitOrderRequest(request.Side,quantity, price,request.CurrencyPair, request.CustomerOrderId, request.RequestDate,true);
+            var quantity = Math.Round(request.PayAmount / price, 8);
+            var limitOrderRequest = new LimitOrderRequest(request.Side, quantity, price, request.CurrencyPair,
+                request.CustomerOrderId, request.RequestDate, true);
             return limitOrderRequest;
         }
 
         public async Task<QuoteResponse> Quote(SimpleOrderRequest simpleOrderRequest)
         {
-            _log.Information($"SimpleOrderQuote {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
+            _log.Information(
+                $"SimpleOrderQuote {simpleOrderRequest.CurrencyPair} {simpleOrderRequest.PayAmount} {simpleOrderRequest.PayInCurrency}");
             var request = new RestRequest("/simple/{currencyPair}/quote", DataFormat.Json) {Method = Method.POST};
             request.AddUrlSegment("currencyPair", simpleOrderRequest.CurrencyPair);
             request.AddJsonBody(AsRequest(simpleOrderRequest));
@@ -164,16 +206,50 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         private object AsRequest(SimpleOrderRequest simpleOrderRequest)
         {
-            return new {
+            return new
+            {
                 Side = simpleOrderRequest.Side.ToString().ToUpper(),
                 PayInCurrency = simpleOrderRequest.PayInCurrency,
                 PayAmount = simpleOrderRequest.PayAmount
             };
         }
 
-        public Task<OrderStatusResponse> LimitOrder(LimitOrderRequest request)
+        private object AsRequest(StopLimitOrderRequest request)
         {
-            throw new System.NotImplementedException();
+            var requestTimeInForce = request.TimeInForce switch
+            {
+                TimeEnforce.GoodTillCancelled => "GTC",
+                TimeEnforce.FillOrKill => "FOK",
+                TimeEnforce.ImmediateOrCancel => "IOC",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var requestType = request.Type switch
+            {
+                StopLimitOrderRequest.Types.TakeProfitLimit => "TAKE_PROFIT_LIMIT",
+                StopLimitOrderRequest.Types.StopLossLimit => "STOP_LOSS_LIMIT",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            return new {
+                     Side = request.Side,
+                     Quantity = request.Quantity,
+                     Price = request.Price,
+                     Pair = request.Pair,
+                     CustomerOrderId = request.CustomerOrderId,
+                     TimeInForce = requestTimeInForce,
+                     StopPrice = request.StopPrice,
+                     Type = requestType,
+                };
+        }
+
+
+        public async Task<OrderStatusResponse> OrderStatusById(string currencyPair,string orderId)
+        {
+            var request = new RestRequest("/orders/{currencyPair}/orderid/{orderId}", DataFormat.Json) { Method = Method.GET };
+            request.AddUrlSegment("currencyPair", currencyPair);
+            request.AddUrlSegment("orderId", orderId);
+            return await ExecuteAsync<OrderStatusResponse>(request);
         }
 
         public async Task<OrderStatusResponse> OrderStatus(string currencyPair,string customerOrderId)
@@ -182,6 +258,16 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             request.AddUrlSegment("currencyPair", currencyPair);
             request.AddUrlSegment("customerOrderId", customerOrderId);
             return await ExecuteAsync<OrderStatusResponse>(request);
+        }
+
+        public async Task<bool> OrderExists(string currencyPair, string customerOrderId)
+        {
+            var request = new RestRequest("/orders/{currencyPair}/customerorderid/{customerOrderId}", DataFormat.Json) { Method = Method.GET };
+            request.AddUrlSegment("currencyPair", currencyPair);
+            request.AddUrlSegment("customerOrderId", customerOrderId);
+            AddAuth(request);
+            var executeAsync = await _client.ExecuteAsync(request);
+            return executeAsync.StatusCode != (HttpStatusCode) 400;
         }
 
         public async Task<OrderStatusResponse> OrderStatusByOrderId(string currencyPair, string orderId)
@@ -193,16 +279,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         }
 
 
-
-        public Task<OrderStatusResponse> MarketOrder(MarketOrderRequest request)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)
-        {
-            throw new System.NotImplementedException();
-        }
 
         #endregion
 
@@ -238,7 +314,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             }
             catch (Exception e)
             {
-
                 _log.Warning($"Failed request [{stopwatch.Elapsed.ToShort()}] to {request.Method}:{url} {e.Message}");
                 _log.Debug($"Request {request.Method}:{url} {GetBody(request)}");
                 if (response?.RawBytes.Length > 0)
@@ -247,7 +322,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             }
         }
 
-        public string SignBody(string timestamp, string verb, string path, string? body = null)
+        public string SignBody(string timestamp, string verb, string path, string body = null)
         {
             var payload = timestamp + verb.ToUpper() + path + body;
             using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_secret));

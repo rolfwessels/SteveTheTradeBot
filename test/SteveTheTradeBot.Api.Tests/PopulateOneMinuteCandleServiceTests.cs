@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
@@ -9,7 +8,6 @@ using Moq;
 using NUnit.Framework;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.Storage;

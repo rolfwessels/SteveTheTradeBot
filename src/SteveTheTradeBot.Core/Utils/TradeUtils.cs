@@ -54,7 +54,8 @@ namespace SteveTheTradeBot.Core.Utils
                 .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit}).ToTable()
                 .ToString());
             Console.Write(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
-                    new {x.OrderSide, x.OrderStatusType, x.OrderType, x.PriceAtRequest, x.OrderPrice, x.OutQuantity, x.OriginalQuantity, x.CurrencyPair})
+                    new {x.OrderSide, x.OrderStatusType, x.OrderType, x.PriceAtRequest, x.OrderPrice,
+                        OutQuantity = x.Total, x.OriginalQuantity, x.CurrencyPair,FeeAmount = x.TotalFee})
                 .ToTable()
                 .ToString());
         }

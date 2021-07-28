@@ -16,6 +16,8 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                     return OrderStatusTypes.PartiallyFilled;
                 case "failed":
                     return OrderStatusTypes.Failed;
+                case "cancelled":
+                    return OrderStatusTypes.Cancelled;
                 default:
                     throw new ArgumentOutOfRangeException(statusType,$"Status type `{statusType}` could not be mapped.");
             }

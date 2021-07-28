@@ -18,14 +18,13 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Api
 {
-    public class PopulateOneMinuteCandleService : BackgroundService
+    public class PopulateOneMinuteCandleService : BackgroundServiceWithResetAndRetry
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
         private readonly ITradePersistenceFactory _factory;
         private readonly IHistoricalDataPlayer _historicalDataPlayer;
         private readonly IMessenger _messenger;
-        readonly ManualResetEventSlim _delayWorker = new ManualResetEventSlim(false);
 
         public PopulateOneMinuteCandleService(ITradePersistenceFactory factory,
             IHistoricalDataPlayer historicalDataPlayer, IMessenger messenger)
@@ -37,19 +36,16 @@ namespace SteveTheTradeBot.Api
 
         #region Overrides of BackgroundService
 
-        public override async Task ExecuteAsync(CancellationToken token)
+        protected override void RegisterSetter()
         {
-            _messenger.Register<TickerTrackerService.UpdatedMessage>(this, x => _delayWorker.Set());
-            while (!token.IsCancellationRequested)
-            {
-                _delayWorker.Wait(token);
+            _messenger.Register<TickerTrackerService.TickerUpdatedMessage>(this, x => _delayWorker.Set());
+        }
 
-                var tasks = ValrFeeds.All.Select(valrFeed => Populate(token, valrFeed.CurrencyPair, valrFeed.Name)).ToList();
-                await Task.WhenAll(tasks);
-
-                await _messenger.Send(new Updated(tasks.Select(x=>x.Result).ToList()));
-                await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
-            }
+        protected override async Task ExecuteAsyncInRetry(CancellationToken token)
+        {
+            var tasks = ValrFeeds.All.Select(valrFeed => Populate(token, valrFeed.CurrencyPair, valrFeed.Name)).ToList();
+            await Task.WhenAll(tasks);
+            await _messenger.Send(new OneMinuteCandleAvailable(tasks.Select(x => x.Result).ToList()));
         }
 
         public async Task<TradeFeedCandle> Populate(CancellationToken token, string currencyPair, string feed)
@@ -67,8 +63,11 @@ namespace SteveTheTradeBot.Api
 
             var stopwatch = new Stopwatch().With(x => x.Start());
             var readHistoricalTrades =
-                _historicalDataPlayer.ReadHistoricalTrades(currencyPair, from, DateTime.Now, token);
-            var candles = readHistoricalTrades.ToCandleOneMinute()
+                _historicalDataPlayer.ReadHistoricalTrades(currencyPair, from.ToUniversalTime(), DateTime.UtcNow, token);
+            var lastTrade = DateTime.Now.AddYears(-10);
+            var candles = readHistoricalTrades
+                .ForAll(x=>lastTrade = x.TradedAt)
+                .ToCandleOneMinute()
                 .Select(x => TradeFeedCandle.From(x, feed, periodSize, currencyPair));
             TradeFeedCandle lastCandle = null;
             foreach (var feedCandles in candles.BatchedBy())
@@ -88,22 +87,23 @@ namespace SteveTheTradeBot.Api
                 }
                 
                 var count = await context.SaveChangesAsync(token);
+                lastCandle = feedCandles.OrderBy(x=>x.Date).Last();
                 _log.Information(
-                    $"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
+                    $"Saved {count} {periodSize} candles for {currencyPair} found candle {from} [{(DateTime.UtcNow - from).ToShort()}] saved {lastCandle.Date} [{(DateTime.UtcNow - lastCandle.Date).ToShort()}] [LT:{lastTrade}] in {stopwatch.Elapsed.ToShort()}.");
                 stopwatch.Restart();
                 
-                lastCandle = feedCandles.Last();
+                
             }
             return lastCandle;
         }
 
         #endregion
 
-        public class Updated
+        public class OneMinuteCandleAvailable
         {
             public List<TradeFeedCandle> Candles { get; }
 
-            public Updated(List<TradeFeedCandle> candles)
+            public OneMinuteCandleAvailable(List<TradeFeedCandle> candles)
             {
                 Candles = candles;
             }

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
     public class StrategyTrade : BaseDalModelWithGuid
     {
-        public const string OrderTypeStopLoss = "stop-loss";
+        public const string OrderTypeStopLoss = "stop-loss-limit";
 
         public StrategyTrade()
         {
@@ -56,8 +57,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 OrderSide = side,
                 RemainingQuantity = 0,
                 OriginalQuantity = estimatedQuantity,
-                OutQuantity = outQuantity,
-                OutCurrency = currencyPair.SideOut(side),
+                Total = outQuantity,
                 FeeCurrency = currencyPair.SideIn(side)
             };
             Orders.Add(tradeOrder);
@@ -66,9 +66,11 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public void ApplyBuyInfo(TradeOrder tradeOrder)
         {
+            tradeOrder.Dump("tradeOrder");
+            
             BuyPrice = tradeOrder.OrderPrice;
             BuyQuantity = tradeOrder.OriginalQuantity;
-            FeeCurrency = tradeOrder.OutCurrency;
+            FeeCurrency = tradeOrder.FeeCurrency;
             FeeAmount = tradeOrder.SwapFeeAmount(FeeCurrency);
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 {
@@ -11,5 +12,11 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         public string FeeCurrency { get; set; }
         public DateTime CreatedAt { get; set; }
         public string Id { get; set; }
+        public List<ToMatch> OrdersToMatch { get; set; }
+        public class ToMatch
+        {
+            public decimal Price { get; set; }
+            public decimal Quantity { get; set; }
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using FizzWare.NBuilder;
 using FluentAssertions;
+using Flurl.Http;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
@@ -53,8 +54,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var buyValue = 100m;
             var expectedTrade = SetupTrade(close, buyValue);
             expectedTrade.BuyPrice = _fakeBroker.AskPrice;
-            expectedTrade.FeeAmount = expectedTrade.BuyValue * _fakeBroker.BuyFeePercent;
-            expectedTrade.FeeCurrency = "ZAR";
+            expectedTrade.FeeAmount = 0.0000074m;
+            expectedTrade.FeeCurrency = "BTC";
             // action
             var trade = await _fakeStrategy.Buy(_data, buyValue);
             // assert
@@ -66,8 +67,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                     .Excluding(x => x.CreateDate)
                     .Excluding(x => x.UpdateDate));
 
-            trade.BuyQuantity.Should().BeApproximately(expectedTrade.BuyQuantity, 0.01m);
-            trade.FeeAmount.Should().BeApproximately(expectedTrade.FeeAmount, 0.01m);
+            trade.BuyQuantity.Should().BeApproximately(0.001m, 0.01m);
+            trade.FeeAmount.Should().BeApproximately(0.74m, 0.01m);
         }
 
 
@@ -78,17 +79,17 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var close = 100000;
             var buyValue = 100m;
-            var expectedTrade = SetupTrade(close, buyValue);
-            expectedTrade.BuyPrice = _fakeBroker.AskPrice;
-            expectedTrade.FeeAmount = expectedTrade.BuyValue * _fakeBroker.BuyFeePercent;
-            expectedTrade.FeeCurrency = "ZAR";
+            SetupTrade(close, buyValue);
             var trade = await _fakeStrategy.Buy(_data, buyValue);
             AddCandle(close - 5, new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
-
+            trade.Orders.Last().FeeCurrency.Should().Be("BTC");
+            trade.FeeAmount.Should().BeApproximately(0.74m, 0.1m);
             // action
             await _fakeStrategy.Sell(_data, trade);
             // assert
-            trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc));
+            _data.StrategyInstance.Print();
+            trade.Dump("sell");
+            trade.EndDate.Should().BeCloseTo(new DateTime(2001, 01, 01, 3, 2, 4, DateTimeKind.Utc),5000);
             trade.SellValue.Should().Be(98.59m);
             trade.SellPrice.Should().BeApproximately(100100, 1m);
             trade.Profit.Should().Be(-1.410m);
@@ -109,7 +110,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // assert
             var marketOrderRequest = _fakeBroker.Requests
                 .OfType<SimpleOrderRequest>().First();
-
 
             marketOrderRequest.PayInCurrency.Should().Be("ZAR");
             marketOrderRequest.PayAmount.Should().Be(100);
@@ -155,7 +155,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .OfType<StopLimitOrderRequest>().First();
 
             request.Price.Should().Be(90000);
-            request.StopPrice.Should().Be(89100);
+            request.StopPrice.Should().Be(90900);
             request.Type.Should().Be(StopLimitOrderRequest.Types.StopLossLimit);
             request.Quantity.Should().Be(quantityBought);
             request.Side.Should().Be(Side.Sell);
@@ -166,7 +166,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
 
         [Test]
-        public async Task SetStopLoss_Given100Rand_ShouldIfStopLossWasASuccessUpdateTheTradeRecord()
+        public async Task ActivateStopLoss_Given100Rand_ShouldIfStopLossWasASuccessUpdateTheTradeRecord()
         {
             // arrange
             Setup();
@@ -176,26 +176,60 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
             var activeTrade = _data.ActiveTrade();
             // action
-            BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
+            await BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
             // assert
             
             activeTrade.IsActive.Should().BeFalse();
+            validStopLoss.OrderType.Should().Be(StrategyTrade.OrderTypeStopLoss);
             validStopLoss.RequestDate.Should().Be(_requestDate);
             validStopLoss.OrderStatusType.Should().Be(OrderStatusTypes.Filled);
             validStopLoss.CurrencyPair.Should().Be("BTCZAR");
             validStopLoss.OrderPrice.Should().Be(90000.0M);
             validStopLoss.RemainingQuantity.Should().Be(0);
-            validStopLoss.OriginalQuantity.Should().Be(88.43M);
+            validStopLoss.OriginalQuantity.Should().Be(90.22M);
             validStopLoss.OrderSide.Should().Be(Side.Sell);
-            validStopLoss.OrderType.Should().Be("stop-loss");
             validStopLoss.FailedReason.Should().Be(null);
             validStopLoss.PriceAtRequest.Should().Be(100000M);
-            validStopLoss.OutQuantity.Should().Be(quantityBought);
-            validStopLoss.OutCurrency.Should().Be("BTC");
+            validStopLoss.Total.Should().Be(quantityBought);
             validStopLoss.FeeCurrency.Should().Be("ZAR");
-            validStopLoss.FeeAmount.Should().Be(0.67M);
+            validStopLoss.TotalFee.Should().Be(0.68M);
         }
 
+        [Test]
+        public async Task ActivateStopLoss_GivenFailedStopLoss_ShouldCancelTheStopLoss()
+        {
+            // arrange
+            Setup();
+            var (dateTime, quantityBought, addTrade) = SetupSale();
+            var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
+            var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
+            var activeTrade = _data.ActiveTrade();
+            var orderStatusById = new OrderHistorySummaryResponse { OrderStatusType = "Failed", FailedReason = "Failed?"};
+            // action
+            await BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, orderStatusById);
+            // assert
+            validStopLoss.OrderStatusType.Should().Be(OrderStatusTypes.Failed);
+            validStopLoss.FailedReason.Should().Be("Failed?");
+        }
+
+
+        [Test]
+        public async Task ActivateStopLoss_GivenCancelledStopLoss_ShouldCancelTheStopLoss()
+        {
+            // arrange
+            Setup();
+            var (dateTime, quantityBought, addTrade) = SetupSale();
+            var stopLossAmount = _data.ActiveTrade().BuyPrice * 0.9m;
+            await _fakeStrategy.SetStopLoss(_data, stopLossAmount);
+            var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
+            var activeTrade = _data.ActiveTrade();
+            var orderStatusById = new OrderHistorySummaryResponse { OrderStatusType = "Cancelled"};
+            // action
+            await BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, orderStatusById);
+            // assert
+            validStopLoss.OrderStatusType.Should().Be(OrderStatusTypes.Cancelled);
+        }
 
         [Test]
         public async Task SetStopLoss_Given100Rand_ShouldIfStopLossWasASuccessUpdateActiveTrade()
@@ -208,13 +242,13 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             var validStopLoss = _data.ActiveTrade().GetValidStopLoss();
             var trade = _data.ActiveTrade();
             // action
-            BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
+            await BrokerUtils.ActivateStopLoss(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
             // assert
             trade.IsActive.Should().BeFalse();
-            trade.EndDate.Should().Be(new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc));
-            trade.SellValue.Should().Be(88.43m);
+            trade.EndDate.Should().BeCloseTo(DateTime.Now);
+            trade.SellValue.Should().Be(90.22m);
             trade.SellPrice.Should().BeApproximately(90000, 1m);
-            trade.Profit.Should().Be(-11.57m);
+            trade.Profit.Should().Be(-9.780m);
             trade.IsActive.Should().Be(false);
             trade.FeeCurrency.Should().Be("ZAR");
             trade.FeeAmount.Should().BeApproximately(1.57m, 0.01m);
@@ -270,17 +304,16 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
             last.CurrencyPair.Should().Be("BTCZAR");
             last.OrderPrice.Should().Be(90000.0m);
-            last.StopPrice.Should().Be(89100M);
+            last.StopPrice.Should().Be(90900m);
             last.RemainingQuantity.Should().Be(0);
             last.OriginalQuantity.Should().Be(0);
             last.OrderSide.Should().Be(0);
-            last.OrderType.Should().Be("stop-loss");
+            last.OrderType.Should().Be(StrategyTrade.OrderTypeStopLoss);
             last.BrokerOrderId.Should().EndWith("-req");
             last.FailedReason.Should().Be(null);
             last.PriceAtRequest.Should().Be(100000M);
-            last.OutQuantity.Should().Be(0.001m);
-            last.OutCurrency.Should().Be("BTC");
-            last.FeeAmount.Should().Be(0);
+            last.Total.Should().Be(0.001m);
+            last.TotalFee.Should().Be(0);
             last.FeeCurrency.Should().Be("ZAR");
             last.OrderStatusType.Should().Be(OrderStatusTypes.Placed);
         }
@@ -321,18 +354,18 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 BrokerOrderId = trade.Orders.First().Id + "_broker",
                 FailedReason = null,
                 PriceAtRequest = 100000,
-                OutQuantity = 100,
-                OutCurrency = "ZAR",
+                Total = buyValue,
                 FeeCurrency = "BTC",
-                FeeAmount = 0.000007499250M,
+                TotalFee = 0.000007499250M,
             };
             // assert
-
+            
             trade.Orders.First().Should().BeEquivalentTo(expectedOrder,
                 e => e
                     .Excluding(x => x.Id)
                     .Excluding(x => x.CreateDate)
                     .Excluding(x => x.UpdateDate));
+           
         }
 
         [Test]
@@ -388,23 +421,22 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 OrderType = "simple",
                 FailedReason = null,
                 PriceAtRequest = 100000,
-                OutQuantity = quantityBought,
-                OutCurrency = "BTC",
+                Total = quantityBought,
                 FeeCurrency = "ZAR",
-                FeeAmount = 0.75M,
+                TotalFee = 0.75M,
             };
             // action
             await _fakeStrategy.Sell(_data, addTrade);
             // assert
-
+            _data.StrategyInstance.Print();
             addTrade.Orders.Last().Dump("last").Should().BeEquivalentTo(expectedOrder,
                 e => e
                     .Excluding(x => x.Id)
                     .Excluding(x => x.BrokerOrderId)
-                    .Excluding(x => x.FeeAmount)
+                    .Excluding(x => x.TotalFee)
                     .Excluding(x => x.CreateDate)
                     .Excluding(x => x.UpdateDate));
-            addTrade.Orders.Last().FeeAmount.Should().BeApproximately(expectedOrder.FeeAmount, 0.1m);
+            addTrade.Orders.Last().TotalFee.Should().BeApproximately(expectedOrder.TotalFee, 0.1m);
         }
 
  
@@ -413,7 +445,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         {
             var tradeFeedCandle = AddCandle(close, _requestDate);
             var expectedTrade = new StrategyTrade(tradeFeedCandle.Date, close, buyValue / close, buyValue);
-
             return expectedTrade;
         }
 
