@@ -2,17 +2,19 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public interface IParameterStore
+    public interface IParamsStoreSimple
     {
-        Task Set(string key, string value);
+        Task Set(string key, string defaultValue);
         Task<string> Get(string key, string defaultValue);
-        Task<DateTime> Get(string metricPopulate, DateTime defaultValue);
-        Task Set(string key, in DateTime value);
+    }
+
+    public interface IParameterStore : IParamsStoreSimple
+    {
+        
     }
 
     public class ParameterStore : StoreBase<SimpleParam>, IParameterStore
@@ -61,20 +63,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return firstOrDefault?.Value ?? defaultValue;
         }
 
-        public async Task<DateTime> Get(string key, DateTime defaultValue)
-        {
-            var value = await Get(key, "_");
-            if (value != "_" && DateTime.TryParse(value, out var date))
-            {
-                return date;
-            }
+        
 
-            return defaultValue;
-        }
-
-        public Task Set(string key, in DateTime value)
-        {
-            return Set(key, value.ToIsoDateString());
-        }
+       
     }
 }

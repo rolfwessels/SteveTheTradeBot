@@ -31,7 +31,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 470; // 209
-            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR);
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.OneMinute);
         }
 
         [Test]
@@ -43,7 +43,19 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
             var expected = 49; // 209
-            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR);
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.OneMinute);
+        }
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_Old()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 49; // 209
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
         [Test]
@@ -55,15 +67,16 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 94; // 
-            await Test(@from, to, expected , t => new RSiStrategy(), CurrencyPair.BTCZAR);
+            await Test(@from, to, expected , t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.OneMinute);
         }
         
-        private async Task Test(DateTime fromDate, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair)
+        private async Task Test(DateTime fromDate, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair, PeriodSize size)
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
             var tradeFeedCandleStore = new TradeFeedCandlesStore(factory);
             var strategyInstanceStore = new StrategyInstanceStore(factory);
+            var parameterStore = new ParameterStore(factory);
             var player = new HistoricalDataPlayer(tradeHistoryStore, tradeFeedCandleStore);
             
             var fakeBroker = new FakeBroker(Messenger.Default, tradeHistoryStore);
@@ -72,13 +85,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
 
             var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, CurrencyPair.BTCZAR);
-            strategyInstance.PeriodSize = PeriodSize.OneMinute;
+            strategyInstance.PeriodSize = size;
             strategyInstance.Reference += $"{fromDate:yyMM}-{to:yyMM}";
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
             await strategyInstanceStore.Add(strategyInstance);
 
             var dynamicGraphs = new DynamicGraphs(factory);
-            var strategyRunner = new StrategyRunner(picker, dynamicGraphs, strategyInstanceStore, fakeBroker, tradeFeedCandleStore, Messenger.Default);
+            
+            var strategyRunner = new StrategyRunner(picker, dynamicGraphs, strategyInstanceStore, fakeBroker, tradeFeedCandleStore, Messenger.Default, parameterStore);
             _backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore, fakeBroker, Messenger.Default, strategyRunner);
             var cancellationTokenSource = new CancellationTokenSource();
 

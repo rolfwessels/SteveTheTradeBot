@@ -10,10 +10,12 @@ using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tests.Components.BackTesting;
+using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
@@ -33,7 +35,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         {
             _requestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc);
             _fakeBroker = new FakeBroker(Messenger.Default).With(x => x.BuyFeePercent = 0.0075m);
-            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default);
+            _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default,new ParameterStore(TestTradePersistenceFactory.InMemoryDb));
             var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4)
                 .WithValidData()
                 .All().With((x, r) => x.Date = _requestDate.AddDays(-1 * r))

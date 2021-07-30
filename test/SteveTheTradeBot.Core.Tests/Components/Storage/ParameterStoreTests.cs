@@ -15,7 +15,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             // arrange
             Setup();
             // action
-            await _parameterStore.Set("test", "12312");
+            await _parameterStore.Set( "test",  "12312");
             var value = await _parameterStore.Get("test", "");
             // assert
             value.Should().Be("12312");

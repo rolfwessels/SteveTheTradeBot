@@ -112,6 +112,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
                 OrderStatusType = "Filled",
                 CurrencyPair = strategyContext.StrategyInstance.Pair,
                 OriginalPrice = validStopLoss.OrderPrice,
+                AveragePrice = validStopLoss.OrderPrice,
                 RemainingQuantity = 0,
                 OriginalQuantity = receivedAmount,
                 OrderSide = Side.Sell,

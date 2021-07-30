@@ -66,8 +66,6 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public void ApplyBuyInfo(TradeOrder tradeOrder)
         {
-            tradeOrder.Dump("tradeOrder");
-            
             BuyPrice = tradeOrder.OrderPrice;
             BuyQuantity = tradeOrder.OriginalQuantity;
             FeeCurrency = tradeOrder.FeeCurrency;

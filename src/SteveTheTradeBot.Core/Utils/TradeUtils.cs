@@ -41,17 +41,19 @@ namespace SteveTheTradeBot.Core.Utils
 
         public static void Print(this StrategyInstance backTestResult)
         {
+            Console.Out.WriteLine("Reference: " + backTestResult.Reference);
             Console.Out.WriteLine("BalanceMoved: " + backTestResult.PercentProfit);
             Console.Out.WriteLine("MarketMoved: " + backTestResult.PercentMarketProfit);
             Console.Out.WriteLine("Trades: " + backTestResult.TotalNumberOfTrades);
             Console.Out.WriteLine("TradesSuccesses: " + backTestResult.NumberOfProfitableTrades);
             Console.Out.WriteLine("TradesSuccessesPercent: " + backTestResult.PercentOfProfitableTrades);
             Console.Out.WriteLine("TradesActive: " + backTestResult.TotalActiveTrades);
+            Console.Out.WriteLine("TotalFee: " + backTestResult.TotalFee);
             Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket.ToShort());
             Console.Out.WriteLine("AverageTradesPerMonth: " + backTestResult.AverageTradesPerMonth);
             
             Console.Write(backTestResult.Trades
-                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit}).ToTable()
+                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit , x.FeeAmount}).ToTable()
                 .ToString());
             Console.Write(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
                     new {x.OrderSide, x.OrderStatusType, x.OrderType, x.PriceAtRequest, x.OrderPrice,

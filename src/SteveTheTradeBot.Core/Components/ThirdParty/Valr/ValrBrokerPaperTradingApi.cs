@@ -30,8 +30,6 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public static OrderHistorySummaryResponse ToHistorySummary(SimpleOrderStatusResponse simpleResponse, SimpleOrderRequest request)
         {
-            simpleResponse.Dump("simpleResponse");
-            
             return new OrderHistorySummaryResponse
             {
                 OrderId = simpleResponse.OrderId,

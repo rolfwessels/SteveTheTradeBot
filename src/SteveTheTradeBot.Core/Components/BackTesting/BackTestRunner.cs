@@ -60,16 +60,20 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
     }
 
-    public class StrategyContext
+   
+
+    public class StrategyContext : IParamsStoreSimple
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IDynamicGraphs _dynamicGraphs;
         private readonly StrategyInstance _strategyInstance;
-        
-        public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance, IBrokerApi broker, IMessenger messenger)
+        private readonly IParameterStore _parameterStore;
+
+        public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance, IBrokerApi broker, IMessenger messenger, IParameterStore parameterStore)
         {
             _dynamicGraphs = dynamicGraphs;
             _strategyInstance = strategyInstance;
+            _parameterStore = parameterStore;
             Messenger = messenger;
             ByMinute = new Recent<TradeFeedCandle>(1000);
             Broker = broker;
@@ -80,6 +84,21 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public StrategyInstance StrategyInstance => _strategyInstance;
         public IBrokerApi Broker { get; }
         public IMessenger Messenger { get; }
+
+        public Task Set(string key, string value)
+        {
+            return _parameterStore.Set(GetKey(key), value);
+        }
+
+        public Task<string> Get(string key, string defaultValue)
+        {
+            return _parameterStore.Get(GetKey(key), defaultValue);
+        }
+
+        private string GetKey(string key)
+        {
+            return $"{_strategyInstance.Reference}_{_strategyInstance.Id.Take(10)}_{key.ToLower()}";
+        }
 
         public async Task PlotRunData(DateTime date, string label, decimal value)
         {

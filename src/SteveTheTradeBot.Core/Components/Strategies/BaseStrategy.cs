@@ -95,27 +95,27 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         }
 
 
-        public async Task Sell(StrategyContext data, StrategyTrade activeTrade)
+        public async Task Sell(StrategyContext data, StrategyTrade trade)
         {
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
-            var estimatedQuantity = activeTrade.BuyQuantity * estimatedPrice;
-            var tradeOrder = activeTrade.AddOrderRequest(Side.Sell, activeTrade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date, estimatedPrice);
+            var estimatedQuantity = trade.BuyQuantity * estimatedPrice;
+            var order = trade.AddOrderRequest(Side.Sell, trade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date, estimatedPrice);
             try
             {
-                var simpleOrderRequest = BrokerUtils.ToOrderRequest(tradeOrder);
+                var simpleOrderRequest = BrokerUtils.ToOrderRequest(order);
                 var response = await data.Broker.MarketOrder(simpleOrderRequest);
-                BrokerUtils.ApplyValue(tradeOrder, response);
-                var close = BrokerUtils.ApplyCloseToActiveTrade(activeTrade, currentTrade.Date, tradeOrder);
+                BrokerUtils.ApplyValue(order, response);
+                var close = BrokerUtils.ApplyCloseToActiveTrade(trade, currentTrade.Date, order);
                 BrokerUtils.ApplyCloseToStrategy(data, close);
                 await data.PlotRunData(currentTrade.Date, "activeTrades", 0);
                 await data.PlotRunData(currentTrade.Date, "sellPrice", close.SellValue);
-                await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, activeTrade, tradeOrder));
+                await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, trade, order));
             }
             catch (Exception e)
             {
-                tradeOrder.FailedReason = e.Message;
-                tradeOrder.OrderStatusType = OrderStatusTypes.Failed;
+                order.FailedReason = e.Message;
+                order.OrderStatusType = OrderStatusTypes.Failed;
                 _log.Error(e, $"Failed to add close trade order:{e.Message}");
             }
             

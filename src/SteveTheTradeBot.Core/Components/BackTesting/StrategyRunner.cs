@@ -24,9 +24,10 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
         private readonly IBrokerApi _broker;
         private readonly IMessenger _messenger;
+        private IParameterStore _parameterStore;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
-            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger)
+            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger, IParameterStore parameterStore)
         {
             _strategyPicker = strategyPicker;
             _dynamicGraphs = dynamicGraphs;
@@ -34,6 +35,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _broker = broker;
             _tradeFeedCandleStore = tradeFeedCandleStore;
             _messenger = messenger;
+            _parameterStore = parameterStore;
         }
 
 
@@ -131,7 +133,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
         {
-            var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger);
+            var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger,_parameterStore);
             var findRecentCandles =
                 await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
           
