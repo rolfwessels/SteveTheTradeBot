@@ -103,7 +103,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
         public static async Task ActivateStopLoss(StrategyContext strategyContext, StrategyTrade trade,
             TradeOrder validStopLoss, decimal buyFeePercent)
         {
-            var totalAmount = validStopLoss.Total * validStopLoss.StopPrice;
+            var totalAmount = validStopLoss.Total * validStopLoss.OrderPrice;
             var feeAmount = Math.Round(totalAmount * buyFeePercent, 2);
             var receivedAmount = Math.Round(totalAmount - feeAmount, 2);
             

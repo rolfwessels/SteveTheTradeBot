@@ -157,7 +157,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .OfType<StopLimitOrderRequest>().First();
 
             request.Price.Should().Be(90000);
-            request.StopPrice.Should().Be(90900);
+            request.StopPrice.Should().Be(90090);
             request.Type.Should().Be(StopLimitOrderRequest.Types.StopLossLimit);
             request.Quantity.Should().Be(quantityBought);
             request.Side.Should().Be(Side.Sell);
@@ -188,7 +188,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             validStopLoss.CurrencyPair.Should().Be("BTCZAR");
             validStopLoss.OrderPrice.Should().Be(90000.0M);
             validStopLoss.RemainingQuantity.Should().Be(0);
-            validStopLoss.OriginalQuantity.Should().Be(90.22M);
+            validStopLoss.OriginalQuantity.Should().Be(89.32M);
             validStopLoss.OrderSide.Should().Be(Side.Sell);
             validStopLoss.FailedReason.Should().Be(null);
             validStopLoss.PriceAtRequest.Should().Be(100000M);
@@ -248,9 +248,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // assert
             trade.IsActive.Should().BeFalse();
             trade.EndDate.Should().BeCloseTo(DateTime.Now);
-            trade.SellValue.Should().Be(90.22m);
+            trade.SellValue.Should().Be(89.32m);
             trade.SellPrice.Should().BeApproximately(90000, 1m);
-            trade.Profit.Should().Be(-9.780m);
+            trade.Profit.Should().Be(-10.680m);
             trade.IsActive.Should().Be(false);
             trade.FeeCurrency.Should().Be("ZAR");
             trade.FeeAmount.Should().BeApproximately(1.57m, 0.01m);
@@ -306,7 +306,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 
             last.CurrencyPair.Should().Be("BTCZAR");
             last.OrderPrice.Should().Be(90000.0m);
-            last.StopPrice.Should().Be(90900m);
+            last.StopPrice.Should().Be(90090m);
             last.RemainingQuantity.Should().Be(0);
             last.OriginalQuantity.Should().Be(0);
             last.OrderSide.Should().Be(0);

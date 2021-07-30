@@ -56,7 +56,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     ResetStops(currentTrade);
                 }
 
-                if (currentTrade.Close <= _setStopLoss || currentTrade.Close >= _setTakeProfit)
+                if (currentTrade.Close <= _setStopLoss )
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");

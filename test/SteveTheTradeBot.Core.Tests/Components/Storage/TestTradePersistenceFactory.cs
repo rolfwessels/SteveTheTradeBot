@@ -15,7 +15,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
         {
             var lookup = "Database=";
             if (!Settings.Instance.NpgsqlConnection.Contains(lookup)) throw new Exception("Please check connection string.");
-            _tradePersistenceFactory = new TradePersistenceFactory(Settings.Instance.NpgsqlConnection.Replace(lookup,"Database=Test"));
+            _tradePersistenceFactory = new TradePersistenceFactory(Settings.Instance.NpgsqlConnection.Replace(lookup,"Database=Test1"));
         }
 
         private static DbContextOptions<TradePersistenceStoreContext> DbContextOptionsFor(string databaseName = "TestDb")

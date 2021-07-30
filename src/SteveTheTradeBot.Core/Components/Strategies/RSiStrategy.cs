@@ -25,9 +25,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public RSiStrategy()
         {
-            _initialStopRisk = 0.94m;
-            _secondStopRisk = 0.94m;
-            _moveProfitPercent = 1.15m;
+            _initialStopRisk = 0.96m;
+            _secondStopRisk = 0.96m;
+            _moveProfitPercent = 1.03m;
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }
@@ -38,9 +38,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var activeTrade = data.ActiveTrade();
             var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
+            var roc100sma = currentTrade.Metric.GetOrDefault("roc100-sma");
             if (activeTrade == null)
             {
-                if (rsiResults < _buySignal && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma))
+                if (rsiResults < _buySignal && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma && roc100sma.Value > _buy200rocsma))
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
