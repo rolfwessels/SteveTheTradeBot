@@ -15,12 +15,12 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Have a BTC bot that actually makes money!
 - [x] Store back test results
 - [x] Run paper trades
-- [ ] Add stop loss and take profit
+- [X] Add stop loss and take profit
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
 - [x] Integrate with grafana
-- [ ] Logging & monitoring
+- [X] Logging & monitoring
 - [X] Slack
 - [ ] Prometheus & Slack counters
 - [ ] Add UI
