@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RedisHost: localhost      NpgsqlConnection: Host=localhost;Database=SteveTheTradeBotSample
+      RedisHost: localhost      NpgsqlConnection: Host=localhost;Database=steve-the-trade-bot-test      MongoConnection: mongodb://localhost:27017/steve-the-trade-bot-test
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET
