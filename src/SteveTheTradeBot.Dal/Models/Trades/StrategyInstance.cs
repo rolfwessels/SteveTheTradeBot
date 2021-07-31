@@ -15,6 +15,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string StrategyName { get; set; }
 
         public List<StrategyTrade> Trades { get; set; } = new List<StrategyTrade>();
+        public List<Properties> Property { get; set; } = new List<Properties>();
 
         public bool IsActive { get; set; }
         public bool IsBackTest { get; set; }
@@ -109,5 +110,34 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         {
             return Trades.FirstOrDefault(x => x.IsActive);
         }
+
+        public class Properties : BaseDalModel
+        {
+            public string StrategyInstanceId { get; set; }
+            public string Key { get; set; }
+            public string Value { get; set; }
+        }
+
+        public string Get(string key, string defaultValue)
+        {
+            var found = Property?.Where(x=>x.Key == key).Select(x=>x.Value).FirstOrDefault();
+            return found ?? defaultValue;
+        }
+
+        public void Set(string key, string value)
+        {
+            if (Property == null) Property = new List<Properties>();
+            var firstOrDefault = Property.FirstOrDefault(x=>x.Key == key);
+            if (firstOrDefault == null)
+            {
+                Property.Add(new Properties() {StrategyInstanceId = Id, Key = key, Value = value});
+            }
+            else
+            {
+                firstOrDefault.Value = value;
+            }
+        }
     }
+
+    
 }

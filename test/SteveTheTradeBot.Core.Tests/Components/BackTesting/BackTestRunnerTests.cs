@@ -20,57 +20,58 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
     public class BackTestRunnerTests
     {
         private BackTestRunner _backTestRunner;
-        
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_RSiStrategy()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 16m; //49
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_RSiMslStrategy()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 49; 
+            await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
         [Test]
         [Timeout(240000)]
         [Explicit]
-        public async Task Run_GivenRSiBot_ShouldOver2YearsShouldMake400PlusProfit()
+        public async Task Run_GivenRSiMslStrategy_ShouldOver2YearsShouldMake400PlusProfit()
         {
             // arrange
             Setup();
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 470; // 209
-            await Test(@from, to, expected, t => new RSiStrategy123(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
+
 
         [Test]
         [Timeout(240000)]
-        public async Task Fast()
-        {
-            // arrange
-            Setup();
-            var from = DateTime.Parse("2021-02-01T00:00:00");
-            var to = from.AddMonths(1);
-            var expected = 49; // 209
-            await Test(@from, to, expected, t => new RSiStrategy123(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
-        }
-
-        [Test]
-        [Timeout(240000)]
-        public async Task Fast_Old()
-        {
-            // arrange
-            Setup();
-            var from = DateTime.Parse("2021-02-01T00:00:00");
-            var to = from.AddMonths(1);
-            var expected = 49; // 209
-            await Test(@from, to, expected, t => new RSiStrategy123(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
-        }
-
-        [Test]
-        [Timeout(240000)]
-        public async Task Run_GivenRSiBot_ShouldOver1YearsShouldMake200PlusProfit()
+        public async Task Run_GivenRSiMslStrategy_ShouldOver1YearsShouldMake200PlusProfit()
         {
             // arrange
             Setup();
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 94; // 
-            await Test(@from, to, expected , t => new RSiStrategy123(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            await Test(@from, to, expected , t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
         
-        private async Task Test(DateTime fromDate, DateTime to, int expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair, PeriodSize size)
+        private async Task Test(DateTime fromDate, DateTime to, decimal expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair, PeriodSize size)
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);

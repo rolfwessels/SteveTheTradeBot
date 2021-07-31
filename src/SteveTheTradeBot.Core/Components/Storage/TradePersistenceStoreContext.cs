@@ -64,6 +64,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .HasKey(b => new { b.Feed, b.Label, b.Date });
             modelBuilder.Entity<SimpleParam>()
                 .HasKey(b => b.Key);
+            modelBuilder.Entity<StrategyInstance.Properties>()
+                .HasKey(b => new {b.StrategyInstanceId, b.Key});
             EnsureAllDatesAreUtc(modelBuilder);
             base.OnModelCreating(modelBuilder);
         }

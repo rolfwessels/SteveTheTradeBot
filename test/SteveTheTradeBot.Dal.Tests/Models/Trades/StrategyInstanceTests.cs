@@ -54,7 +54,64 @@ namespace SteveTheTradeBot.Dal.Tests.Models.Trades
             forBackTest.Reference.Should().StartWith("123_btczar_fiveminutes_202");
         }
 
-       
 
+        [Test]
+        public void Get_GivenUnKnownProperty_ShouldDefault()
+        {
+            // action
+            var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
+            // assert
+            var result = forBackTest.Get("nothing", "default");
+            result.Should().Be("default");
+        }
+
+
+        [Test]
+        public void Get_GivenKnownProperty_ShouldValue()
+        {
+            // action
+            var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
+            forBackTest.Set("nothing", "something");
+            // assert
+            var result = forBackTest.Get("nothing", "default");
+            result.Should().Be("something");
+        }
+
+        [Test]
+        public void Get_GivenNullProperty_ShouldNotFail()
+        {
+            // action
+            var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
+            forBackTest.Property = null;
+            // assert
+            var result = forBackTest.Get("nothing", "default");
+            result.Should().Be("default");
+        }
+
+
+        [Test]
+        public void Set_GivenNullProperty_ShouldNotFail()
+        {
+            // action
+            var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
+            forBackTest.Property = null;
+            forBackTest.Set("nothing", "something");
+            // assert
+            var result = forBackTest.Get("nothing", "default");
+            result.Should().Be("something");
+        }
+
+        [Test]
+        public void Set_GivenExistingProperty_ShouldNotFail()
+        {
+            // action
+            var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
+            forBackTest.Property = null;
+            forBackTest.Set("nothing", "something1");
+            forBackTest.Set("nothing", "something2");
+            // assert
+            var result = forBackTest.Get("nothing", "default");
+            result.Should().Be("something2");
+        }
     }
 }

@@ -52,6 +52,27 @@ namespace SteveTheTradeBot.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Properties",
+                columns: table => new
+                {
+                    StrategyInstanceId = table.Column<string>(type: "text", nullable: false),
+                    Key = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true),
+                    CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Properties", x => new { x.StrategyInstanceId, x.Key });
+                    table.ForeignKey(
+                        name: "FK_Properties_Strategies_StrategyInstanceId",
+                        column: x => x.StrategyInstanceId,
+                        principalTable: "Strategies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Trades",
                 columns: table => new
                 {
@@ -130,6 +151,9 @@ namespace SteveTheTradeBot.Core.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Properties");
+
             migrationBuilder.DropTable(
                 name: "TradeOrder");
 

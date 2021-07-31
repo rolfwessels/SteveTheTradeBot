@@ -212,6 +212,28 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.ToTable("Strategies");
                 });
 
+            modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance+Properties", b =>
+                {
+                    b.Property<string>("StrategyInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("StrategyInstanceId", "Key");
+
+                    b.ToTable("Properties");
+                });
+
             modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyTrade", b =>
                 {
                     b.Property<string>("Id")
@@ -375,6 +397,15 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.ToTable("TradeOrder");
                 });
 
+            modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance+Properties", b =>
+                {
+                    b.HasOne("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance", null)
+                        .WithMany("Property")
+                        .HasForeignKey("StrategyInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyTrade", b =>
                 {
                     b.HasOne("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance", null)
@@ -391,6 +422,8 @@ namespace SteveTheTradeBot.Core.Migrations
 
             modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance", b =>
                 {
+                    b.Navigation("Property");
+
                     b.Navigation("Trades");
                 });
 

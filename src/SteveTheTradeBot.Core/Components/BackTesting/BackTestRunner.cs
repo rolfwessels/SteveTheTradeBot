@@ -66,13 +66,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IDynamicGraphs _dynamicGraphs;
-        private readonly StrategyInstance _strategyInstance;
         private readonly IParameterStore _parameterStore;
 
         public StrategyContext(IDynamicGraphs dynamicGraphs, StrategyInstance strategyInstance, IBrokerApi broker, IMessenger messenger, IParameterStore parameterStore)
         {
             _dynamicGraphs = dynamicGraphs;
-            _strategyInstance = strategyInstance;
+            StrategyInstance = strategyInstance;
             _parameterStore = parameterStore;
             Messenger = messenger;
             ByMinute = new Recent<TradeFeedCandle>(1000);
@@ -81,29 +80,28 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
 
         public Recent<TradeFeedCandle> ByMinute { get; }
-        public StrategyInstance StrategyInstance => _strategyInstance;
+        public StrategyInstance StrategyInstance { get; }
+
         public IBrokerApi Broker { get; }
         public IMessenger Messenger { get; }
 
         public Task Set(string key, string value)
         {
-            return _parameterStore.Set(GetKey(key), value);
+            StrategyInstance.Set(key, value);
+            return Task.CompletedTask;
         }
 
         public Task<string> Get(string key, string defaultValue)
         {
-            return _parameterStore.Get(GetKey(key), defaultValue);
+            return Task.FromResult(StrategyInstance.Get(key, defaultValue));
         }
 
-        private string GetKey(string key)
-        {
-            return $"{_strategyInstance.Reference}_{_strategyInstance.Id.Take(10)}_{key.ToLower()}";
-        }
+       
 
         public async Task PlotRunData(DateTime date, string label, decimal value)
         {
-            _log.Debug($"StrategyContext:PlotRunData {_strategyInstance.Reference} {date}, {label}, {value}");
-            await _dynamicGraphs.Plot(_strategyInstance.Reference, date, label, value);
+            _log.Debug($"StrategyContext:PlotRunData {StrategyInstance.Reference} {date}, {label}, {value}");
+            await _dynamicGraphs.Plot(StrategyInstance.Reference, date, label, value);
         }
 
         public TradeFeedCandle LatestQuote()

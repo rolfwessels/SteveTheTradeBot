@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Core.Components.Storage
@@ -9,7 +10,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
     {
         public static async Task<decimal?> Get(this IParamsStoreSimple data, string key, decimal? value)
         {
-            var get = await data.Get(key, null);
+            var get = await data.Get(key, null);    
             if (decimal.TryParse(get, out var result))
             {
                 return result;
