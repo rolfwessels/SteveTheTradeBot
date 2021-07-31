@@ -16,7 +16,7 @@ using SteveTheTradeBot.Dal.Models.Trades;
 namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 {
 
-    [Category("Integration")]
+    [Category("FullIntegration")]
     public class BackTestRunnerTests
     {
         private BackTestRunner _backTestRunner;

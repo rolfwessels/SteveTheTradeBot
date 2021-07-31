@@ -14,7 +14,7 @@ using SteveTheTradeBot.Dal.Tests;
 
 namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
 {
-    [Category("Integration")]
+    [Category("FullIntegration")]
     public class ValrBrokerApiTests
     {
         private ValrBrokerApi _api;

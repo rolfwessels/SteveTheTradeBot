@@ -64,7 +64,7 @@ services:
   src:
     depends_on:
       - redis
-      - db
+      - db      - sql
     container_name: steve-the-trade-bot
     build:
       context: ./

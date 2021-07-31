@@ -16,6 +16,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
 
 
         [Test]
+        [Category("FullIntegration")]
         public async Task Order_GivenBuyOrder1_ShouldFulfillOrder()
         {
             await TestHelper.TestEveryNowAndThen(async () => {
