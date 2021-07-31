@@ -47,7 +47,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             var expected = "yar";
             // action
             var encryptString = _sampleSettings.EncryptString(expected);
-            var value = _sampleSettings.ReadEncryptedValue("three",encryptString );
+            var value = _sampleSettings.ReadEncryptedValue("three", encryptString);
             // assert
             value.Should().Be(expected);
         }
@@ -59,7 +59,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var expected = "xo";
-            var sampleSettings = new SampleSettings(new ConfigurationBuilder().AddJsonFilesAndEnvironment("develop").Build());
+            var sampleSettings = new SampleSettings(new ConfigurationBuilder().AddJsonFilesAndEnvironment().Build());
             // action
             var encryptString = sampleSettings.EncryptString(expected);
 
@@ -67,7 +67,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             Console.Out.WriteLine("----------------");
             Console.Out.WriteLine(encryptString);
             Console.Out.WriteLine("----------------");
-            
+
         }
 
         private void Setup()

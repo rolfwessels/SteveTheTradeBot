@@ -60,8 +60,7 @@ namespace SteveTheTradeBot.Api
 
         public static void SettingsFileReaderHelper(WebHostBuilderContext hostingContext, IConfigurationBuilder config)
         {
-            var env = hostingContext.HostingEnvironment;
-            config.AddJsonFilesAndEnvironment(env.EnvironmentName);
+            config.AddJsonFilesAndEnvironment();
         }
     }
 }

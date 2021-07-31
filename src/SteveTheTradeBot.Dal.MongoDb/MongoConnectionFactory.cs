@@ -1,7 +1,6 @@
 using System;
-using System.Reflection;
+using System.Linq;
 using SteveTheTradeBot.Dal.Persistence;
-using Serilog;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -11,10 +10,10 @@ namespace SteveTheTradeBot.Dal.MongoDb
     {
         private readonly Lazy<IGeneralUnitOfWork> _singleConnection;
 
-        public MongoConnectionFactory(string connectionString, string databaseName)
+        public MongoConnectionFactory(string connectionString)
         {
             ConnectionString = connectionString;
-            DatabaseName = databaseName;
+            DatabaseName = connectionString.Split('/').Last();
             _singleConnection = new Lazy<IGeneralUnitOfWork>(GeneralUnitOfWork);
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -10,15 +11,15 @@ using SteveTheTradeBot.Api.Swagger;
 using SteveTheTradeBot.Api.WebApi.Filters;
 using SteveTheTradeBot.Core;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using StackExchange.Redis;
-using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
-using SteveTheTradeBot.Core.Components.ThirdParty;
 
 namespace SteveTheTradeBot.Api
 {
@@ -28,8 +29,6 @@ namespace SteveTheTradeBot.Api
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            Settings.Initialize(Configuration);
-            Redis = ConnectionMultiplexer.Connect(Settings.Instance.RedisHost);
         }
         
         public void ConfigureContainer(ContainerBuilder builder)
@@ -43,7 +42,12 @@ namespace SteveTheTradeBot.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)))
+                .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
+                {
+                    EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+                    ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+                });
             services.AddSingleton(x => TradePersistenceFactory.DbContextOptions(Settings.Instance.NpgsqlConnection));
             services.AddDbContext<TradePersistenceStoreContext>();
             services.AddCors();
@@ -53,12 +57,6 @@ namespace SteveTheTradeBot.Api
             services.AddMvc(config => { config.Filters.Add(new CaptureExceptionFilter()); });
             services.AddSwagger();
             services.AddSignalR();
-            services.AddHangfire(configuration =>
-            {
-                configuration.UseRedisStorage(Redis);
-                //RecurringJob.AddOrUpdate<IUpdateHistoricalData>("refresh", x => x.StartUpdate("BTCZAR"), Cron.Daily);
-            });
-           
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -87,8 +85,6 @@ namespace SteveTheTradeBot.Api
             app.AddGraphQl();
             app.UseEndpoints(e => e.MapControllers());
             app.UseSwagger();
-            app.UseHangfireDashboard();
-            app.UseHangfireServer();
             SimpleFileServer.Initialize(app);
         }
 

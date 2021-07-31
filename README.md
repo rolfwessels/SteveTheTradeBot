@@ -16,7 +16,7 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Store back test results
 - [x] Run paper trades
 - [x] Add stop loss and take profit
-- [ ] Add to docker
+- [x] Add to docker
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
@@ -25,7 +25,7 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Slack
 - [ ] Prometheus & Slack counters
 - [ ] Add UI
-- [ ] Deploy to staging
+- [x] Deploy to staging
 - [ ] Deploy to AWS or Digital Ocean
 - [ ] Move to using only OpenId
 - [ ] Move away from postgress
@@ -107,6 +107,7 @@ docker-compose exec api bash
 ```cmd
 
 CREATE USER sttb_dev WITH ENCRYPTED PASSWORD 'xxxxxx';
+ALTER ROLE sttb_dev WITH CREATEDB
 CREATE DATABASE steve_the_trade_bot_dev OWNER sttb_dev;
 
 ```

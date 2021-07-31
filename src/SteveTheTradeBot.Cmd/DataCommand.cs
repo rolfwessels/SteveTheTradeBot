@@ -15,24 +15,21 @@ using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Cmd
 {
     public class DataCommand
     {
         
-        public class Download : CommandSync<Download.Settings>
+        public class Download : CommandSync<BaseCommandSettings>
         {
             private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
             private readonly TimeSpan _retryIn = TimeSpan.FromMinutes(1);
 
-            public sealed class Settings : BaseCommandSettings
-            {
-            }
-
             #region Overrides of Command<Settings>
 
-            public override async Task ExecuteAsync(Settings settings, CancellationToken token)
+            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
             {
                 foreach (var feed in ValrFeeds.All)
                 {
@@ -68,6 +65,43 @@ namespace SteveTheTradeBot.Cmd
                     }
                 }
                 
+            }
+
+            #endregion
+        }
+
+        public class Import : CommandSync<BaseCommandSettings>
+        {
+            #region Overrides of CommandSync<BaseCommandSettings>
+
+            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
+            {
+                foreach (var x in ValrFeeds.All)
+                {
+                    var fileName = $"{x.Name}_{x.CurrencyPair}.csv".ToLower();
+                    AnsiConsole.MarkupLine($"Importing trades from [yellow]{fileName}[/].");
+                    using (var reader = new StreamReader(fileName))
+                    {
+                        var count = 0;
+                        var take = 10000;
+                        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                        {
+                            var tradeHistoryStore = IocApi.Instance.Resolve<ITradeHistoryStore>();
+                            foreach (var batch in csv.GetRecords<HistoricalTrade>().BatchedBy(take))
+                            {
+                                count += await tradeHistoryStore.AddRangeAndIgnoreDuplicates(batch);
+                                AnsiConsole.MarkupLine($"[grey]updating.... ({count})[/]");
+                                if (token.IsCancellationRequested) break;
+                            }
+                        }
+
+                        AnsiConsole.MarkupLine(token.IsCancellationRequested
+                            ? $"Partial export [yellow]{fileName}[/] {count} lines."
+                            : $"Done exporting [green]{fileName}[/] {count} lines.");
+                    }
+
+
+                }
             }
 
             #endregion
