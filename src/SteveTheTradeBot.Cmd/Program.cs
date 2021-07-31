@@ -4,7 +4,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Events;
+using Serilog.Sinks.Slack;
+using Serilog.Sinks.Slack.Models;
 using Spectre.Console.Cli;
+using SteveTheTradeBot.Core;
 using SteveTheTradeBot.Core.Framework.Logging;
 
 namespace SteveTheTradeBot.Cmd
@@ -92,16 +95,16 @@ namespace SteveTheTradeBot.Cmd
                     fileSizeLimitBytes: 10 * LoggingHelper.MB, 
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",
                     rollOnFileSizeLimit: true)
-                // .WriteTo.Slack(new SlackSinkOptions()
-                // {
-                //     MinimumLogEventLevel = LogEventLevel.Warning,
-                //     WebHookUrl = Settings.Instance.SlackWebhookUrl,
-                //     CustomChannel = Settings.Instance.LogsSlackChannel,
-                //     BatchSizeLimit = 20,
-                //     Period = TimeSpan.FromSeconds(5),
-                //     ShowDefaultAttachments = true,
-                //     ShowExceptionAttachments = true,
-                // })
+                .WriteTo.Slack(new SlackSinkOptions()
+                {
+                    MinimumLogEventLevel = LogEventLevel.Warning,
+                    WebHookUrl = Settings.Instance.SlackWebhookUrl,
+                    CustomChannel = Settings.Instance.LogsSlackChannel,
+                    BatchSizeLimit = 20,
+                    Period = TimeSpan.FromSeconds(5),
+                    ShowDefaultAttachments = true,
+                    ShowExceptionAttachments = true,
+                })
                 .WriteTo.Console(RestrictedToMinimumLevel(args))
                 //.ReadFrom.Configuration(BaseSettings.Config)
                 .CreateLogger());

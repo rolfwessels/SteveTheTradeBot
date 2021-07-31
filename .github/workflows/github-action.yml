@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RedisHost: localhost
+      RedisHost: localhost      NpgsqlConnection: Host=localhost;Database=SteveTheTradeBotSample
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET
@@ -25,7 +25,9 @@ jobs:
         uses: supercharge/mongodb-github-action@1.6.0
         with:
           mongodb-version: "4.0"
-
+      - uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '11'
       - name: Test
         run: make test
 
