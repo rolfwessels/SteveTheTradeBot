@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RedisHost: localhost      NpgsqlConnection: Host=localhost;Database=steve-the-trade-bot-test      MongoConnection: mongodb://localhost:27017/steve-the-trade-bot-test
+      RedisHost: localhost      NpgsqlConnection: Host=localhost;Database=steve-the-trade-bot-test;Username=postgres;Password=GRES_password      MongoConnection: mongodb://localhost:27017/steve-the-trade-bot-test
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET
@@ -28,6 +28,8 @@ jobs:
       - uses: harmon758/postgresql-action@v1
         with:
           postgresql version: '11'
+          postgresql user: 'postgres'
+          postgresql password: 'GRES_password'
       - name: Test
         run: make test
 
