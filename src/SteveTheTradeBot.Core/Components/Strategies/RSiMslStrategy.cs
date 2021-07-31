@@ -58,7 +58,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                if (currentTrade.Close > MoveProfit(data).Dump(""))
+                if (currentTrade.Close > MoveProfit(data))
                 {
                     ResetStops(currentTrade, data);
                 }
@@ -78,7 +78,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var key = "MoveProfit";
             if (setValue == null)
             {
-                var moveProfitPercent = 551258;
+                var moveProfitPercent = data.LatestQuote().Close * _moveProfitPercent;
                 return data.Get(key, moveProfitPercent).Result;
             }
             data.Set(key, setValue.Value).Wait();

@@ -1,6 +1,7 @@
 using System;
 using Bumbershoot.Utilities;
 using Microsoft.Extensions.Configuration;
+using SteveTheTradeBot.Core.Framework.Settings;
 using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Core
@@ -8,7 +9,7 @@ namespace SteveTheTradeBot.Core
     public class Settings : BaseEncryptedSettings
     {
         private static Lazy<Settings> _instance = new Lazy<Settings>(() => new Settings(new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", true, true).Build()));
+            .AddJsonFilesAndEnvironment().Build()));
 
         public Settings(IConfiguration configuration) : base(configuration, null)
         {

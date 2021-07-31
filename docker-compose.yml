@@ -1,6 +1,4 @@
 version: "3.5"
-networks:
-  dev-network:
 volumes:
   grafana_data:
   mongo_data:
@@ -17,8 +15,7 @@ services:
     ports:
       - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
-    networks:
-      - dev-network
+
 
   sql:
     image: postgres:13.3-buster
@@ -42,8 +39,6 @@ services:
     image: redis:6.0-alpine
     ports:
       - 6391:6379
-    networks:
-      - dev-network
 
   grafana:
     image: grafana/grafana:latest
@@ -108,5 +103,3 @@ services:
     entrypoint: top -b
     logging:
       driver: none
-    networks:
-      - dev-network

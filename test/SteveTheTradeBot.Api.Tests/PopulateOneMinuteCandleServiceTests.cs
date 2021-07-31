@@ -52,7 +52,7 @@ namespace SteveTheTradeBot.Api.Tests
             context.SaveChanges();
 
             context.TradeFeedCandles.AddRange(historicalTrades.Take(2)
-                .ToCandleOneMinute().Dump("")
+                .ToCandleOneMinute()
                 .Select(x => TradeFeedCandle.From(x, "valr", PeriodSize.OneMinute, CurrencyPair.BTCZAR)));
             context.SaveChanges();
             
