@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.Dal.Tests;
@@ -15,26 +16,31 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
 
 
         [Test]
-        public async Task Order_GivenBuyOrder_ShouldFulfillOrder()
+        [Category("FullIntegration")]
+        public async Task Order_GivenBuyOrder1_ShouldFulfillOrder()
         {
             await TestHelper.TestEveryNowAndThen(async () => {
                 // arrange
                 Setup();
                 // action
-                var response = await _valrBrokerApi.Order(SimpleOrderRequest.From(Side.Buy, 100, CurrencyCodes.ZAR,
+                var response = await _valrBrokerApi.MarketOrder(SimpleOrderRequest.From(Side.Buy, 100, CurrencyCodes.ZAR,
                     DateTime.Now, Gu.Id(),
                     CurrencyPair.ETHZAR));
                 // assert
-                response.OrderId.Should().NotBeNullOrEmpty();
-                response.Success.Should().Be(true);
-                response.Processing.Should().Be(false);
-                response.PaidAmount.Should().Be(100);
-                response.PaidCurrency.Should().Be(CurrencyCodes.ZAR);
-                response.ReceivedAmount.Should().BeGreaterThan(0).And.BeLessThan(1);
-                response.ReceivedCurrency.Should().Be(CurrencyCodes.ETH);
-                response.FeeAmount.Should().BeGreaterThan(0);
-                response.FeeCurrency.Should().Be(CurrencyCodes.ETH);
-                response.OrderExecutedAt.Should().BeCloseTo(DateTime.Now.ToUniversalTime(), 5999);
+
+                response.OrderStatusType.Should().Be("Filled");
+                response.CurrencyPair.Should().Be("ETHZAR");
+                response.AveragePrice.Should().BeGreaterOrEqualTo(35000);
+                response.OriginalPrice.Should().Be(100);
+                response.RemainingQuantity.Should().Be(0);
+                response.OriginalQuantity.Should().BeApproximately(0.002m,0.1m);
+                response.Total.Should().Be(100);
+                response.TotalFee.Should().BeApproximately(0.00002m, 0.1m);
+                response.FeeCurrency.Should().Be("ETH");
+                response.OrderSide.Should().Be(0);
+                response.OrderType.Should().Be("simple");
+                response.FailedReason.Should().Be(null);
+               
             });
         }
 
@@ -42,7 +48,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
         private void Setup()
         {
             TestLoggingHelper.EnsureExists();
-            _valrBrokerApi = new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret);
+            _valrBrokerApi = new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret, Messenger.Default);
         }
     }
 }

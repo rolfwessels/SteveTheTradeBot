@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using SteveTheTradeBot.Core.Components.Storage;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Storage
 {
-    public class TestTradePersistenceFactory: TradePersistenceFactory
+    public class TestTradePersistenceFactory : TradePersistenceFactory
     {
         private static readonly Lazy<TestTradePersistenceFactory> _instance = new Lazy<TestTradePersistenceFactory>(() => new TestTradePersistenceFactory());
         private readonly TradePersistenceFactory _tradePersistenceFactory;
@@ -13,7 +14,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
 
         protected TestTradePersistenceFactory() : base(DbContextOptionsFor())
         {
-            _tradePersistenceFactory = new TradePersistenceFactory("Host=localhost;Database=SteveTheTradeBotTests;Username=postgres;Password=GRES_password");
+            var lookup = "Database=";
+            if (!Settings.Instance.NpgsqlConnection.Contains(lookup)) throw new Exception("Please check connection string.");
+            var connection = Settings.Instance.NpgsqlConnection.Replace(lookup,"Database=Test1");
+            _tradePersistenceFactory = new TradePersistenceFactory(connection);
         }
 
         private static DbContextOptions<TradePersistenceStoreContext> DbContextOptionsFor(string databaseName = "TestDb")

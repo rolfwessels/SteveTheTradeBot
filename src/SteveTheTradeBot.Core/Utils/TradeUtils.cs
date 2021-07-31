@@ -14,10 +14,11 @@ namespace SteveTheTradeBot.Core.Utils
             return Math.Round((currentValue - fromValue) / fromValue * 100, decimals);
         }
 
-        public static ConsoleTables ToTable<T>(this IEnumerable<T> enumerable)
+        public static string ToTable<T>(this IEnumerable<T> enumerable)
         {
             var table = new Table().From(enumerable.ToList()).With(x => x.Config = TableConfiguration.UnicodeAlt());
-            return new ConsoleTables(table);
+            if (!table.Rows.Any()) return "No records found.\n";
+            return new ConsoleTables(table).ToString();
         }
 
 
@@ -40,26 +41,23 @@ namespace SteveTheTradeBot.Core.Utils
 
         public static void Print(this StrategyInstance backTestResult)
         {
+            Console.Out.WriteLine("Reference: " + backTestResult.Reference);
             Console.Out.WriteLine("BalanceMoved: " + backTestResult.PercentProfit);
             Console.Out.WriteLine("MarketMoved: " + backTestResult.PercentMarketProfit);
             Console.Out.WriteLine("Trades: " + backTestResult.TotalNumberOfTrades);
             Console.Out.WriteLine("TradesSuccesses: " + backTestResult.NumberOfProfitableTrades);
             Console.Out.WriteLine("TradesSuccessesPercent: " + backTestResult.PercentOfProfitableTrades);
             Console.Out.WriteLine("TradesActive: " + backTestResult.TotalActiveTrades);
-            Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket);
-            var tradeValues = backTestResult.Trades
-                .Select(x => new
-                {
-                    x.StartDate, x.Profit, Value = x.SellValue - x.BuyValue,
-                    MarketMoved = TradeUtils.MovementPercent(x.SellPrice, x.BuyPrice)
-                })
-                .OrderByDescending(x => x.Value).ToArray();
-            Console.Write(tradeValues.Take(10).Concat(tradeValues.TakeLast(10)).ToTable().ToString());
+            Console.Out.WriteLine("TotalFee: " + backTestResult.TotalFee);
+            Console.Out.WriteLine("AvgDuration: " + backTestResult.AverageTimeInMarket.ToShort());
+            Console.Out.WriteLine("AverageTradesPerMonth: " + backTestResult.AverageTradesPerMonth);
+            
             Console.Write(backTestResult.Trades
-                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice}).ToTable()
+                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit , x.FeeAmount}).ToTable()
                 .ToString());
             Console.Write(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
-                    new {x.OrderSide, x.PriceAtRequest, x.OrderPrice, x.OutQuantity, x.OriginalQuantity, x.CurrencyPair})
+                    new {x.OrderSide, x.OrderStatusType, x.OrderType, x.PriceAtRequest, x.OrderPrice,
+                        OutQuantity = x.Total, x.OriginalQuantity, x.CurrencyPair,FeeAmount = x.TotalFee})
                 .ToTable()
                 .ToString());
         }

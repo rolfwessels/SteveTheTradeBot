@@ -13,7 +13,7 @@ namespace SteveTheTradeBot.Core.Utils
         {
             try
             {
-                strategyInstance.TotalFee = strategyInstance.Trades.Where(x => x.IsActive).Sum(x=>x.FeeAmount);
+                strategyInstance.TotalFee = strategyInstance.Trades.Sum(x=>x.FeeAmount);
                 strategyInstance.TotalActiveTrades = strategyInstance.Trades.Count(x => x.IsActive);
                 strategyInstance.TotalNumberOfTrades = strategyInstance.Trades.Count;
 

@@ -16,14 +16,13 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Api
 {
-    public class PopulateOtherMetrics : BackgroundService
+    public class PopulateOtherMetrics : BackgroundServiceWithResetAndRetry
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
         private readonly ITradeFeedCandlesStore _store;
         private readonly IParameterStore _parameterStore;
         private readonly IMessenger _messenger;
-        readonly ManualResetEventSlim _delayWorker = new ManualResetEventSlim(false);
 
         public PopulateOtherMetrics(ITradeFeedCandlesStore store, IParameterStore parameterStore, IMessenger messenger)
         {
@@ -34,31 +33,30 @@ namespace SteveTheTradeBot.Api
 
         #region Overrides of BackgroundService
 
-        public override async Task ExecuteAsync(CancellationToken token)
+        protected override void RegisterSetter()
         {
-            _messenger.Register<PopulateOneMinuteCandleService.Updated>(this, x => _delayWorker.Set());
-            while (!token.IsCancellationRequested)
-            {
-                _delayWorker.Wait(token);
-                foreach (var (period,feed) in ValrFeeds.AllWithPeriods())
-                {
-                    await Populate(token, feed.Name, feed.CurrencyPair, period);
-                }
-
-                await _messenger.Send(new Updated());
-                await Task.Delay(DateTime.Now.AddMinutes(1).ToMinute().TimeTill(), token);
-            }
+            _messenger.Register<PopulateOtherCandlesService.UpdatedOtherCandles>(this, x => _delayWorker.Set());
         }
 
-        public class Updated
+        protected override async Task ExecuteAsyncInRetry(CancellationToken token)
+        {
+            foreach (var (period, feed) in ValrFeeds.AllWithPeriods())
+            {
+                await Populate(token, feed.Name, feed.CurrencyPair, period);
+            }
+
+            await _messenger.Send(new MetricsUpdatedMessage());
+        }
+
+        public class MetricsUpdatedMessage
         {
         }
 
         private async Task Populate(CancellationToken token, string feed, string currencyPair, PeriodSize periodSize)
         {
-            var required = 400;
+            var required = 500;
             var key = $"metric_populate_{feed}_{currencyPair}_{periodSize}";
-            var startDate = await _parameterStore.Get(key, new DateTime(2000,1,1));
+            var startDate = (await _parameterStore.Get(key, new DateTime(2000,1,1))).ToUniversalTime();
             try
             {
                 var findAllBetween = _store.FindAllBetween(startDate, DateTime.Now.ToUniversalTime(), feed, currencyPair, periodSize);
@@ -74,14 +72,14 @@ namespace SteveTheTradeBot.Api
                         break;
                     }
 
-                    AddRsi(currentBatch, values);
-                    GetRoc(currentBatch, values);
-                    AddEmi(currentBatch, values);
-                    AddGetMacd(currentBatch, values);
                     AddSuperTrend(currentBatch, values);
-                    var keyValuePairs = values.Where(x=>x.Key.ToUniversalTime() >= startDate.AddHours(-1).ToUniversalTime()).ToList();
+                    AddGetMacd(currentBatch, values);
+                    AddEmi(currentBatch, values);
+                    AddRoc(currentBatch, values);
+                    AddRsi(currentBatch, values);
+                    var keyValuePairs = values.Where(x=>x.Key.ToUniversalTime() >= startDate.Add(periodSize.ToTimeSpan()*-1)).ToList();
                     var updateFeed = await _store.UpdateFeed(keyValuePairs, feed, currencyPair, periodSize);
-                    await _parameterStore.Set(key, batch.Last().Date);
+                    await _parameterStore.Set(key, keyValuePairs.Last().Key);
                     startDate = batch.Last().Date;
                     prevBatch = currentBatch.TakeLast(required).ToList();
                     _log.Debug($"PopulateOtherMetrics:Populate {key} with {updateFeed.Count} / {keyValuePairs.Count} entries before LastDate:{startDate} {currentBatch.Count} records used from {currentBatch.Min(x=>x.Date)} to {currentBatch.Max(x => x.Date)} {values.Keys.Min()} {values.Keys.Max()}.");
@@ -95,6 +93,7 @@ namespace SteveTheTradeBot.Api
 
         private static void AddSuperTrend(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
+            if (tradeFeedCandles.Count < 250) return;
             var rsiResults = tradeFeedCandles.GetSuperTrend();
             foreach (var rsiResult in rsiResults)
             {
@@ -107,6 +106,7 @@ namespace SteveTheTradeBot.Api
 
         private static void AddRsi(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
+            if (tradeFeedCandles.Count < 140) return;
             var rsiResults = tradeFeedCandles.GetRsi();
             foreach (var rsiResult in rsiResults)
             {
@@ -116,17 +116,29 @@ namespace SteveTheTradeBot.Api
         }
 
 
-        private static void GetRoc(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddRoc(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
-            var rsiResults = tradeFeedCandles.GetRoc(100, 100);
-            foreach (var rsiResult in rsiResults)
+            if (tradeFeedCandles.Count < 101) return;
+            var roc = tradeFeedCandles.GetRoc(100, 100);
+            foreach (var rsiResult in roc)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
                 orAdd.Add("roc100", rsiResult.Roc);
                 orAdd.Add("roc100-sma", rsiResult.RocSma);
             }
-            rsiResults = tradeFeedCandles.GetRoc(200,200);
-            foreach (var rsiResult in rsiResults)
+
+            if (tradeFeedCandles.Count < 202) return;
+            roc = tradeFeedCandles.GetRoc(200,200).ToList();
+            if (roc.TakeLast(30).Any(x => x.RocSma == null))
+            {
+                foreach (var rsi in roc)
+                {
+                    _log.Debug($"PopulateOtherMetrics:AddRoc Failing to get values for {rsi.Date} - {rsi.RocSma}");
+                }
+                throw new Exception("Fail!");
+            }
+
+            foreach (var rsiResult in roc)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
                 orAdd.Add("roc200", rsiResult.Roc);
@@ -136,6 +148,7 @@ namespace SteveTheTradeBot.Api
 
         private static void AddGetMacd(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
+            if (tradeFeedCandles.Count < 135) return;
             var rsiResults = tradeFeedCandles.GetMacd();
             foreach (var rsiResult in rsiResults)
             {
@@ -147,12 +160,14 @@ namespace SteveTheTradeBot.Api
         }
         private static void AddEmi(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
+            if (tradeFeedCandles.Count < 200) return;
             var rsiResults = tradeFeedCandles.GetEma(100);
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
                 orAdd.Add("ema100", rsiResult.Ema);
             }
+            if (tradeFeedCandles.Count < 400) return;
             rsiResults = tradeFeedCandles.GetEma(200);
             foreach (var rsiResult in rsiResults)
             {

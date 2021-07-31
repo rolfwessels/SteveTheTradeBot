@@ -17,3 +17,5 @@ project.lock.json
 **/*nCrunchTemp*
 /TestResults/*.trx
 build/**/*
+/src/SteveTheTradeBot.Cmd/valr_ethzar.csv
+/src/SteveTheTradeBot.Cmd/valr_btczar.csv

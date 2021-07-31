@@ -67,8 +67,8 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
             return base.WithFullData(query)
                 .Include(r => r.Trades)
-                .Include("Trades.Orders")
-                ;
+                .Include(r => r.Property)
+                .Include("Trades.Orders");
         }
 
         #endregion

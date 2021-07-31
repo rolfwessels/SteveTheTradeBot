@@ -15,6 +15,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string StrategyName { get; set; }
 
         public List<StrategyTrade> Trades { get; set; } = new List<StrategyTrade>();
+        public List<Properties> Property { get; set; } = new List<Properties>();
 
         public bool IsActive { get; set; }
         public bool IsBackTest { get; set; }
@@ -43,7 +44,8 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public TimeSpan AverageTimeInMarket { get; set; }
         public DateTime FirstStart { get; set; }
         public DateTime LastDate { get; set; }
-        
+        public string Status { get; set; }
+
         // public decimal MaximumDrawDown { get; set; }
         // public decimal MaximumDrawDownMonteCarlo { get; set; }
         // public decimal StandardDeviation { get; set; }
@@ -59,9 +61,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
         public static StrategyInstance ForBackTest(string strategy, string pair)
         {
-            var forBackTest = From( strategy,  pair, 1000, PeriodSize.FiveMinutes);
-            forBackTest.IsBackTest = true;
-            return forBackTest;
+            var instance = From( strategy,  pair, 1000, PeriodSize.FiveMinutes);
+            instance.IsBackTest = true;
+            instance.Reference += "_backtest";
+            return instance;
         }
 
 
@@ -91,5 +94,50 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 Reference = $"{strategy}_{pair}_{periodSize}_{DateTime.Now:yyyyMMdd}".ToLower()
             };
         }
+
+        public (StrategyTrade addTrade, TradeOrder tradeOrder) AddBuyTradeOrder(decimal randValue,
+            decimal estimatedPrice, DateTime currentTradeDate)
+        {
+            var estimatedQuantity = Math.Round(randValue / estimatedPrice, 8);
+
+            var addTrade = AddTrade(currentTradeDate, estimatedPrice, estimatedQuantity, randValue);
+            var tradeOrder = addTrade.AddOrderRequest(Side.Buy, randValue, estimatedPrice, estimatedQuantity,
+                Pair, currentTradeDate, estimatedPrice);
+            return (addTrade, tradeOrder);
+        }
+
+        public StrategyTrade ActiveTrade()
+        {
+            return Trades.FirstOrDefault(x => x.IsActive);
+        }
+
+        public class Properties : BaseDalModel
+        {
+            public string StrategyInstanceId { get; set; }
+            public string Key { get; set; }
+            public string Value { get; set; }
+        }
+
+        public string Get(string key, string defaultValue)
+        {
+            var found = Property?.Where(x=>x.Key == key).Select(x=>x.Value).FirstOrDefault();
+            return found ?? defaultValue;
+        }
+
+        public void Set(string key, string value)
+        {
+            if (Property == null) Property = new List<Properties>();
+            var firstOrDefault = Property.FirstOrDefault(x=>x.Key == key);
+            if (firstOrDefault == null)
+            {
+                Property.Add(new Properties() {StrategyInstanceId = Id, Key = key, Value = value});
+            }
+            else
+            {
+                firstOrDefault.Value = value;
+            }
+        }
     }
+
+    
 }

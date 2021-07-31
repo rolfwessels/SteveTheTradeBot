@@ -15,10 +15,11 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         public decimal FeeAmount { get; set; }
         public string FeeCurrency { get; set; }
         public DateTime OrderExecutedAt { get; set; }
+        public string FailedReason { get; set; }
 
         public decimal OriginalPrice(Side sell)
         {
-            if (sell == Side.Sell)
+            if (sell != Side.Sell)
             {
                 return Math.Floor(PaidAmount / (ReceivedAmount + FeeAmount));
             }

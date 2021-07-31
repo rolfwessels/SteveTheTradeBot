@@ -1,6 +1,8 @@
 version: "3.5"
-networks:
-  dev-network:volumes:  grafana_data:
+volumes:
+  grafana_data:
+  mongo_data:
+  postgres_data:
 
 services:
   db:
@@ -8,22 +10,25 @@ services:
     environment:
       - MONGO_DATA_DIR=/data/db
       - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - mongo_data:/data/db
     ports:
       - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
-    networks:
-      - dev-network
+
 
   sql:
     image: postgres:13.3-buster
     ports:
-      - 5432:5432
+      - 15432:5432
     environment:
       POSTGRES_PASSWORD: GRES_password
 
   pgadmin:
     container_name: pgadmin4_container
     image: dpage/pgadmin4
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: GRES_password
@@ -34,8 +39,7 @@ services:
     image: redis:6.0-alpine
     ports:
       - 6391:6379
-    networks:
-      - dev-network
+
   grafana:
     image: grafana/grafana:latest
     container_name: "grafana"
@@ -49,12 +53,13 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin!!
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=webdav      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=ilgizar-candlestick-panel
-    
+      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=webdav
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=ilgizar-candlestick-panel
+
   src:
     depends_on:
       - redis
-      - db
+      - db      - sql
     container_name: steve-the-trade-bot
     build:
       context: ./
@@ -89,6 +94,7 @@ services:
       - DOTNET_ENVIRONMENT=Development
       - MongoConnection=mongodb://db:27017/steve-the-trade-bot
       - MongoDatabase=steve-the-trade-bot
+      - NpgsqlConnection=Host=sql;Database=SteveTheTradeBotSample;Username=postgres;Password=GRES_password;Port=5432
       - RedisHost=redis
       - App__HostUrl=http://localhost:5000
       - OpenId__Origins=http://localhost:5000,http://localhost:84,http://localhost:3000
@@ -97,5 +103,3 @@ services:
     entrypoint: top -b
     logging:
       driver: none
-    networks:
-      - dev-network

@@ -15,12 +15,12 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Have a BTC bot that actually makes money!
 - [x] Store back test results
 - [x] Run paper trades
-- [ ] Add stop loss and take profit
+- [X] Add stop loss and take profit
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
 - [x] Integrate with grafana
-- [ ] Logging & monitoring
+- [X] Logging & monitoring
 - [X] Slack
 - [ ] Prometheus & Slack counters
 - [ ] Add UI
@@ -79,8 +79,9 @@ cd src\SteveTheTradeBot.Core
 dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj add AddStrategy
 dotnet ef database  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj update
 dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj list
-#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 
 #dotnet ef database update  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 20210719165547_AddMetricMapping
+#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 
+
 ```
 
 ## Deploy docker files

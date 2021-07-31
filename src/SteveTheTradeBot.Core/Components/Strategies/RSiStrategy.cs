@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
+using SteveTheTradeBot.Core.Framework.Slack;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -17,18 +19,15 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         
         private readonly int _buySignal;
         private readonly decimal _initialStopRisk;
-        private decimal? _setStopLoss;
         private readonly decimal _buy200rocsma;
-        private readonly decimal _initialTakeProfit;
-        private decimal _setTakeProfit;
         private readonly decimal _moveProfitPercent;
-        private decimal _setMoveProfit;
+        private readonly decimal _secondStopRisk;
 
-        public RSiStrategy() : base()
+        public RSiStrategy()
         {
             _initialStopRisk = 0.96m;
-            _initialTakeProfit = 1.10m;
-            _moveProfitPercent = 1.05m;
+            _secondStopRisk = 0.96m;
+            _moveProfitPercent = 1.03m;
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }
@@ -39,43 +38,57 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var activeTrade = data.ActiveTrade();
             var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
+            var roc100sma = currentTrade.Metric.GetOrDefault("roc100-sma");
             if (activeTrade == null)
             {
-                if (rsiResults < _buySignal && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma))
+                if (rsiResults < _buySignal && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma && roc100sma.Value > _buy200rocsma))
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
-                    await Buy(data, data.StrategyInstance.BaseAmount);
-                    ResetStops(currentTrade);
+                    var strategyTrade = await Buy(data, data.StrategyInstance.BaseAmount);
+                    var lossAmount = strategyTrade.BuyPrice * _initialStopRisk;
+                    await data.Messenger.Send(new PostSlackMessage()
+                        { Message = $"{data.StrategyInstance.Reference} set stop loss to {lossAmount}." });
+                    await SetStopLoss(data, lossAmount);
+                    data.StrategyInstance.Status =
+                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {lossAmount}]";
+                }
+                else
+                {
+                    data.StrategyInstance.Status =
+                        $"Waiting to buy ![{rsiResults} < {_buySignal}] [{roc200sma} > {_buy200rocsma}]";
                 }
             }
             else
             {
-                //if ( (rsiResults > _sellSignal && activeTrade.BuyPrice < currentTrade.Close) || currentTrade.Close <= _setStopLoss)
-                if (currentTrade.Close > _setMoveProfit)
+                var moveProfit = GetMoveProfit(activeTrade);
+                if (currentTrade.Close > moveProfit)
                 {
-                    ResetStops(currentTrade);
+                    var lossAmount = currentTrade.Close * _secondStopRisk;
+                    await data.Messenger.Send(new PostSlackMessage()
+                        { Message = $"{data.StrategyInstance.Reference} update stop loss to {lossAmount}." });
+                    await SetStopLoss(data, lossAmount);
+                    data.StrategyInstance.Status = $"Update stop loss to {lossAmount}";
                 }
-
-                if ( currentTrade.Close <= _setStopLoss || currentTrade.Close >= _setTakeProfit)
+                else
                 {
-                    _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
-
-                    await Sell(data, activeTrade);
-                    _setStopLoss = null;
+                    data.StrategyInstance.Status = $"Waiting for price above {moveProfit} or stop loss {activeTrade.GetValidStopLoss()?.OrderPrice}]";
                 }
             }
         }
 
-        private void ResetStops(TradeFeedCandle currentTrade)
+
+        private decimal GetMoveProfit(StrategyTrade activeTrade)
         {
-            _setStopLoss = currentTrade.Close * _initialStopRisk;
-            _setTakeProfit = currentTrade.Close * _initialTakeProfit;
-            _setMoveProfit = currentTrade.Close * _moveProfitPercent;
+            var validStopLoss = activeTrade.GetValidStopLoss();
+            if (validStopLoss != null)
+            {
+                var moveProfitPercent = validStopLoss.OrderPrice * (_moveProfitPercent + (1 - _initialStopRisk));
+                return moveProfitPercent;
+            }
+            return activeTrade.BuyPrice;
         }
 
-  
 
         public override string Name => Desc;
       

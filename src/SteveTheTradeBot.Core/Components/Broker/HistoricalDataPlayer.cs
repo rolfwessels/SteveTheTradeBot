@@ -26,9 +26,12 @@ namespace SteveTheTradeBot.Core.Components.Broker
 
         #region Implementation of IHistoricalDataPlayer
 
-        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(string currencyPair, DateTime @from, DateTime to,
+        public IEnumerable<HistoricalTrade> ReadHistoricalTrades(string currencyPair, DateTime from, DateTime to,
             CancellationToken cancellationToken = default, int batchSize = 1000)
         {
+            if (from.Kind != DateTimeKind.Utc) throw new ArgumentException("Please provide utc date for this call.", nameof(from));
+            if (to.Kind != DateTimeKind.Utc) throw new ArgumentException("Please provide utc date for this call.", nameof(to));
+
             _log.Information($"ReadHistoricalTrades for {currencyPair} from {from} to {to}");
             var skip = 0;
             int counter;
@@ -49,6 +52,9 @@ namespace SteveTheTradeBot.Core.Components.Broker
 
         public IEnumerable<TradeFeedCandle> ReadHistoricalData(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, CancellationToken cancellationToken = default, int batchSize = 1000)
         {
+            if (from.Kind != DateTimeKind.Utc) throw new ArgumentException("Please provide utc date for this call.", nameof(from));
+            if (to.Kind != DateTimeKind.Utc) throw new ArgumentException("Please provide utc date for this call.", nameof(to));
+
             _log.Information($"ReadHistoricalTrades {from} {to}");
             var skip = 0;
             int counter;

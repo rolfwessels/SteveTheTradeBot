@@ -42,12 +42,34 @@ namespace SteveTheTradeBot.Core.Migrations
                     AverageTimeInMarket = table.Column<TimeSpan>(type: "interval", nullable: false),
                     FirstStart = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     LastDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: true),
                     CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     UpdateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Strategies", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Properties",
+                columns: table => new
+                {
+                    StrategyInstanceId = table.Column<string>(type: "text", nullable: false),
+                    Key = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true),
+                    CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Properties", x => new { x.StrategyInstanceId, x.Key });
+                    table.ForeignKey(
+                        name: "FK_Properties_Strategies_StrategyInstanceId",
+                        column: x => x.StrategyInstanceId,
+                        principalTable: "Strategies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -90,17 +112,17 @@ namespace SteveTheTradeBot.Core.Migrations
                     OrderStatusType = table.Column<int>(type: "integer", nullable: false),
                     CurrencyPair = table.Column<string>(type: "text", nullable: true),
                     OrderPrice = table.Column<decimal>(type: "numeric", nullable: false),
+                    PriceAtRequest = table.Column<decimal>(type: "numeric", nullable: false),
                     RemainingQuantity = table.Column<decimal>(type: "numeric", nullable: false),
                     OriginalQuantity = table.Column<decimal>(type: "numeric", nullable: false),
                     OrderSide = table.Column<int>(type: "integer", nullable: false),
                     OrderType = table.Column<string>(type: "text", nullable: true),
                     BrokerOrderId = table.Column<string>(type: "text", nullable: true),
                     FailedReason = table.Column<string>(type: "text", nullable: true),
-                    PriceAtRequest = table.Column<decimal>(type: "numeric", nullable: false),
-                    OutQuantity = table.Column<decimal>(type: "numeric", nullable: false),
-                    OutCurrency = table.Column<string>(type: "text", nullable: true),
-                    FeeAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    Total = table.Column<decimal>(type: "numeric", nullable: false),
+                    TotalFee = table.Column<decimal>(type: "numeric", nullable: false),
                     FeeCurrency = table.Column<string>(type: "text", nullable: true),
+                    StopPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     StrategyTradeId = table.Column<string>(type: "text", nullable: true),
                     CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     UpdateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
@@ -129,6 +151,9 @@ namespace SteveTheTradeBot.Core.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Properties");
+
             migrationBuilder.DropTable(
                 name: "TradeOrder");
 

@@ -7,15 +7,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{96956A56-3019-4049-896A-11C2FAD6B8EB}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		.travis.yml = .travis.yml
-		appveyor.yml = appveyor.yml
 		docker-compose.yml = docker-compose.yml
-		src\dockerbuild.sh = src\dockerbuild.sh
 		src\Dockerfile = src\Dockerfile
-		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\github-action.yml = .github\workflows\github-action.yml
+		Makefile = Makefile
 		README.md = README.md
-		SteveTheTradeBot.build.ps1 = SteveTheTradeBot.build.ps1
-		testall.ps1 = testall.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1F5EB58A-8ACE-4179-85CD-119D2DEFF2DF}"

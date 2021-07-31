@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Globalization;
-using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
@@ -13,7 +11,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         public string CustomerOrderId { get; set; }
         public DateTime RequestDate { get; set; }
         public string CurrencyPair { get; set; }
-
+        
 
         public static SimpleOrderRequest From(Side side, decimal amount, string payIn, DateTime requestDate,
              string customerOrderId, string currencyPair)

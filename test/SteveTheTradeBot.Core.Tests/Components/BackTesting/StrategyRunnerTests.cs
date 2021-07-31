@@ -25,6 +25,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         private Mock<ITradeFeedCandlesStore> _mockITradeHistoryStore;
         private FakeStrategy _fakeStrategy;
         private StrategyInstanceStore _strategyInstanceStore;
+        private Mock<IParameterStore> _mockIParameterStore;
 
 
         #region Setup/Teardown
@@ -34,10 +35,13 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             _mockIDynamicGraphs = new Mock<IDynamicGraphs>();
             _strategyInstanceStore = new StrategyInstanceStore(TestTradePersistenceFactory.UniqueDb());
             _mockITradeHistoryStore = new Mock<ITradeFeedCandlesStore>();
-            var fakeBroker = new FakeBroker();
+            _mockIParameterStore = new Mock<IParameterStore>();
+            
+            var fakeBroker = new FakeBroker(Messenger.Default);
             _fakeStrategy = new FakeStrategy();
             var strategyPicker = new StrategyPicker().Add("FakeStrategy", () => _fakeStrategy);
-            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _strategyInstanceStore, fakeBroker, _mockITradeHistoryStore.Object, Messenger.Default);
+            
+            _strategyRunner = new StrategyRunner(strategyPicker, _mockIDynamicGraphs.Object, _strategyInstanceStore, fakeBroker, _mockITradeHistoryStore.Object, Messenger.Default, _mockIParameterStore.Object);
         }
 
         [TearDown]

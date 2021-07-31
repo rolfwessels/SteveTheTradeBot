@@ -183,6 +183,9 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<string>("Reference")
                         .HasColumnType("text");
 
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
                     b.Property<string>("StrategyName")
                         .HasColumnType("text");
 
@@ -207,6 +210,28 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Strategies");
+                });
+
+            modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance+Properties", b =>
+                {
+                    b.Property<string>("StrategyInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("StrategyInstanceId", "Key");
+
+                    b.ToTable("Properties");
                 });
 
             modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyTrade", b =>
@@ -323,9 +348,6 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<string>("FailedReason")
                         .HasColumnType("text");
 
-                    b.Property<decimal>("FeeAmount")
-                        .HasColumnType("numeric");
-
                     b.Property<string>("FeeCurrency")
                         .HasColumnType("text");
 
@@ -344,12 +366,6 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<decimal>("OriginalQuantity")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("OutCurrency")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("OutQuantity")
-                        .HasColumnType("numeric");
-
                     b.Property<decimal>("PriceAtRequest")
                         .HasColumnType("numeric");
 
@@ -359,8 +375,17 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.Property<DateTime>("RequestDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<decimal>("StopPrice")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("StrategyTradeId")
                         .HasColumnType("text");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TotalFee")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("timestamp without time zone");
@@ -370,6 +395,15 @@ namespace SteveTheTradeBot.Core.Migrations
                     b.HasIndex("StrategyTradeId");
 
                     b.ToTable("TradeOrder");
+                });
+
+            modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance+Properties", b =>
+                {
+                    b.HasOne("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance", null)
+                        .WithMany("Property")
+                        .HasForeignKey("StrategyInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyTrade", b =>
@@ -388,6 +422,8 @@ namespace SteveTheTradeBot.Core.Migrations
 
             modelBuilder.Entity("SteveTheTradeBot.Dal.Models.Trades.StrategyInstance", b =>
                 {
+                    b.Navigation("Property");
+
                     b.Navigation("Trades");
                 });
 

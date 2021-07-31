@@ -5,6 +5,7 @@
         Filled,
         PartiallyFilled,
         Placed,
-        Failed
+        Failed,
+        Cancelled,
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Dal.Models.Trades;
@@ -23,5 +24,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         Task<List<TradeFeedCandle>> FindBefore(DateTime startDate, string feed, string currencyPair,
             PeriodSize periodSize, int take);
+
+        Task Populate(CancellationToken token, string feedCurrencyPair, string feedName, PeriodSize periodSize);
     }
 }

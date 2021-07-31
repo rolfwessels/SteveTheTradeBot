@@ -61,10 +61,10 @@ namespace SteveTheTradeBot.Core.Components.Broker
         {
             _log.Information($"Ensure we have the latest data after {earliest.TradedAt}.");
             var saveChangesAsync = BatchSize;
-            string? lastId = earliest.Id;
+            string lastId = earliest.Id;
             while (saveChangesAsync != 0 && !token.IsCancellationRequested && lastId != null)
             {
-                var trades = await _api.GetTradeHistory(currencyPair, lastId, BatchSize);
+                var trades = await Retry.Run(() =>  _api.GetTradeHistory(currencyPair, lastId, BatchSize) ,token);
                 var stopwatch = new Stopwatch().With(x=>x.Start());
                 saveChangesAsync = await _store.AddRangeAndIgnoreDuplicates(trades.Select(x => x.ToDao()).ToList());
                 _log.Information($"Saved {saveChangesAsync} new {currencyPair} items after {trades.Select(x=>x.TradedAt).LastOrDefault()} in  {stopwatch.Elapsed.ToShort()}");

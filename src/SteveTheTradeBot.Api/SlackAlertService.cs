@@ -1,7 +1,5 @@
-﻿using System.Reflection;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
 using SteveTheTradeBot.Core;
 using SteveTheTradeBot.Core.Components.Notifications;
 using SteveTheTradeBot.Core.Components.Strategies;
@@ -36,6 +34,7 @@ namespace SteveTheTradeBot.Api
             await _notificationChannel.PostAsync("Morning, Im awake and up and running.");
             await _slackService.Connect();
             MessengerHelper.RegisterAsync<TradeOrderMadeMessage>(_messenger,this, _messageToNotification.OnTradeOrderMade);
+            MessengerHelper.RegisterAsync<PostSlackMessage>(_messenger,this,(r) => _notificationChannel.PostAsync(r.Message));
         }
 
       

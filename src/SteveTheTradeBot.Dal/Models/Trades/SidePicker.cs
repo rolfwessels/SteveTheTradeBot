@@ -30,5 +30,13 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             }
         }
 
+        public static string BaseCurrency(this string currencyPair)
+        {
+            return currencyPair.Substring(0, 3);
+        }
+        public static string QuoteCurrency(this string currencyPair)
+        {
+            return currencyPair.Substring(3, 3);
+        }
     }
 }

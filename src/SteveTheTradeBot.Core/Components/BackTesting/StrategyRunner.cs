@@ -24,9 +24,10 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
         private readonly IBrokerApi _broker;
         private readonly IMessenger _messenger;
+        private IParameterStore _parameterStore;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
-            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger)
+            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger, IParameterStore parameterStore)
         {
             _strategyPicker = strategyPicker;
             _dynamicGraphs = dynamicGraphs;
@@ -34,6 +35,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _broker = broker;
             _tradeFeedCandleStore = tradeFeedCandleStore;
             _messenger = messenger;
+            _parameterStore = parameterStore;
         }
 
 
@@ -58,31 +60,11 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             {
                 var strategy = _strategyPicker.Get(instance.StrategyName);
                 var strategyContext = await PopulateStrategyContext(instance, time);
-                var lastQuoteDate = strategyContext.LatestQuote().Date.ToLocalTime();
-                var instanceLastDate = instance.LastDate.ToLocalTime();
-                if (lastQuoteDate < instanceLastDate)
+                if (!ValidateInputDate(instance, time, strategyContext))
                 {
-                    
-                    _log.Debug($"[ERR] ! StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run a old trade of {lastQuoteDate} ! !");
                     return false;
                 }
-
-                if (lastQuoteDate == instanceLastDate)
-                {
-                    var timeSinceLastRun = (DateTime.Now.ToLocalTime() - instanceLastDate);
-                    var allowedTime = (instance.PeriodSize.ToTimeSpan()*10);
-                    if (timeSinceLastRun > allowedTime)
-                        _log.Warning($"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
-                    else
-                    {
-                        _log.Debug($"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
-                    }
-                    return false;
-                }
-
-                PreRun(instance, strategyContext.ByMinute.Last());
-                await strategy.DataReceived(strategyContext);
-                PostRun(instance, strategyContext.ByMinute.Last());
+                await Process(instance, strategyContext, strategy);
                 return true;
             }
             finally
@@ -92,13 +74,51 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             }
         }
 
-        private static void PostRun(StrategyInstance strategyInstance, TradeFeedCandle last)
+        public async Task Process(StrategyInstance instance, StrategyContext strategyContext, IStrategy strategy)
+        {
+            PreRun(instance, strategyContext.ByMinute.Last());
+            await strategyContext.Broker.SyncOrderStatus(instance, strategyContext);
+            await strategy.DataReceived(strategyContext);
+            PostRun(instance, strategyContext.ByMinute.Last());
+        }
+
+        private static bool ValidateInputDate(StrategyInstance instance, DateTime time, StrategyContext strategyContext)
+        {
+            var lastQuoteDate = strategyContext.LatestQuote().Date.ToLocalTime();
+            var instanceLastDate = instance.LastDate.ToLocalTime();
+            if (lastQuoteDate < instanceLastDate)
+            {
+                _log.Debug(
+                    $"[ERR] ! StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run a old trade of {lastQuoteDate} ! !");
+                return false;
+            }
+
+            if (lastQuoteDate == instanceLastDate)
+            {
+                var timeSinceLastRun = (DateTime.Now.ToLocalTime() - instanceLastDate);
+                var allowedTime = (instance.PeriodSize.ToTimeSpan() * 10);
+                if (timeSinceLastRun > allowedTime)
+                    _log.Warning(
+                        $"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
+                else
+                {
+                    _log.Debug(
+                        $"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
+                }
+
+                 return false;
+            }
+
+            return true;
+        }
+
+        public void PostRun(StrategyInstance strategyInstance, TradeFeedCandle last)
         {
             strategyInstance.LastClose = last.Close;
             strategyInstance.LastDate = last.Date;
         }
 
-        private static void PreRun(StrategyInstance strategyInstance, TradeFeedCandle last)
+        public void PreRun(StrategyInstance strategyInstance, TradeFeedCandle last)
         {
             if (strategyInstance.FirstClose != 0) return;
             strategyInstance.FirstClose = last.Close;
@@ -111,9 +131,9 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             instance.Recalculate();
         }
 
-        private async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
+        public async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
         {
-            var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger);
+            var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger,_parameterStore);
             var findRecentCandles =
                 await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
           

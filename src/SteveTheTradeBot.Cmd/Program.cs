@@ -20,7 +20,7 @@ namespace SteveTheTradeBot.Cmd
         {
             Console.Title = "SteveTheTradeBot.Api";
             SetupLogin(args);
-            // Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             var app = new CommandApp();
             
             app.Configure(config =>
@@ -44,8 +44,6 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<StrategyCommand.Add>("add")
                         .WithDescription("List strategies.")
                         .WithExample(new[] { "strategy", "add" });
-
-
                 });
 
                 config.AddBranch("data", conf =>
@@ -55,11 +53,15 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<DataCommand.Download>("download")
                         .WithAlias("import")
                         .WithDescription("Download historical data to csv files.")
-                        .WithExample(new[] { "data", "download" });      
-                    
+                        .WithExample(new[] { "data", "download" });
+
+                    conf.AddCommand<DataCommand.Export>("export")
+                        .WithDescription("Export data to csv files.")
+                        .WithExample(new[] { "data", "export" });
+
                     conf.AddCommand<DataCommand.Reset>("reset")
                         .WithDescription("Reset historical data to be a few days old.")
-                        .WithExample(new[] { "data", "reset","--days=5" });
+                        .WithExample(new[] { "data", "reset","--days=5","-m" });
 
                    
                 });
@@ -97,7 +99,7 @@ namespace SteveTheTradeBot.Cmd
                 {
                     MinimumLogEventLevel = LogEventLevel.Warning,
                     WebHookUrl = Settings.Instance.SlackWebhookUrl,
-                    CustomChannel = Settings.Instance.SlackChannel,
+                    CustomChannel = Settings.Instance.LogsSlackChannel,
                     BatchSizeLimit = 20,
                     Period = TimeSpan.FromSeconds(5),
                     ShowDefaultAttachments = true,

@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace SteveTheTradeBot.Core.Components.Storage
@@ -11,7 +13,9 @@ namespace SteveTheTradeBot.Core.Components.Storage
     public class TradePersistenceFactory : ITradePersistenceFactory
     {
         private readonly DbContextOptions<TradePersistenceStoreContext> _dbContextOptions;
-        private bool _isInitialized = false;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1,1);
+        private bool _isInitialized =false;
+
         public TradePersistenceFactory(string connection)
         {
             _dbContextOptions = DbContextOptions(connection);
@@ -34,12 +38,21 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var context = new TradePersistenceStoreContext(_dbContextOptions);
             if (!_isInitialized)
             {
-                //await context.Database.EnsureCreatedAsync();
-                if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+                _semaphore.Wait();
+                try
                 {
-                    await context.Database.MigrateAsync();
+                    if (!_isInitialized && context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+                    {
+                        await context.Database.MigrateAsync();
+                    }
+                    _isInitialized = true;
+
                 }
-                _isInitialized = true;
+                finally
+                {
+                    _semaphore.Release();
+                }
+                
             }
 
             return context;

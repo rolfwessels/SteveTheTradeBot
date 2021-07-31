@@ -70,8 +70,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
         {
             var estimatedQuantity = strategyTrade.BuyQuantity * estimatedPrice;
             var tradeOrder = strategyTrade.AddOrderRequest(Side.Sell, strategyTrade.BuyQuantity, estimatedPrice,
-                estimatedQuantity, forBackTest.Pair, DateTime.Now);
-            BrokerUtils.Close(strategyTrade, tradeOrder.CreateDate, tradeOrder);
+                estimatedQuantity, forBackTest.Pair, DateTime.Now, estimatedPrice);
+            BrokerUtils.ApplyCloseToActiveTrade(strategyTrade, tradeOrder.CreateDate, tradeOrder);
             return tradeOrder;
         }
 
@@ -79,12 +79,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
         {
             var price = 123321m;
             var amount = 200m;
-            var estimatedQuantity = Math.Round(amount / price, 8);
-
-            var strategyTrade = forBackTest.AddTrade(DateTime.Now, price, estimatedQuantity, amount);
-            addOrderRequest =
-                strategyTrade.AddOrderRequest(Side.Buy, amount, price, estimatedQuantity, forBackTest.Pair, DateTime.Now);
-            return strategyTrade;
+            var (addTrade, tradeOrder) = forBackTest.AddBuyTradeOrder(amount, price, DateTime.Now);
+            addOrderRequest = tradeOrder;
+            return addTrade;
         }
 
         private void Setup()

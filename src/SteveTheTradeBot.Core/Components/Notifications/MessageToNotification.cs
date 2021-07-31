@@ -17,9 +17,9 @@ namespace SteveTheTradeBot.Core.Components.Notifications
 
         public async Task OnTradeOrderMade(TradeOrderMadeMessage tradeOrder)
         {
-            var cost = Amount.From(tradeOrder.Order.OutQuantity, tradeOrder.Order.OutCurrency);
+            var cost = Amount.From(tradeOrder.Order.Total, tradeOrder.Order.PaidCurrency);
             var buySell = Amount.From(tradeOrder.Order.OriginalQuantity, tradeOrder.Order.FeeCurrency);
-            var price = Amount.From(tradeOrder.Order.OrderPrice, tradeOrder.Order.OutCurrency);
+            var price = Amount.From(tradeOrder.Order.OrderPrice, tradeOrder.Order.PaidCurrency);
             if (tradeOrder.Order.OrderSide == Side.Buy)
             {
                 await _notification.PostAsync(
