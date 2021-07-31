@@ -11,7 +11,7 @@ GREEN=\033[0;32m
 NC=\033[0m # No Color
 version := 0.1.$(shell git rev-list HEAD --count)
 
-dockerhub := rolfwessels/stevethetradebot
+dockerhub := rolfwessels/steve-the-trade-bot
 
 ifdef GITHUB_BASE_REF
 	current-branch :=  $(patsubst refs/heads/%,%,${GITHUB_HEAD_REF})
@@ -29,7 +29,7 @@ endif
 
 
 ifeq ($(current-branch), master)
-  docker-tags := -t $(dockerhub):alpha -t $(dockerhub):latest -t $(dockerhub):v$(version)
+  docker-tags := -t $(dockerhub):latest -t $(dockerhub):v$(version)
 else ifeq ($(current-branch), develop)
   docker-tags := -t $(dockerhub):beta 
 else
@@ -52,7 +52,7 @@ help:
 	@echo "   - build       : (re)builds the container"
 	@echo ""
 	@echo "  Service Targets (should only be run inside the docker container)"
-	@echo "   - publish      : Build the $(project) to build folder"
+	@echo "   - publish      : Build the $(project) and publish to docker $(docker-tags)"
 	@echo "   - version      : Set current version number $(project)"
 	@echo "   - start        : Run the $(project)"
 	@echo "   - test         : Run the $(project) tests"

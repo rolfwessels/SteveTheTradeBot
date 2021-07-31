@@ -16,7 +16,6 @@ services:
       - 27022:27017
     command: mongod --smallfiles --logpath=/dev/null # --quiet
 
-
   sql:
     image: postgres:13.3-buster
     ports:
@@ -59,7 +58,8 @@ services:
   src:
     depends_on:
       - redis
-      - db      - sql
+      - db
+      - sql
     container_name: steve-the-trade-bot
     build:
       context: ./
