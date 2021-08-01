@@ -28,7 +28,7 @@ endif
 
 
 
-ifeq ($(current-branch), master)
+ifeq ($(current-branch), main)
   docker-tags := -t $(dockerhub):latest -t $(dockerhub):v$(version)
 else ifeq ($(current-branch), develop)
   docker-tags := -t $(dockerhub):beta 

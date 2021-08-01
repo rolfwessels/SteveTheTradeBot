@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using SlackConnector;
 using SlackConnector.Models;
+using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Core.Framework.Slack
 {
-    public class SlackService
-    {   
+    public class SlackService : IDisposable
+    {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string _key;
-        private ISlackConnector _connector;
+        private readonly ISlackConnector _connector;
         private ISlackConnection _connection;
         private readonly List<IResponder> _responders;
+        private readonly TimeSpan _reconnectTime = TimeSpan.FromMinutes(5);
         public int ReconnectingCounter { get; set; }
 
         public SlackService(string key, ResponseBuilder responseBuilder)
@@ -24,65 +28,77 @@ namespace SteveTheTradeBot.Core.Framework.Slack
 
         public async Task Connect()
         {
-            Log.Information("Connecting to slack service");
+            _log.Information("Connecting to slack service");
             _connection = await _connector.Connect(_key);
-            Log.Information("Connected");
+            _log.Information("Connected");
             LinkEvents();
         }
 
-        private void LinkEvents()
+        private void LinkEvents(bool linkEvents = true)
         {
-            RemoveEvents();
-            _connection.OnMessageReceived += MessageReceived;
-            _connection.OnDisconnect += Disconnected;
-            _connection.OnReconnecting += Reconnecting;
+            if (_connection == null) return;
+            _connection.OnMessageReceived -= MessageReceived;
+            _connection.OnDisconnect -= OnDisconnectedTryReconnect;
+            _connection.OnReconnecting -= Reconnecting;
+            if (linkEvents)
+            {
+                _connection.OnMessageReceived += MessageReceived;
+                _connection.OnDisconnect += OnDisconnectedTryReconnect;
+                _connection.OnReconnecting += Reconnecting;
+            }
         }
+
 
         private async Task Reconnecting()
         {
             ReconnectingCounter++;
-            Log.Debug($"OnReconnecting {ReconnectingCounter}");
+            _log.Debug($"OnReconnecting {ReconnectingCounter}");
             if (ReconnectingCounter > 30)
             {
-                Disconnected();
-                Log.Debug($"Wait a few minutes then reconnect...");
-                await Task.Delay(TimeSpan.FromMinutes(2));
-                
-                _connector = new SlackConnector.SlackConnector();
-                Log.Debug($"Connecting again.");
+                Close();
+                _log.Debug($"Wait a few {_reconnectTime.ToShort()} then reconnect...");
+                await Task.Delay(_reconnectTime);
+                _log.Debug($"Trying to reconnect!");
                 await Connect();
             }
         }
 
-        private void RemoveEvents()
+        private void OnDisconnectedTryReconnect()
         {
-            _connection.OnMessageReceived -= MessageReceived;
-            _connection.OnDisconnect -= Disconnected;
+            _log.Information("Disconnected");
+            //Close();
+            _log.Warning($"SlackService:OnDisconnectedTryReconnect Not trying to reconnect or close!");
+            // _log.Information($"Trying to reconnect in {_reconnectTime.ToShort()}.");
+            // Task.Delay(_reconnectTime).ContinueWith(_ =>
+            // {
+            //     Connect().ContinueWith(task =>
+            //     {
+            //         if (task.Exception != null)
+            //             _log.Error(task.Exception,
+            //                 $"Error while trying to reconnect to slack:{task.Exception.Message}");
+            //     });
+            // });
+
         }
 
-        private void Disconnected()
+        private void Close()
         {
-            Log.Information("Disconnected");
-            
-            RemoveEvents();
+            if (_connection == null) return;
+            LinkEvents(false);
             try
             {
                 _connection.Close().Wait();
+                _connection = null;
             }
             catch (Exception e)
             {
-                Log.Warning("SlackService Ensure disconnected: " + e.Message);
+                _log.Warning("SlackService Ensure disconnected: " + e.Message);
             }
-            Log.Information("Trying to reconnect.");
-            Connect().ContinueWith(x=>
-            {
-                if (x.Exception != null) Log.Error(x.Exception.Message, x.Exception);
-            });
         }
 
         private async Task MessageReceived(SlackMessage message)
         {
-            Log.Information("message" + message.Text);
+            
             var messageContext = GetMessageContext(message);
             try
             {
@@ -90,7 +106,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
             }
             catch (Exception e)
             {
-                Log.Error(e.Message, e);
+                _log.Error(e.Message, e);
                 _connection.Say(new BotMessage()
                 {
                     Text = $"Ooops something went wrong ({e.Message})",
@@ -109,7 +125,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
 
         private async Task ProcessMessage(MessageContext messageContext)
         {
-            Log.Debug($"Message in {messageContext.Message.User.Name}: {messageContext.Message.Text}");
+            _log.Debug($"Message in {messageContext.Message.User.Name}: {messageContext.Message.Text}");
             foreach (var responder in _responders)
             {
                 if (responder.CanRespond(messageContext))
@@ -122,11 +138,20 @@ namespace SteveTheTradeBot.Core.Framework.Slack
                             botMessage.ChatHub = messageContext.Message.ChatHub;
                         }
                         await _connection.Say(botMessage);
-                        Log.Debug($"Message out {messageContext.Message.User.Name}: {botMessage.Text}");
+                        _log.Debug($"Message out {messageContext.Message.User.Name}: {botMessage.Text}");
                         messageContext.BotHasResponded = true;
                     }
                 }
             }
         }
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            Close();
+        }
+
+        #endregion
     }
 }

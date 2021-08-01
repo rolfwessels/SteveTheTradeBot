@@ -39,12 +39,12 @@ namespace SteveTheTradeBot.Cmd
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddHostedService<SlackAlertService>();
                     services.AddHostedService<TickerTrackerService>();
                     services.AddHostedService<PopulateOneMinuteCandleService>();
                     services.AddHostedService<PopulateOtherCandlesService>();
                     services.AddHostedService<PopulateOtherMetrics>();
                     services.AddHostedService<StrategyService>();
-                    services.AddHostedService<SlackAlertService>();
                 })
                 .Build()
                 .Run();

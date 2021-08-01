@@ -1,6 +1,6 @@
 # SteveTheTradeBot
 
-![BuildStatus](https://github.com/rolfwessels/SteveTheTradeBot/actions/workflows/github-action.yml/badge.svg)
+[![BuildStatus](https://github.com/rolfwessels/SteveTheTradeBot/actions/workflows/github-action.yml/badge.svg)](https://github.com/rolfwessels/SteveTheTradeBot/actions)
 [![Dockerhub Status](https://img.shields.io/badge/dockerhub-ok-blue.svg)](https://hub.docker.com/r/rolfwessels/steve-the-trade-bot/)
 
 Steve is a crypto trading bot. Well he is trying to be!
@@ -17,15 +17,16 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Run paper trades
 - [x] Add stop loss and take profit
 - [x] Add to docker
-- [ ] Integrate a broker (Valr for now)
-- [ ] More back test stats
-- [ ] Integrate a broker to get real time data
 - [x] Integrate with grafana
 - [x] Logging & monitoring
 - [x] Slack
+- [x] Deploy to staging
+- [ ] Fix slack - better error logging
+- [ ] Integrate a broker (Valr for now)
+- [ ] More back test stats
+- [ ] Integrate a broker to get real time data
 - [ ] Prometheus & Slack counters
 - [ ] Add UI
-- [x] Deploy to staging
 - [ ] Deploy to AWS or Digital Ocean
 - [ ] Move to using only OpenId
 - [ ] Move away from postgress

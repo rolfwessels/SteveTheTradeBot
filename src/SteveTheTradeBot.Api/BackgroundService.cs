@@ -21,6 +21,7 @@ namespace SteveTheTradeBot.Api
         {
             _log.Information($"Starting {GetType().Name}.");
             _currentTask = ExecuteAsync(_tokenSource.Token);
+            _currentTask.ConfigureAwait(false);
             _currentTask.ContinueWith(x =>
             {
                 if (x.Exception != null)
@@ -28,15 +29,15 @@ namespace SteveTheTradeBot.Api
                     LogException(x.Exception);
                 }
             }, cancellationToken);
-            return _currentTask.IsCompleted ? _currentTask : Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
-        private static void LogException(Exception aggregateException)
+        private static void LogException(Exception exception)
         {
-            _log.Error($"{aggregateException.Message}\n {aggregateException.StackTrace}", aggregateException);
-            if (aggregateException.InnerException != null)
+            _log.Error(exception,$"{exception.Message}\n");
+            if (exception.InnerException != null)
             {
-                LogException(aggregateException.InnerException);
+                LogException(exception.InnerException);
             }
         }
 
