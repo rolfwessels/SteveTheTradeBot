@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using Bumbershoot.Utilities;
+using Bumbershoot.Utilities.Helpers;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using SteveTheTradeBot.Core.Utils.Security;
@@ -16,22 +17,27 @@ namespace SteveTheTradeBot.Core.Utils
 
         public string EncryptString(string plainText)
         {
-            var encryptString = "ENC:" + Encrypt(ReadConfigValue("EncryptionKey", "EncryptionKey"), plainText);
+            var encryptString = "ENC:" + Encrypt(SharedSecret(), plainText);
             return encryptString;
         }
-        
+
+        private string SharedSecret()
+        {
+            return ReadConfigValue("EncryptionKey", "EncryptionKey");
+        }
+
         public string ReadEncryptedValue(string configValue, string defaultValue, string key = "EncryptionKey")
         {
-            var value = ReadConfigValue(configValue,defaultValue);
+            var value = ReadConfigValue(configValue, defaultValue);
             if (value.StartsWith("ENC:"))
             {
                 try
                 {
-                    return DecryptString(ReadConfigValue("EncryptionKey", "EncryptionKey"), value.Substring(4));
+                    return DecryptString(SharedSecret(), value.Substring(4));
                 }
                 catch (Exception)
                 {
-                    _log.Warning($"BaseEncryptedSettings:ReadEncryptedValue could not decrypt `{value.Substring(0,Math.Min(10, value.Length))}...`");
+                    _log.Warning($"BaseEncryptedSettings:ReadEncryptedValue could not decrypt {configValue}: with key `{SharedSecret().Mask(2)}` `{value.Mask(10)}...`");
                     return defaultValue;
                 }
             }

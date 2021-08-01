@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using Autofac;
+using Bumbershoot.Utilities.Helpers;
 using Bumbershoot.Utilities.Serializer;
 using SteveTheTradeBot.Core.Components.Projects;
 using SteveTheTradeBot.Core.Components.Users;
@@ -112,7 +113,7 @@ namespace SteveTheTradeBot.Core.Startup
         {
             builder.Register(x => new RedisMessenger(Settings.Instance.RedisHost)).As<IMessenger>().SingleInstance();
             builder.RegisterType<MediatorCommander>();
-            builder.Register(x=>new CommanderPersist(x.Resolve<MediatorCommander>(),x.Resolve<IRepository<SystemCommand>>(), x.Resolve<IStringify>(), x.Resolve<IEventStoreConnection>())).As<ICommander>();
+            builder.Register(x => new CommanderPersist(x.Resolve<MediatorCommander>(), x.Resolve<IRepository<SystemCommand>>(), x.Resolve<IStringify>(), x.Resolve<IEventStoreConnection>())).As<ICommander>();
             builder.RegisterType<SubscriptionNotifications>().SingleInstance();
             builder.RegisterType<StringifyJson>().As<IStringify>().SingleInstance();
             builder.RegisterType<EventStoreConnection>().As<IEventStoreConnection>();
@@ -128,20 +129,20 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<ResponseBuilder>();
             builder.RegisterType<MessageToNotification>();
 
-            builder.Register(x=> new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret, Messenger.Default)).As<IBrokerApi>();
-            builder.Register(x=>new StrategyPicker()
-                .Add(RSiStrategy.Desc, ()=> new RSiStrategy())
+            builder.Register(x => new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret, Messenger.Default)).As<IBrokerApi>();
+            builder.Register(x => new StrategyPicker()
+                .Add(RSiStrategy.Desc, () => new RSiStrategy())
                 .Add(RSiMslStrategy.Desc, () => new RSiMslStrategy())
                 .Add(TestBuySellStrategy.Desc, () => new TestBuySellStrategy())
             ).As<StrategyPicker>();
-            
-            
-            
+
+
+
             builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection)).As<ITradePersistenceFactory>().SingleInstance();
             builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result);
             builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result).As<TradePersistenceStoreContext>();
         }
-        
+
         #endregion
 
         #region Nested type: AutofacValidatorFactory

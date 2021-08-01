@@ -1,18 +1,28 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine AS build-env
+
+
+WORKDIR /app
+COPY ./SteveTheTradeBot.Cmd/SteveTheTradeBot.Cmd.csproj ./SteveTheTradeBot.Cmd/SteveTheTradeBot.Cmd.csproj
+COPY ./SteveTheTradeBot.Api/SteveTheTradeBot.Api.csproj ./SteveTheTradeBot.Api/SteveTheTradeBot.Api.csproj
+COPY ./SteveTheTradeBot.Core/SteveTheTradeBot.Core.csproj ./SteveTheTradeBot.Core/SteveTheTradeBot.Core.csproj
+WORKDIR /app/SteveTheTradeBot.Cmd
+RUN dotnet restore
 WORKDIR /app
 COPY ./ ./
-WORKDIR /app/SteveTheTradeBot.Api
-RUN dotnet publish -c Release -o out
+WORKDIR /app/SteveTheTradeBot.Cmd
+ARG VERSION=1.0.0
+RUN dotnet publish -c Release -o /app/output /p:Version=$VERSION 
 
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine
 
 WORKDIR /app
-COPY --from=build-env /app/SteveTheTradeBot.Api/out .
 RUN apk add curl
-HEALTHCHECK CMD curl --fail http://localhost:5000/api/ping/hc || exit 1
-#  <file value="C:\temp\Logs\SteveTheTradeBot.Api.log" />
-#     <lockingModel type="log4net.Appender.FileAppender+MinimalLock" />
-EXPOSE 5000/tcp
-ENTRYPOINT ["dotnet", "SteveTheTradeBot.Api.dll"]
+COPY --from=build-env /app/output .
+COPY --from=build-env /app/SteveTheTradeBot.Cmd/*.json /app/
+RUN chmod a+x /app/sttb
+VOLUME [ "/data/sessions" ]
+HEALTHCHECK CMD curl --fail http://localhost:5002/api/ping/hc || exit 1
+EXPOSE 5002/tcp
+ENTRYPOINT ["/app/sttb","service", "-v"]

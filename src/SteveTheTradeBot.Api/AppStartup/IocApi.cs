@@ -39,6 +39,7 @@ namespace SteveTheTradeBot.Api.AppStartup
             SetBuilder(new ContainerBuilder());
             if (_services != null) _builder.Populate(_services);
         }
+
         public static void Populate(IServiceCollection services)
         {
             if (Instance._container.IsValueCreated) throw new Exception("Need to call Populate before first instance call.");
@@ -50,10 +51,10 @@ namespace SteveTheTradeBot.Api.AppStartup
         protected override IGeneralUnitOfWorkFactory GetInstanceOfIGeneralUnitOfWorkFactory(IComponentContext arg)
         {
             
-            _log.Information($"Connecting to :{Settings.Instance.MongoConnection} [{Settings.Instance.MongoDatabase}]");
+            _log.Information($"Connecting to :{Settings.Instance.MongoConnection}");
             try
             {
-                return new MongoConnectionFactory(Settings.Instance.MongoConnection, Settings.Instance.MongoDatabase);
+                return new MongoConnectionFactory(Settings.Instance.MongoConnection);
             }
             catch (Exception e)
             {

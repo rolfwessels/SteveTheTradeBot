@@ -30,7 +30,6 @@ namespace SteveTheTradeBot.Api
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
-            
             await _notificationChannel.PostAsync("Morning, Im awake and up and running.");
             await _slackService.Connect();
             MessengerHelper.RegisterAsync<TradeOrderMadeMessage>(_messenger,this, _messageToNotification.OnTradeOrderMade);

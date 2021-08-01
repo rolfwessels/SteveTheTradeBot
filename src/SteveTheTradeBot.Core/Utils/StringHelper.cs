@@ -33,5 +33,10 @@ namespace SteveTheTradeBot.Core.Utils
         {
             return BitConverter.ToString(data).Replace("-", string.Empty).ToLower();
         }
+
+        public static string Mask(this string value, int i=3)
+        {
+            return value.Substring(0, Math.Min(i, value.Length)).PadRight(10,'X');
+        }
     }
 }

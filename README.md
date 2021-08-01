@@ -1,7 +1,7 @@
 # SteveTheTradeBot
 
-![SteveTheTradeBot Logo](https://github.com/rolfwessels/SteveTheTradeBot/raw/master/logo/stevethetradebot_logo.png)
-[![Dockerhub Status](https://img.shields.io/badge/dockerhub-ok-blue.svg)](https://hub.docker.com/r/rolfwessels/stevethetradebot/)
+![BuildStatus](https://github.com/rolfwessels/SteveTheTradeBot/actions/workflows/github-action.yml/badge.svg)
+[![Dockerhub Status](https://img.shields.io/badge/dockerhub-ok-blue.svg)](https://hub.docker.com/r/rolfwessels/steve-the-trade-bot/)
 
 Steve is a crypto trading bot. Well he is trying to be!
 
@@ -11,19 +11,21 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Create dummy broker.
 - [x] Create simple bot.
 - [x] Add a way do some back testing.
-- [x] Store metrics when importing data [RSI, Super trend,EMA100 , EMA200 ]. 
+- [x] Store metrics when importing data [RSI, Super trend,EMA100 , EMA200 ].
 - [x] Have a BTC bot that actually makes money!
 - [x] Store back test results
 - [x] Run paper trades
-- [X] Add stop loss and take profit
+- [x] Add stop loss and take profit
+- [x] Add to docker
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
 - [x] Integrate with grafana
-- [X] Logging & monitoring
-- [X] Slack
+- [x] Logging & monitoring
+- [x] Slack
 - [ ] Prometheus & Slack counters
 - [ ] Add UI
+- [x] Deploy to staging
 - [ ] Deploy to AWS or Digital Ocean
 - [ ] Move to using only OpenId
 - [ ] Move away from postgress
@@ -80,7 +82,7 @@ dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot
 dotnet ef database  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj update
 dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj list
 #dotnet ef database update  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 20210719165547_AddMetricMapping
-#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj 
+#dotnet ef migrations remove --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj
 
 ```
 
@@ -90,6 +92,24 @@ dotnet ef migrations  --startup-project ..\SteveTheTradeBot.Api\SteveTheTradeBot
 cd src
 docker-compose build;
 docker-compose up;
+```
+
+Debugging
+
+```cmd
+cd src
+docker-compose up -d;
+docker-compose exec api bash
+```
+
+## Setup the database with user in postgress
+
+```cmd
+
+CREATE USER sttb_dev WITH ENCRYPTED PASSWORD 'xxxxxx';
+ALTER ROLE sttb_dev WITH CREATEDB
+CREATE DATABASE steve_the_trade_bot_dev OWNER sttb_dev;
+
 ```
 
 Debugging

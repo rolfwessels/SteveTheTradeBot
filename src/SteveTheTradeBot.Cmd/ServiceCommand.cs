@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using Autofac.Extensions.DependencyInjection;
@@ -52,8 +53,7 @@ namespace SteveTheTradeBot.Cmd
 
         public static void SettingsFileReaderHelper(WebHostBuilderContext hostingContext, IConfigurationBuilder config)
         {
-            var env = hostingContext.HostingEnvironment;
-            config.AddJsonFilesAndEnvironment(env.EnvironmentName);
+            config.AddJsonFilesAndEnvironment();
         }
     }
 }

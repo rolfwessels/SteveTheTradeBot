@@ -51,9 +51,12 @@ namespace SteveTheTradeBot.Cmd
                     conf.SetDescription("Download & import historical data.");
 
                     conf.AddCommand<DataCommand.Download>("download")
-                        .WithAlias("import")
-                        .WithDescription("Download historical data to csv files.")
+                        .WithDescription("Download data from the API into the database.")
                         .WithExample(new[] { "data", "download" });
+
+                    conf.AddCommand<DataCommand.Import>("import")
+                        .WithDescription("Download import initial data from csv files.")
+                        .WithExample(new[] { "data", "import" });
 
                     conf.AddCommand<DataCommand.Export>("export")
                         .WithDescription("Export data to csv files.")
@@ -62,10 +65,29 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<DataCommand.Reset>("reset")
                         .WithDescription("Reset historical data to be a few days old.")
                         .WithExample(new[] { "data", "reset","--days=5","-m" });
-
-                   
                 });
-                
+
+                config.AddBranch("utils", conf =>
+                {
+                    conf.SetDescription("Common utilities.");
+
+                    conf.AddCommand<UtilCommand.Encrypt>("encrypt")
+                        .WithDescription("Encrypt a secret using the keys.")
+                        .WithExample(new[] { "utils", "encrypt", "--enc=valuetoencrypt" });
+
+                    conf.AddCommand<DataCommand.Import>("import")
+                        .WithDescription("Download import initial data from csv files.")
+                        .WithExample(new[] { "data", "import" });
+
+                    conf.AddCommand<DataCommand.Export>("export")
+                        .WithDescription("Export data to csv files.")
+                        .WithExample(new[] { "data", "export" });
+
+                    conf.AddCommand<DataCommand.Reset>("reset")
+                        .WithDescription("Reset historical data to be a few days old.")
+                        .WithExample(new[] { "data", "reset", "--days=5", "-m" });
+                });
+
             });
             try
             {
@@ -91,7 +113,7 @@ namespace SteveTheTradeBot.Cmd
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 
-                .WriteTo.File(@"c:\temp\logs\SteveTheTradeBot.Api.log", 
+                .WriteTo.File($@"{Settings.Instance.LogFolder}SteveTheTradeBot.Api.log", 
                     fileSizeLimitBytes: 10 * LoggingHelper.MB, 
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",
                     rollOnFileSizeLimit: true)
@@ -118,5 +140,5 @@ namespace SteveTheTradeBot.Cmd
         }
     }
 
-    
+   
 }

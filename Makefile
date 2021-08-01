@@ -11,7 +11,7 @@ GREEN=\033[0;32m
 NC=\033[0m # No Color
 version := 0.1.$(shell git rev-list HEAD --count)
 
-dockerhub := rolfwessels/stevethetradebot
+dockerhub := rolfwessels/steve-the-trade-bot
 
 ifdef GITHUB_BASE_REF
 	current-branch :=  $(patsubst refs/heads/%,%,${GITHUB_HEAD_REF})
@@ -29,7 +29,7 @@ endif
 
 
 ifeq ($(current-branch), master)
-  docker-tags := -t $(dockerhub):alpha -t $(dockerhub):latest -t $(dockerhub):v$(version)
+  docker-tags := -t $(dockerhub):latest -t $(dockerhub):v$(version)
 else ifeq ($(current-branch), develop)
   docker-tags := -t $(dockerhub):beta 
 else
@@ -52,7 +52,7 @@ help:
 	@echo "   - build       : (re)builds the container"
 	@echo ""
 	@echo "  Service Targets (should only be run inside the docker container)"
-	@echo "   - publish      : Build the $(project) to build folder"
+	@echo "   - publish      : Build the $(project) and publish to docker $(docker-tags)"
 	@echo "   - version      : Set current version number $(project)"
 	@echo "   - start        : Run the $(project)"
 	@echo "   - test         : Run the $(project) tests"
@@ -91,7 +91,7 @@ publish:
 	@echo  "${GREEN}Publish branch $(current-branch) to $(docker-tags) as user ${DOCKER_USER}${NC}"
 	@docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 	@echo  "${GREEN}Building $(docker-tags)${NC}"
-	@cd src && docker build ${docker-tags} .
+	@cd src && docker build ${docker-tags} --build-arg VERSION=$(version) .
 	@echo  "${GREEN}Pusing to $(docker-tags)${NC}"
 	@docker push --all-tags $(dockerhub)
 
