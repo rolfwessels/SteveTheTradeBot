@@ -22,6 +22,7 @@ RUN apk add curl
 COPY --from=build-env /app/output .
 COPY --from=build-env /app/SteveTheTradeBot.Cmd/*.json /app/
 RUN chmod a+x /app/sttb
-HEALTHCHECK CMD curl --fail http://localhost:5000/api/ping/hc || exit 1
-EXPOSE 5000/tcp
+VOLUME [ "/data/sessions" ]
+HEALTHCHECK CMD curl --fail http://localhost:5002/api/ping/hc || exit 1
+EXPOSE 5002/tcp
 ENTRYPOINT ["/app/sttb","service", "-v"]

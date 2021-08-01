@@ -25,12 +25,12 @@ namespace SteveTheTradeBot.Api
 {
     public class Startup
     {
-       
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-        
+
         public void ConfigureContainer(ContainerBuilder builder)
         {
             IocApi.Instance.SetBuilder(builder);
@@ -42,7 +42,7 @@ namespace SteveTheTradeBot.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)))
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Settings.Instance.DataProtectionFolder))
                 .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
                 {
                     EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,

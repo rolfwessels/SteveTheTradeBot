@@ -12,9 +12,12 @@ namespace SteveTheTradeBot.Api.Components.Integration
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly SlackClient _slackClient;
+        private static string _channel;
+
         public SlackNotification()
         {
             _slackClient = new SlackClient(Settings.Instance.SlackWebhookUrl);
+            _channel = Settings.Instance.SlackChannel;
         }
 
         #region Implementation of INotificationChannel
@@ -25,6 +28,7 @@ namespace SteveTheTradeBot.Api.Components.Integration
             {
                 Text = message
             };
+            _log.Debug($"SlackNotification:PostAsync {slackMessage}");
             await _slackClient.PostAsync(slackMessage);
         }
 
@@ -34,7 +38,7 @@ namespace SteveTheTradeBot.Api.Components.Integration
             return _slackClient.PostAsync(slackMessage);
         }
 
-       
+
         public Task PostFailedAsync(string message)
         {
             var slackMessage = PostTextAttachment(message, "#D00000");
@@ -44,44 +48,22 @@ namespace SteveTheTradeBot.Api.Components.Integration
 
         private static SlackMessage PostTextAttachment(string message, string d00000)
         {
-            var slackMessage = new SlackMessage();
+            _log.Debug($"SlackNotification:PostTextAttachment {message}");
+            var slackMessage = new SlackMessage()
+            {
+                Channel = _channel
+            };
             var slackAttachment = new SlackAttachment
             {
                 Fallback = message,
                 Text = message,
                 Color = d00000,
             };
-            slackMessage.Attachments = new List<SlackAttachment> { slackAttachment };
+            slackMessage.Attachments = new List<SlackAttachment> {slackAttachment};
             return slackMessage;
         }
-
 
         #endregion
 
-        private static SlackMessage Post(string message)
-        {
-            _log.Debug($"SlackAlertService:Post SlackMessage {message}");
-            var slackMessage = new SlackMessage
-            {
-                Text = message
-            };
-            // var slackAttachment = new SlackAttachment
-            // {
-            //     Fallback = "New open task [Urgent]: <http://url_to_task|Test out Slack message attachments>",
-            //     Text = "New open task *[Urgent]*: <http://url_to_task|Test out Slack message attachments>",
-            //     Color = "#D00000",
-            //     Fields =
-            //         new List<SlackField>
-            //         {
-            //             new SlackField
-            //             {
-            //                 Title = "Notes",
-            //                 Value = "This is much *easier* than I thought it would be."
-            //             }
-            //         }
-            // };
-            // slackMessage.Attachments = new List<SlackAttachment> {slackAttachment};
-            return slackMessage;
-        }
     }
 }
