@@ -24,12 +24,14 @@ namespace SteveTheTradeBot.Core
         public string MongoConnection => ReadEncryptedValue("MongoConnection", "mongodb://localhost:27022/SteveTheTradeBotSample");
         public string NpgsqlConnection => ReadEncryptedValue("NpgsqlConnection", "Host=localhost;Database=SteveTheTradeBotSample;Username=postgres;Password=GRES_password;Port=15432");
         public string RedisHost => ReadConfigValue("RedisHost", "localhost:6391");
-        public string SlackBotKey => ReadEncryptedValue("SlackBotKey", "ENC:U2FsdGVkX18yL23DTXaiC3o+A+ITplG3beoAPrnfOnVi1sN9p0hhzw66pTf7OvL/+/zKJpiRGkRLBVRADq1ODsOwVRP/BKilNikvqJMLon8=");
+        public string SlackBotKey => ReadEncryptedValue("SlackBotKey", "ENC:U2FsdGVkX1/aMryp50WI/N7Sx3Mo6zIBHbdqAn4Rv8KGJGi897/ETE2bYjQglxxperpnQvp2e9Dr9NlP931+dLbs6U7PPWzFp+32DVVYxsA=");
         public string SlackChannel => ReadConfigValue("SlackChannel", "#steve-trader-dev");
         public string LogsSlackChannel => ReadConfigValue("LogsSlackChannel", "#steve-trader-dev-logs");
-        public string SlackWebhookUrl => ReadEncryptedValue("SlackWebhookUrl", "ENC:U2FsdGVkX1/XkFGjcelJyvYGKfS+NKj8kbEF1wCF6X4IH9zvN+8o+7K1H4kTahK0t8MMmhIWeWhx6tAE8UzFiqi7hgq18PaSkJJKcCSdBIzV+1Lq2kG++FGebXEuVZKl");
+        public string SlackWebhookUrl => ReadEncryptedValue("SlackWebhookUrl", "ENC:U2FsdGVkX1845EU+6zoYfd2f/S+ZRR1eyTEcR9x3ryflytzvvBVRCzt7HwSQh6gq6HJZwfZeLfus66N5BVRQ9QVhBN+VWZsd/MBDAScrZLmxB4tyglVc7V+vCVuj9TWZ");
         public string LogFolder => ReadEncryptedValue("LogFolder", @"c:\temp\logs\");
         public string DataProtectionFolder => ReadEncryptedValue("DataProtectionFolder", @"c:\temp\sttb\");
-
+        public string LokiUrl => ReadConfigValue("LokiUrl", @"https://logs-prod-us-central1.grafana.net");
+        public string LokiUser => ReadEncryptedValue("LokiUser", @"ENC:U2FsdGVkX19MEoMc1/5vkmPF+x/85lRb36RexmGYgAc=");
+        public string LokiPassword => ReadEncryptedValue("LokiPassword", @"ENC:U2FsdGVkX1+byC3zaxv3cRZgmvoE0q6+0yiO0fikKBjxloRPGB9CRCOkWqd+5Z6TEMQT5oO3kvK9JB+Z/inz7qSZ209sZLHsti48AAvBeseXovrzm+UCegeHKJlqXTC50TIUNC2Y1X7E2w6Uqbqhy2LO9ca01BTOWU9gCjN2ijo=");
     }
 }

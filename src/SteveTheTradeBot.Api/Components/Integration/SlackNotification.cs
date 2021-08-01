@@ -24,10 +24,7 @@ namespace SteveTheTradeBot.Api.Components.Integration
 
         public async Task PostAsync(string message)
         {
-            var slackMessage = new SlackMessage
-            {
-                Text = message
-            };
+            var slackMessage = DefaultSlackMessage(message);
             _log.Debug($"SlackNotification:PostAsync {slackMessage}");
             await _slackClient.PostAsync(slackMessage);
         }
@@ -49,10 +46,7 @@ namespace SteveTheTradeBot.Api.Components.Integration
         private static SlackMessage PostTextAttachment(string message, string d00000)
         {
             _log.Debug($"SlackNotification:PostTextAttachment {message}");
-            var slackMessage = new SlackMessage()
-            {
-                Channel = _channel
-            };
+            var slackMessage = DefaultSlackMessage();
             var slackAttachment = new SlackAttachment
             {
                 Fallback = message,
@@ -60,6 +54,16 @@ namespace SteveTheTradeBot.Api.Components.Integration
                 Color = d00000,
             };
             slackMessage.Attachments = new List<SlackAttachment> {slackAttachment};
+            return slackMessage;
+        }
+
+        private static SlackMessage DefaultSlackMessage(string message = null)
+        {
+            var slackMessage = new SlackMessage()
+            {
+                Channel = _channel,
+                Text = message
+            };
             return slackMessage;
         }
 

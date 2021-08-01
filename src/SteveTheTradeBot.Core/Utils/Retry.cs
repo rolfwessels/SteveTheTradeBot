@@ -36,6 +36,7 @@ namespace SteveTheTradeBot.Core.Utils
                 catch (Exception e)
                 {
                     var fromSeconds = TimeSpan.FromSeconds(seconds);
+                    if (e.GetType() == typeof(TaskCanceledException)) break;
                     if (e.Message.Contains("TooManyRequests"))
                     {
                         var oneMinFromNow = DateTime.Now.AddMinutes(1).ToMinute().AddSeconds(5).TimeTill();
