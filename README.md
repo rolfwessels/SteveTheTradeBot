@@ -21,7 +21,7 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Logging & monitoring
 - [x] Slack
 - [x] Deploy to staging
-- [ ] Fix slack - better error logging
+- [?] Fix slack - better error logging
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
