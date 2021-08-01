@@ -7,11 +7,17 @@ namespace SteveTheTradeBot.Core.Framework.Settings
     {
         public static IConfigurationBuilder AddJsonFilesAndEnvironment(this IConfigurationBuilder config)
         {
-            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+            var environment = GetEnvironment();
             config.AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile($"appsettings.{environment}.json", true, true);
             config.AddEnvironmentVariables();
             return config;
+        }
+
+        public static string GetEnvironment()
+        {
+            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+            return environment;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using Bumbershoot.Utilities;
 using Bumbershoot.Utilities.Helpers;
@@ -10,9 +11,12 @@ namespace SteveTheTradeBot.Core.Utils
 {
     public class BaseEncryptedSettings : BaseSettings
     {
+        private const string EncryptionKeyName = "EncryptionKey";
+        private readonly string _configGroup;
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         public BaseEncryptedSettings(IConfiguration configuration, string configGroup) : base(configuration, configGroup)
         {
+            _configGroup = configGroup;
         }
 
         public string EncryptString(string plainText)
@@ -23,20 +27,25 @@ namespace SteveTheTradeBot.Core.Utils
 
         private string SharedSecret()
         {
-            return ReadConfigValue("EncryptionKey", "EncryptionKey");
+            var readConfigValue = ReadConfigValue(EncryptionKeyName, EncryptionKeyName);
+            if (readConfigValue == EncryptionKeyName) throw new Exception($"Please set the environment variable for `{new[] { _configGroup, EncryptionKeyName }.Where(x=> !string.IsNullOrEmpty(x)).StringJoin("__")}`.");
+            return readConfigValue;
         }
 
-        public string ReadEncryptedValue(string configValue, string defaultValue, string key = "EncryptionKey")
+        public string ReadEncryptedValue(string configValue, string defaultValue, string key = EncryptionKeyName)
         {
             var value = ReadConfigValue(configValue, defaultValue);
             if (value.StartsWith("ENC:"))
             {
                 try
                 {
-                    return DecryptString(SharedSecret(), value.Substring(4));
+                    var readEncryptedValue = DecryptString(SharedSecret(), value.Substring(4));
+                    
+                    return readEncryptedValue;
                 }
                 catch (Exception)
                 {
+                    Console.Out.WriteLine($"Fail to read {configValue} with key `{SharedSecret().Mask(2)}");
                     _log.Warning($"BaseEncryptedSettings:ReadEncryptedValue could not decrypt {configValue}: with key `{SharedSecret().Mask(2)}` `{value.Mask(10)}...`");
                     return defaultValue;
                 }

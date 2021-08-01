@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Events;
+using Serilog.Sinks.Loki;
 using Serilog.Sinks.Slack;
 using Serilog.Sinks.Slack.Models;
 using Spectre.Console.Cli;
@@ -107,30 +108,37 @@ namespace SteveTheTradeBot.Cmd
 
         private static void SetupLogin(string[] args)
         {
-            Log.Logger = LoggingHelper.SetupOnce(() => new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .MinimumLevel.Override("System", LogEventLevel.Warning)
-                .Enrich.FromLogContext()
+            Log.Logger = LoggingHelper.SetupOnce(() =>
+            {
+                var logger = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                    .MinimumLevel.Override("System", LogEventLevel.Warning)
+                    .Enrich.FromLogContext()
+                    .WriteTo.File($@"{Settings.Instance.LogFolder}SteveTheTradeBot.Api.log",
+                        fileSizeLimitBytes: 10 * LoggingHelper.MB,
+                        outputTemplate:
+                        "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",
+                        rollOnFileSizeLimit: true)
+                    .WriteTo.Slack(new SlackSinkOptions()
+                    {
+                        MinimumLogEventLevel = LogEventLevel.Warning,
+                        WebHookUrl = Settings.Instance.SlackWebhookUrl,
+                        CustomChannel = Settings.Instance.LogsSlackChannel,
+                        BatchSizeLimit = 20,
+                        Period = TimeSpan.FromSeconds(5),
+                        ShowDefaultAttachments = true,
+                        ShowExceptionAttachments = true,
+                    })
+                    .WriteTo.LokiHttp(
+                        new BasicAuthCredentials(Settings.Instance.LokiUrl, Settings.Instance.LokiUser,
+                            Settings.Instance.LokiPassword),new LokiLogLabelProvider())
+                    .WriteTo.Console(RestrictedToMinimumLevel(args))
+                    //.ReadFrom.Configuration(BaseSettings.Config)
+                    .CreateLogger();
                 
-                .WriteTo.File($@"{Settings.Instance.LogFolder}SteveTheTradeBot.Api.log", 
-                    fileSizeLimitBytes: 10 * LoggingHelper.MB, 
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",
-                    rollOnFileSizeLimit: true)
-                .WriteTo.Slack(new SlackSinkOptions()
-                {
-                    MinimumLogEventLevel = LogEventLevel.Warning,
-                    WebHookUrl = Settings.Instance.SlackWebhookUrl,
-                    CustomChannel = Settings.Instance.LogsSlackChannel,
-                    BatchSizeLimit = 20,
-                    Period = TimeSpan.FromSeconds(5),
-                    ShowDefaultAttachments = true,
-                    ShowExceptionAttachments = true,
-                })
-                .WriteTo.Console(RestrictedToMinimumLevel(args))
-                //.ReadFrom.Configuration(BaseSettings.Config)
-                .CreateLogger());
-
+                return logger;
+            });
         }
 
         private static LogEventLevel RestrictedToMinimumLevel(string[] args)
@@ -139,6 +147,4 @@ namespace SteveTheTradeBot.Cmd
             return args.Any(x => x == "-v") ? LogEventLevel.Information : LogEventLevel.Warning;
         }
     }
-
-   
 }

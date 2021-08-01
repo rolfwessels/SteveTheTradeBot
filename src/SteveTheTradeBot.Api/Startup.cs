@@ -90,7 +90,7 @@ namespace SteveTheTradeBot.Api
 
         public static string InformationalVersion()
         {
-            return Assembly.GetEntryAssembly()
+            return Assembly.GetEntryAssembly()?
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 .InformationalVersion;
         }
