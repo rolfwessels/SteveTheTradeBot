@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
+﻿using System.Threading.Tasks;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -23,7 +21,7 @@ namespace SteveTheTradeBot.Core.Components.Notifications
             if (tradeOrder.Order.OrderSide == Side.Buy)
             {
                 await _notification.PostAsync(
-                    $"{tradeOrder.StrategyInstance.StrategyName} just *bought* {buySell} for *{cost}* at {price}! :robot_face:");
+                    $"{tradeOrder.StrategyInstance.Reference} just *bought* {buySell} for *{cost}* at {price}! :robot_face:");
             }
             else
             {
@@ -31,12 +29,12 @@ namespace SteveTheTradeBot.Core.Components.Notifications
                 if (tradeOrder.StrategyTrade.IsProfit())
                 {
                     await _notification.PostSuccessAsync(
-                        $"{tradeOrder.StrategyInstance.StrategyName} just *sold* *{cost}* for {buySell} at {price}! We made {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :moneybag:");
+                        $"{tradeOrder.StrategyInstance.Reference} just *sold* *{cost}* for {buySell} at {price}! We made {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :moneybag:");
                 }
                 else
                 {
                     await _notification.PostFailedAsync(
-                        $"{tradeOrder.StrategyInstance.StrategyName} just *sold* *{cost}* for {buySell} at {price}! We lost {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :money_with_wings:");
+                        $"{tradeOrder.StrategyInstance.Reference} just *sold* *{cost}* for {buySell} at {price}! We lost {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :money_with_wings:");
                 }
             }
         }
