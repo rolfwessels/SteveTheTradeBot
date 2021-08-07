@@ -22,7 +22,7 @@ namespace SteveTheTradeBot.Cmd
     public class DataCommand
     {
         
-        public class Download : CommandSync<BaseCommandSettings>
+        public class Download : AsyncCommandWithToken<BaseCommandSettings>
         {
             private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
             private readonly TimeSpan _retryIn = TimeSpan.FromMinutes(1);
@@ -70,7 +70,7 @@ namespace SteveTheTradeBot.Cmd
             #endregion
         }
 
-        public class Import : CommandSync<BaseCommandSettings>
+        public class Import : AsyncCommandWithToken<BaseCommandSettings>
         {
             #region Overrides of CommandSync<BaseCommandSettings>
 
@@ -107,7 +107,7 @@ namespace SteveTheTradeBot.Cmd
             #endregion
         }
 
-        public class Export : CommandSync<BaseCommandSettings>
+        public class Export : AsyncCommandWithToken<BaseCommandSettings>
         {
             #region Overrides of CommandSync<BaseCommandSettings>
 
@@ -150,7 +150,7 @@ namespace SteveTheTradeBot.Cmd
             #endregion
         }
 
-        public class Reset : CommandSync<Reset.Settings>
+        public class Reset : AsyncCommandWithToken<Reset.Settings>
         {
             public sealed class Settings : BaseCommandSettings
             {

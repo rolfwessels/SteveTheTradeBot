@@ -4,18 +4,21 @@ using Spectre.Console.Cli;
 
 namespace SteveTheTradeBot.Cmd
 {
-    public abstract class CommandSync<T> : Command<T> where T : CommandSettings
+    public abstract class AsyncCommandWithToken<T> : AsyncCommand<T> where T : CommandSettings
     {
         #region Overrides of Command<T>
 
-        public override int Execute(CommandContext context, T settings)
+        #region Overrides of AsyncCommand<T>
+
+        public override async Task<int> ExecuteAsync(CommandContext context, T settings)
         {
             var bindToCancelKey = ConsoleHelper.BindToCancelKey();
-            // ReSharper disable once MethodSupportsCancellation
-            ExecuteAsync(settings, bindToCancelKey.Token).Wait();
+            await ExecuteAsync(settings, bindToCancelKey.Token);
             return 0;
-
         }
+
+        #endregion
+
 
         public abstract Task ExecuteAsync(T settings, CancellationToken token);
 

@@ -12,7 +12,7 @@ namespace SteveTheTradeBot.Cmd
 {
     public class UtilCommand
     {
-        public class Encrypt : CommandSync<Encrypt.Settings>
+        public class Encrypt : AsyncCommandWithToken<Encrypt.Settings>
         {
             public sealed class Settings : BaseCommandSettings
             {
