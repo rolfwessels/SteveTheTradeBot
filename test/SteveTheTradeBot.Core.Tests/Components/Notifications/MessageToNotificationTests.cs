@@ -49,7 +49,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
             await _messageToNotification.OnTradeOrderMade(new TradeOrderMadeMessage(forBackTest, strategyTrade, tradeOrder));
             // assert
             _fakeNotification.PostSuccess.Should().HaveCount(1);
-            _fakeNotification.PostSuccess.First().Should().Be("XRP RsiIsAThing FiveMinutes just *sold* *0.00162178XRP* for R220.00 at R135653.1! We made R20.00 :moneybag:");
+            _fakeNotification.PostSuccess.First().Should().Be("XRP RsiIsAThing FiveMinutes just *sold* *0.00162178XRP* for R220.00 at R135653.1! We made R20.00(10%) :moneybag:");
         }
  
         [Test]
@@ -66,7 +66,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
             await _messageToNotification.OnTradeOrderMade(new TradeOrderMadeMessage(forBackTest, strategyTrade, tradeOrder));
             // assert
             _fakeNotification.PostFailed.Should().HaveCount(1);
-            _fakeNotification.PostFailed.First().Should().Be("XRP RsiIsAThing FiveMinutes just *sold* *0.00162178XRP* for R180.00 at R110988.9! We lost R20.00 :money_with_wings:");
+            _fakeNotification.PostFailed.First().Should().Be("XRP RsiIsAThing FiveMinutes just *sold* *0.00162178XRP* for R180.00 at R110988.9! We lost R20.00(-10%) :money_with_wings:");
         }
 
         private static TradeOrder CloseTrade(StrategyTrade strategyTrade, decimal estimatedPrice, StrategyInstance forBackTest)
