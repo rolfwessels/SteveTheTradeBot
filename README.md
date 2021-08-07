@@ -24,9 +24,9 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [?] Fix slack - better error logging
 - [ ] Add a daily status report to slack
 - [ ] Add slack response to report
-- [ ] Add command to add all bots
+- [x] Add command to add all bots
 - [ ] All broker to be set from command line
-- [ ] Add some machine learning with net ml
+- [x] Add some machine learning with net ml
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
 - [ ] Integrate a broker to get real time data
