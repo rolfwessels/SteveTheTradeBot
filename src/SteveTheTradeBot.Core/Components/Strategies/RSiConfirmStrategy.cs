@@ -1,42 +1,49 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
 using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RSiMslStrategy : RaiseStopLossOutStrategyBase
+    public class RSiConfirmStrategy : RaiseStopLossOutStrategyBase
     {
-        public const string Desc = "RSiMslStrategy";
+        public const string Desc = nameof(RSiConfirmStrategy);
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly int _buySignal;
         private readonly decimal _buy200rocsma;
+        private int _quotesToCheckRsi;
 
 
-        public RSiMslStrategy() : base(0.96m, 1.05m)
+        public RSiConfirmStrategy() : base(0.96m, 1.05m)
         {
-           
             _buySignal = 30;
             _buy200rocsma = 0.5m;
+            _quotesToCheckRsi = 10;
         }
 
         public override async Task DataReceived(StrategyContext data)
         {
             var currentTrade = data.ByMinute.Last();
             var activeTrade = data.ActiveTrade();
-            var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
+            
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
+            var hasRecentlyHitOverSold = data.ByMinute.TakeLast(_quotesToCheckRsi).Min(x => x.Metric.GetOrDefault("rsi14"));
+            var isPositiveTrend = IsPositiveTrend(data.ByMinute.TakeLast(3));
             if (activeTrade == null)
             {
-                if (rsiResults < _buySignal && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma))
+
+                if (hasRecentlyHitOverSold <= _buySignal && isPositiveTrend && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma))
                 {
                     _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold} Rsi:{roc200sma.Value}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
                     ResetStops(currentTrade, data);
                     data.StrategyInstance.Status =
@@ -45,7 +52,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 else
                 {
                     data.StrategyInstance.Status =
-                        $"Waiting to buy ![{rsiResults} < {_buySignal}] [{roc200sma} > {_buy200rocsma}]";
+                        $"Waiting to buy ![wait for min rsi {hasRecentlyHitOverSold} <= {_buySignal} in last {_quotesToCheckRsi}] [{roc200sma} > {_buy200rocsma}]";
                 }
             }
             else
@@ -53,6 +60,24 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 await RaiseStopLoss(data, currentTrade, activeTrade);
             }
         }
+
+        private bool IsPositiveTrend(IEnumerable<TradeFeedCandle> values)
+        {
+            decimal lastValue = -1;
+            foreach (var value in values)
+            {
+                if (lastValue != -1 && value.Close <= lastValue)
+                {
+                    return false;
+                }
+
+                lastValue = value.Close;
+                
+            }
+
+            return true;
+        }
+
 
 
         public override string Name => Desc;

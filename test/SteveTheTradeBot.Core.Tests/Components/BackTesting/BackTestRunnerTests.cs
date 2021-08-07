@@ -25,15 +25,15 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
-        public async Task Fast_recent_RSiStrategy()
+        public void Fast_recent_RSiStrategy()
         {
             // arrange
             Setup();
             var to = DateTime.Now;
-            var from = to.AddDays(-6);
+            var from = to.AddMonths(-3);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
-                BuildBackTestResult(@from, to, t => new RSiStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, t => new RSiConfirmStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
                 { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth }).ToTable();
@@ -81,7 +81,19 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var expected = 49; 
             await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
-        
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_RSiConfirmStrategy()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 51;
+            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
         [Test]
         [Timeout(240000)]
         [Explicit]
@@ -107,7 +119,19 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var expected = 94; // 
             await Test(@from, to, expected , t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
-        
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Run_GivenRSiConfirmStrategy_ShouldOver1YearsShouldMake200PlusProfit()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2020-11-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 294; // 
+            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
         private async Task Test(DateTime fromDate, DateTime to, decimal expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair, PeriodSize size)
         {
             var backTestResult = await BuildBackTestResult(fromDate, to, getStrategy, currencyPair, size);
