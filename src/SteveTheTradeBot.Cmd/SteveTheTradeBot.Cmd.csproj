@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SteveTheTradeBot.Api\SteveTheTradeBot.Api.csproj" />
-    <ProjectReference Include="..\SteveTheTradeBotML.Model\SteveTheTradeBotML.Model.csproj" />
+    <ProjectReference Include="..\SteveTheTradeBot.Ml.Model\SteveTheTradeBot.ML.Model.csproj" />
   </ItemGroup>
 
   <ItemGroup>

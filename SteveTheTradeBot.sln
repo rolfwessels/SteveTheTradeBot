@@ -17,9 +17,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1F5EB58A-8ACE-4179-85CD-119D2DEFF2DF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{BA7073F6-2A1C-4F82-A240-D02064A3BE86}"
-	ProjectSection(SolutionItems) = preProject
-		src\SteveTheTradeBot.Utilities\Settings.cs = src\SteveTheTradeBot.Utilities\Settings.cs
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{E1C5C555-3024-4E82-92B0-15CB6AA06135}"
 EndProject
@@ -42,6 +39,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteveTheTradeBot.Dal.MongoDb", "src\SteveTheTradeBot.Dal.MongoDb\SteveTheTradeBot.Dal.MongoDb.csproj", "{2B94B549-655C-4119-9CED-953F006964F8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteveTheTradeBot.Cmd", "src\SteveTheTradeBot.Cmd\SteveTheTradeBot.Cmd.csproj", "{59FDE704-04A8-4C0B-84AA-64BC6DF02A34}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteveTheTradeBot.ML.Model", "src\SteveTheTradeBot.Ml.Model\SteveTheTradeBot.ML.Model.csproj", "{FF3113C4-C3B2-48EB-B66F-483A3C5ED946}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -89,6 +88,10 @@ Global
 		{59FDE704-04A8-4C0B-84AA-64BC6DF02A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59FDE704-04A8-4C0B-84AA-64BC6DF02A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59FDE704-04A8-4C0B-84AA-64BC6DF02A34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF3113C4-C3B2-48EB-B66F-483A3C5ED946}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF3113C4-C3B2-48EB-B66F-483A3C5ED946}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF3113C4-C3B2-48EB-B66F-483A3C5ED946}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF3113C4-C3B2-48EB-B66F-483A3C5ED946}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -106,6 +109,7 @@ Global
 		{22F26F83-C97A-4506-A976-81C0DA5C6332} = {1F5EB58A-8ACE-4179-85CD-119D2DEFF2DF}
 		{2B94B549-655C-4119-9CED-953F006964F8} = {BA7073F6-2A1C-4F82-A240-D02064A3BE86}
 		{59FDE704-04A8-4C0B-84AA-64BC6DF02A34} = {3DDA180C-DBB7-4E9C-AE72-0427DB7A98A3}
+		{FF3113C4-C3B2-48EB-B66F-483A3C5ED946} = {BA7073F6-2A1C-4F82-A240-D02064A3BE86}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2AD4DEAF-9CA0-40AD-90E5-2377A4BB3BB4}

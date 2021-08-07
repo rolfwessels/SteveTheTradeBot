@@ -19,3 +19,4 @@ project.lock.json
 build/**/*
 /src/SteveTheTradeBot.Cmd/valr_ethzar.csv
 /src/SteveTheTradeBot.Cmd/valr_btczar.csv
+/src/SteveTheTradeBot.Ml.Model/MLModel.zip
