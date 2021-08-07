@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
+using Bumbershoot.Utilities.Helpers;
 using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
@@ -18,15 +20,15 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly int _buySignal;
-        private readonly decimal _buy200rocsma;
-        private int _quotesToCheckRsi;
+        private readonly int _quotesToCheckRsi;
+        private readonly int _positiveTrendOverQuotes;
 
 
         public RSiConfirmStrategy() : base(0.96m, 1.05m)
         {
             _buySignal = 30;
-            _buy200rocsma = 0.5m;
             _quotesToCheckRsi = 10;
+            _positiveTrendOverQuotes = 3;
         }
 
         public override async Task DataReceived(StrategyContext data)
@@ -34,16 +36,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.ByMinute.Last();
             var activeTrade = data.ActiveTrade();
             
-            var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");
             var hasRecentlyHitOverSold = data.ByMinute.TakeLast(_quotesToCheckRsi).Min(x => x.Metric.GetOrDefault("rsi14"));
-            var isPositiveTrend = IsPositiveTrend(data.ByMinute.TakeLast(3));
+            
+            var isPositiveTrend = IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
             if (activeTrade == null)
             {
 
-                if (hasRecentlyHitOverSold <= _buySignal && isPositiveTrend && (roc200sma.HasValue && roc200sma.Value > _buy200rocsma))
+                if (hasRecentlyHitOverSold <= _buySignal && isPositiveTrend)
                 {
                     _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold} Rsi:{roc200sma.Value}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
                     ResetStops(currentTrade, data);
                     data.StrategyInstance.Status =
@@ -52,7 +54,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 else
                 {
                     data.StrategyInstance.Status =
-                        $"Waiting to buy ![wait for min rsi {hasRecentlyHitOverSold} <= {_buySignal} in last {_quotesToCheckRsi}] [{roc200sma} > {_buy200rocsma}]";
+                        $"Waiting to buy ![wait for min rsi {hasRecentlyHitOverSold} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.ByMinute.TakeLast(_positiveTrendOverQuotes).Select(x=>x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
                 }
             }
             else
