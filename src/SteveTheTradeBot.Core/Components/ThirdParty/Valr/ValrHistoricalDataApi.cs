@@ -50,18 +50,19 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
         private async Task<T> Execute<T>(RestRequest request)
         {
             var stopwatch = new Stopwatch();
+            IRestResponse<T> response = null;
             try
             {
                 stopwatch.Start();
-                var response = await _client.ExecuteGetAsync<T>(request);
+                response = await _client.ExecuteGetAsync<T>(request);
                 var validateResponse = ValidateResponse(response);
                 stopwatch.Stop();
                 _log.Debug($"Request to {_client.BuildUri(request).PathAndQuery} returned {response.StatusCode} in {stopwatch.Elapsed.ToShort()}");
                 return validateResponse;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                _log.Information("Failed response in ");
+                _log.Debug($"[WRN] Request to {_client.BuildUri(request).PathAndQuery} failed with status `{response?.StatusCode}` in {stopwatch.Elapsed.ToShort()} : {e.Message}");
                 throw;
             }
         }

@@ -52,8 +52,15 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
-                    await Buy(data, data.StrategyInstance.BaseAmount);
+                    var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
                     ResetStops(currentTrade, data);
+                    data.StrategyInstance.Status =
+                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {StopLoss(data)}]";
+                }
+                else
+                {
+                    data.StrategyInstance.Status =
+                        $"Waiting to buy ![{rsiResults} < {_buySignal}] [{roc200sma} > {_buy200rocsma}]";
                 }
             }
             else
@@ -61,14 +68,21 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 if (currentTrade.Close > MoveProfit(data))
                 {
                     ResetStops(currentTrade, data);
+                    data.StrategyInstance.Status = $"Update stop loss to {StopLoss(data)}";
+                    await data.Messenger.Send(
+                        $"{data.StrategyInstance.Name} has updated its stop loss to {StopLoss(data)}");
                 }
-
-                if (currentTrade.Close <= StopLoss(data))
+                else if (currentTrade.Close <= StopLoss(data))
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} Rsi:{rsiResults}");
 
                     await Sell(data, activeTrade);
+                    data.StrategyInstance.Status = $"Sold! {activeTrade.SellPrice} at profit {activeTrade.Profit}";
+                }
+                else
+                {
+                    data.StrategyInstance.Status = $"Waiting for price above {MoveProfit(data)} or stop loss {StopLoss(data)}";
                 }
             }
         }

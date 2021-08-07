@@ -12,8 +12,8 @@ namespace SteveTheTradeBot.Dal.Tests.Models.Trades
             // action
             var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
             // assert
-            forBackTest.BaseAmount.Should().Be(1000);
-            forBackTest.BaseAmountCurrency.Should().Be(CurrencyCodes.ZAR);
+            forBackTest.BaseAmount.Should().Be(0);
+            forBackTest.BaseAmountCurrency.Should().Be(CurrencyCodes.BTC);
         }
 
         [Test]
@@ -22,8 +22,8 @@ namespace SteveTheTradeBot.Dal.Tests.Models.Trades
             // action
             var forBackTest = StrategyInstance.ForBackTest("123", CurrencyPair.BTCZAR);
             // assert
-            forBackTest.QuoteAmount.Should().Be(0);
-            forBackTest.QuoteAmountCurrency.Should().Be(CurrencyCodes.BTC);
+            forBackTest.QuoteAmount.Should().Be(1000);
+            forBackTest.QuoteAmountCurrency.Should().Be(CurrencyCodes.ZAR);
         }
 
 

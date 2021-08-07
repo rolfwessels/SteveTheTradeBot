@@ -14,7 +14,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var activeTrade = data.ActiveTrade();
             if (activeTrade == null)
             {
-                await Buy(data, data.StrategyInstance.BaseAmount);
+                await Buy(data, data.StrategyInstance.QuoteAmount);
             }
             else
             {

@@ -383,8 +383,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             await _fakeStrategy.Buy(_data, buyValue);
             // assert
             _data.StrategyInstance.InvestmentAmount.Should().Be(1000);
-            _data.StrategyInstance.BaseAmount.Should().Be(900);
-            _data.StrategyInstance.QuoteAmount.Should().Be(0.00099240m);
+            _data.StrategyInstance.QuoteAmount.Should().Be(900);
+            _data.StrategyInstance.BaseAmount.Should().Be(0.00099240m);
         }
 
         [Test]
@@ -401,8 +401,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             await _fakeStrategy.Sell(_data, _data.ActiveTrade());
             // assert
             _data.StrategyInstance.InvestmentAmount.Should().Be(1000);
-            _data.StrategyInstance.BaseAmount.Should().Be(998.59m);
-            _data.StrategyInstance.QuoteAmount.Should().Be(0.00000000m);
+            _data.StrategyInstance.QuoteAmount.Should().Be(998.59m);
+            _data.StrategyInstance.BaseAmount.Should().Be(0.00000000m);
         }
 
         [Test]

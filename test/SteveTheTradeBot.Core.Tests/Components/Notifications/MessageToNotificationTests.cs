@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Notifications;
 using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Notifications
@@ -29,7 +31,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
                 addOrderRequest));
             // assert
             _fakeNotification.Post.Should().HaveCount(1);
-            _fakeNotification.Post.First().Should().Be("RsiIsAThing just *bought* 0.00162178XRP for *R200* at R123321! :robot_face:");
+            _fakeNotification.Post.First().Should().Be("XRP RsiIsAThing FiveMinutes just *bought* 0.00162178XRP for *R200* at R123321! :robot_face:");
+            
         }
         
         [Test]
@@ -46,7 +49,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
             await _messageToNotification.OnTradeOrderMade(new TradeOrderMadeMessage(forBackTest, strategyTrade, tradeOrder));
             // assert
             _fakeNotification.PostSuccess.Should().HaveCount(1);
-            _fakeNotification.PostSuccess.First().Should().Be("RsiIsAThing just *sold* *0.00162178XRP* for R220.00 at R135653.1! We made R20.00 :moneybag:");
+            _fakeNotification.PostSuccess.First().Should().Be("XRP RsiIsAThing FiveMinutes just *sold* *0.00162178XRP* for R220.00 at R135653.1! We made R20.00 :moneybag:");
         }
  
         [Test]
@@ -63,7 +66,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
             await _messageToNotification.OnTradeOrderMade(new TradeOrderMadeMessage(forBackTest, strategyTrade, tradeOrder));
             // assert
             _fakeNotification.PostFailed.Should().HaveCount(1);
-            _fakeNotification.PostFailed.First().Should().Be("RsiIsAThing just *sold* *0.00162178XRP* for R180.00 at R110988.9! We lost R20.00 :money_with_wings:");
+            _fakeNotification.PostFailed.First().Should().Be("XRP RsiIsAThing FiveMinutes just *sold* *0.00162178XRP* for R180.00 at R110988.9! We lost R20.00 :money_with_wings:");
         }
 
         private static TradeOrder CloseTrade(StrategyTrade strategyTrade, decimal estimatedPrice, StrategyInstance forBackTest)

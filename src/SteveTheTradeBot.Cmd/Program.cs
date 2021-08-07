@@ -116,6 +116,7 @@ namespace SteveTheTradeBot.Cmd
                     .MinimumLevel.Debug()
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                     .MinimumLevel.Override("System", LogEventLevel.Warning)
+                    .MinimumLevel.Override("Websocket.Client.WebsocketClient", LogEventLevel.Fatal) // slack messages
                     .Enrich.FromLogContext()
                     .WriteTo.File($@"{Settings.Instance.LogFolder}SteveTheTradeBot.Api.log",
                         levelSwitch: new LoggingLevelSwitch(ConfigurationBuilderHelper.GetEnvironment()=="Development"? LogEventLevel.Information: LogEventLevel.Warning),

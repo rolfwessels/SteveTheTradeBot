@@ -58,6 +58,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             
             var activeTrade = data.ActiveTrade();
+            if (activeTrade == null)
+            {
+                _log.Warning($"BaseStrategy:SetStopLoss wtf how can activeTrade be null");
+                return;
+            }
+
             if (activeTrade.GetValidStopLoss() != null) await CancelStopLoss(data, activeTrade.GetValidStopLoss());
             var currentTrade = data.LatestQuote();
             var estimatedQuantity = 0;
