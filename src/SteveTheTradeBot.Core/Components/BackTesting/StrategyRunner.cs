@@ -70,7 +70,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             finally
             {
                 await PostTransaction(instance);
-                _log.Information($"Done processing {instance.Reference} in {stopwatch.Elapsed.ToShort()}");
+                _log.Information($"Done processing {instance.Name} in {stopwatch.Elapsed.ToShort()}");
             }
         }
 

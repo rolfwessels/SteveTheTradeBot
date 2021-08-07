@@ -48,7 +48,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     var strategyTrade = await Buy(data, data.StrategyInstance.BaseAmount);
                     var lossAmount = strategyTrade.BuyPrice * _initialStopRisk;
                     await data.Messenger.Send(new PostSlackMessage()
-                        { Message = $"{data.StrategyInstance.Reference} set stop loss to {lossAmount}." });
+                        { Message = $"{data.StrategyInstance.Name} set stop loss to {lossAmount}." });
                     await SetStopLoss(data, lossAmount);
                     data.StrategyInstance.Status =
                         $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {lossAmount}]";
@@ -66,7 +66,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 {
                     var lossAmount = currentTrade.Close * _secondStopRisk;
                     await data.Messenger.Send(new PostSlackMessage()
-                        { Message = $"{data.StrategyInstance.Reference} update stop loss to {lossAmount}." });
+                        { Message = $"{data.StrategyInstance.Name} update stop loss to {lossAmount}." });
                     await SetStopLoss(data, lossAmount);
                     data.StrategyInstance.Status = $"Update stop loss to {lossAmount}";
                 }

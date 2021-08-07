@@ -46,6 +46,8 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public DateTime LastDate { get; set; }
         public string Status { get; set; }
 
+        public string Name => $"{Pair.BaseCurrency()} {StrategyName} {PeriodSize}";
+
         // public decimal MaximumDrawDown { get; set; }
         // public decimal MaximumDrawDownMonteCarlo { get; set; }
         // public decimal StandardDeviation { get; set; }

@@ -70,7 +70,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     ResetStops(currentTrade, data);
                     data.StrategyInstance.Status = $"Update stop loss to {StopLoss(data)}";
                     await data.Messenger.Send(
-                        $"{data.StrategyInstance.Reference} has updated its stop loss to {StopLoss(data)}");
+                        $"{data.StrategyInstance.Name} has updated its stop loss to {StopLoss(data)}");
                 }
                 else if (currentTrade.Close <= StopLoss(data))
                 {
