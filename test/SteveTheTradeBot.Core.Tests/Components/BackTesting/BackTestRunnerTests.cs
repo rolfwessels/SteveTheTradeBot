@@ -42,17 +42,17 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╗                              
                 // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║                              
                 // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╣                              
-                // ║ BTCZAR ║ OneMinute      ║ -21.802             ║ -32.950       ║ 16.321                ║                              
-                // ║ BTCZAR ║ FiveMinutes    ║ -22.048             ║ -0.198        ║ 7.508                 ║                              
-                // ║ BTCZAR ║ FifteenMinutes ║ -21.906             ║ -3.150        ║ 4.57                  ║                              
-                // ║ BTCZAR ║ ThirtyMinutes  ║ -22.046             ║ -4.763        ║ 3.265                 ║                              
-                // ║ BTCZAR ║ OneHour        ║ -23.042             ║ 3.534         ║ 3.267                 ║                              
+                // ║ BTCZAR ║ OneMinute      ║ -22.052             ║ -3.805        ║ 23.504                ║                              
+                // ║ BTCZAR ║ FiveMinutes    ║ -21.958             ║ 48.299        ║ 19.914                ║                              
+                // ║ BTCZAR ║ FifteenMinutes ║ -22.043             ║ 66.334        ║ 15.345                ║                              
+                // ║ BTCZAR ║ ThirtyMinutes  ║ -22.046             ║ 76.421        ║ 11.755                ║                              
+                // ║ BTCZAR ║ OneHour        ║ -23.042             ║ 72.472        ║ 7.84                  ║                              
                 // ║ BTCZAR ║ Day            ║ -23.769             ║ 0.299         ║ 0                     ║                              
-                // ║ ETHZAR ║ OneMinute      ║ -9.730              ║ 32.165        ║ 16.648                ║                              
-                // ║ ETHZAR ║ FiveMinutes    ║ -9.732              ║ 30.175        ║ 11.425                ║                              
-                // ║ ETHZAR ║ FifteenMinutes ║ -9.959              ║ 61.464        ║ 6.856                 ║                              
-                // ║ ETHZAR ║ ThirtyMinutes  ║ -10.712             ║ 21.426        ║ 6.204                 ║                              
-                // ║ ETHZAR ║ OneHour        ║ -10.269             ║ 6.677         ║ 2.94                  ║                              
+                // ║ ETHZAR ║ OneMinute      ║ -9.816              ║ 68.933        ║ 35.909                ║                              
+                // ║ ETHZAR ║ FiveMinutes    ║ -9.991              ║ 153.104       ║ 25.79                 ║                              
+                // ║ ETHZAR ║ FifteenMinutes ║ -10.165             ║ 208.410       ║ 19.263                ║                              
+                // ║ ETHZAR ║ ThirtyMinutes  ║ -10.712             ║ 265.288       ║ 14.367                ║                              
+                // ║ ETHZAR ║ OneHour        ║ -10.269             ║ 63.173        ║ 8.167                 ║                              
                 // ║ ETHZAR ║ Day            ║ -18.695             ║ 0             ║ 0                     ║                              
                 // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╝ 
         }

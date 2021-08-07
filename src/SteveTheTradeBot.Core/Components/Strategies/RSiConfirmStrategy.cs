@@ -36,7 +36,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.ByMinute.Last();
             var activeTrade = data.ActiveTrade();
             
-            var hasRecentlyHitOverSold = data.ByMinute.TakeLast(_quotesToCheckRsi).Min(x => x.Metric.GetOrDefault("rsi14"));
+            var hasRecentlyHitOverSold = data.ByMinute.TakeLast(_quotesToCheckRsi+ _positiveTrendOverQuotes).Take(_quotesToCheckRsi).Min(x => x.Metric.GetOrDefault("rsi14"));
             
             var isPositiveTrend = IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
             if (activeTrade == null)
