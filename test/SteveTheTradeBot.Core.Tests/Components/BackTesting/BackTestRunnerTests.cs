@@ -36,7 +36,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 BuildBackTestResult(@from, to, t => new RSiConfirmStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
-                { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth }).ToTable();
+                { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth , x.PercentOfProfitableTrades }).ToTable();
             Console.Out.WriteLine(table);
 
                 // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╗                              
@@ -55,6 +55,40 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 // ║ ETHZAR ║ OneHour        ║ -10.269             ║ 63.173        ║ 8.167                 ║                              
                 // ║ ETHZAR ║ Day            ║ -18.695             ║ 0             ║ 0                     ║                              
                 // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╝ 
+        }
+
+        [Test]
+        [Timeout(240000)]
+        public void Fast_recent_RSiMlStrategy()
+        {
+            // arrange
+            Setup();
+            var to = DateTime.Now;
+            var from = to.AddMonths(-3);
+
+            var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
+                BuildBackTestResult(@from, to, t => new RSiMlStrategy(),  x.Item2.CurrencyPair, x.Item1).Result);
+
+            var table = strategyInstances.Select(x => new
+            { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth, x.PercentOfProfitableTrades }).ToTable();
+            Console.Out.WriteLine(table);
+
+            // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╗                              
+            // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║                              
+            // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╣                              
+            // ║ BTCZAR ║ OneMinute      ║ -22.052             ║ -3.805        ║ 23.504                ║                              
+            // ║ BTCZAR ║ FiveMinutes    ║ -21.958             ║ 48.299        ║ 19.914                ║                              
+            // ║ BTCZAR ║ FifteenMinutes ║ -22.043             ║ 66.334        ║ 15.345                ║                              
+            // ║ BTCZAR ║ ThirtyMinutes  ║ -22.046             ║ 76.421        ║ 11.755                ║                              
+            // ║ BTCZAR ║ OneHour        ║ -23.042             ║ 72.472        ║ 7.84                  ║                              
+            // ║ BTCZAR ║ Day            ║ -23.769             ║ 0.299         ║ 0                     ║                              
+            // ║ ETHZAR ║ OneMinute      ║ -9.816              ║ 68.933        ║ 35.909                ║                              
+            // ║ ETHZAR ║ FiveMinutes    ║ -9.991              ║ 153.104       ║ 25.79                 ║                              
+            // ║ ETHZAR ║ FifteenMinutes ║ -10.165             ║ 208.410       ║ 19.263                ║                              
+            // ║ ETHZAR ║ ThirtyMinutes  ║ -10.712             ║ 265.288       ║ 14.367                ║                              
+            // ║ ETHZAR ║ OneHour        ║ -10.269             ║ 63.173        ║ 8.167                 ║                              
+            // ║ ETHZAR ║ Day            ║ -18.695             ║ 0             ║ 0                     ║                              
+            // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╝ 
         }
 
 

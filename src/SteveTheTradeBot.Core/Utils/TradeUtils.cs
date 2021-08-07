@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BetterConsoleTables;
 using SteveTheTradeBot.Dal.Models.Trades;
+using SteveTheTradeBotML.Model;
 
 namespace SteveTheTradeBot.Core.Utils
 {
@@ -60,5 +61,7 @@ namespace SteveTheTradeBot.Core.Utils
                 .ToTable()
                 .ToString());
         }
+
+       
     }
 }

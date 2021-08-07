@@ -19,6 +19,7 @@ using Spectre.Console.Cli;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Framework.Mappers;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.ML.Model;
@@ -118,12 +119,6 @@ namespace SteveTheTradeBot.Cmd
 
             }
 
-            private float ToFloat(decimal? @decimal)
-            {
-                if (@decimal.HasValue) return (float) @decimal;
-                return 0;
-            }
-
             public override async Task ExecuteAsync(Settings settings, CancellationToken token)
             {
                 var stopwatch = new Stopwatch();
@@ -143,8 +138,8 @@ namespace SteveTheTradeBot.Cmd
                         var counter = 0;
                         foreach (var tradeFeedCandle in tradeFeedCandles)
                         {
-                            var sampleData = ToModelInput(tradeFeedCandle);
-                            var predictionResult = consumeModel.Predict(sampleData);
+                            var modelInput = tradeFeedCandle.ToModelInput();
+                            var predictionResult = consumeModel.Predict(modelInput);
                             await dynoDynamicGraphs.Plot(feedName, tradeFeedCandle.Date, "ml",
                                 (decimal) predictionResult.Score);
                             await dynoDynamicGraphs.Plot(feedName, tradeFeedCandle.Date.AddHours(6), "value",
@@ -158,29 +153,6 @@ namespace SteveTheTradeBot.Cmd
                         await dynoDynamicGraphs.Flush();
                         AnsiConsole.MarkupLine($"[grey]Done with {counter} records in [/] [white]{stopwatch.Elapsed.ToShort()}[/] 👍.");
                     });
-            }
-
-            private ModelInput ToModelInput(TradeFeedCandle tradeFeedCandle)
-            {
-                var sampleData = new ModelInput()
-                {
-                    Close = (float) tradeFeedCandle.Close,
-                    Volume = (float) tradeFeedCandle.Volume,
-                    Macd = ToFloat(tradeFeedCandle.Metric["macd"]),
-                    Rsi14 = ToFloat(tradeFeedCandle.Metric["rsi14"]),
-                    Ema100 = ToFloat(tradeFeedCandle.Metric["ema100"]),
-                    Ema200 = ToFloat(tradeFeedCandle.Metric["ema200"]),
-                    Roc100 = ToFloat(tradeFeedCandle.Metric["roc100"]),
-                    Roc200 = ToFloat(tradeFeedCandle.Metric["roc200"]),
-                    Roc100sma = ToFloat(tradeFeedCandle.Metric["roc100-sma"]),
-                    Roc200sma = ToFloat(tradeFeedCandle.Metric["roc200-sma"]),
-                    Supertrend = ToFloat(tradeFeedCandle.Metric["supertrend"]),
-                    Macdsignal = ToFloat(tradeFeedCandle.Metric["macd-signal"]),
-                    Macdhistogram = ToFloat(tradeFeedCandle.Metric["macd-histogram"]),
-                    Supertrendlower = ToFloat(tradeFeedCandle.Metric["supertrend-lower"]),
-                    Supertrendupper = ToFloat(tradeFeedCandle.Metric["supertrend-upper"]),
-                };
-                return sampleData;
             }
         }
 
