@@ -65,20 +65,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
 
         private void OnDisconnectedTryReconnect()
         {
-            _log.Information("Disconnected");
-            //Close();
-            _log.Warning($"SlackService:OnDisconnectedTryReconnect Not trying to reconnect or close!");
-            // _log.Information($"Trying to reconnect in {_reconnectTime.ToShort()}.");
-            // Task.Delay(_reconnectTime).ContinueWith(_ =>
-            // {
-            //     Connect().ContinueWith(task =>
-            //     {
-            //         if (task.Exception != null)
-            //             _log.Error(task.Exception,
-            //                 $"Error while trying to reconnect to slack:{task.Exception.Message}");
-            //     });
-            // });
-
+            _log.Information("Disconnected. Slack will try to reconnect on its own.");
         }
 
         private void Close()
