@@ -20,9 +20,9 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public bool IsActive { get; set; }
         public bool IsBackTest { get; set; }
         public decimal InvestmentAmount { get; set; }
-        public decimal BaseAmount { get; set; }
-        public string BaseAmountCurrency { get; set; }
         public decimal QuoteAmount { get; set; }
+        public string BaseAmountCurrency { get; set; }
+        public decimal BaseAmount { get; set; }
         public string QuoteAmountCurrency { get; set; }
         
 
@@ -88,10 +88,10 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 Pair = pair,
                 PeriodSize = periodSize,
                 InvestmentAmount = amount,
-                BaseAmount = amount,
-                BaseAmountCurrency = pair.SideIn(Side.Sell),
-                QuoteAmount = 0,
-                QuoteAmountCurrency = pair.SideIn(Side.Buy),
+                QuoteAmount = amount,
+                QuoteAmountCurrency = pair.QuoteCurrency(),
+                BaseAmount = 0,
+                BaseAmountCurrency = pair.BaseCurrency(),
                 Feed = "valr",
                 Reference = $"{strategy}_{pair}_{periodSize}_{DateTime.Now:yyyyMMdd}".ToLower()
             };

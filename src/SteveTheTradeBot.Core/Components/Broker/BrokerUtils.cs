@@ -128,14 +128,14 @@ namespace SteveTheTradeBot.Core.Components.Broker
 
         public static void ApplyCloseToStrategy(StrategyContext data, StrategyTrade close)
         {
-            data.StrategyInstance.BaseAmount += close.SellValue;
-            data.StrategyInstance.QuoteAmount -= close.BuyQuantity;
+            data.StrategyInstance.QuoteAmount += close.SellValue;
+            data.StrategyInstance.BaseAmount -= close.BuyQuantity;
         }
 
         public static void ApplyBuyToStrategy(StrategyContext data, TradeOrder tradeOrder)
         {
-            data.StrategyInstance.BaseAmount -= tradeOrder.Total;
-            data.StrategyInstance.QuoteAmount += tradeOrder.OriginalQuantity;
+            data.StrategyInstance.QuoteAmount -= tradeOrder.Total;
+            data.StrategyInstance.BaseAmount += tradeOrder.OriginalQuantity;
         }
 
 

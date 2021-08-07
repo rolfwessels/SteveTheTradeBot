@@ -52,7 +52,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
-                    var strategyTrade = await Buy(data, data.StrategyInstance.BaseAmount);
+                    var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
                     ResetStops(currentTrade, data);
                     data.StrategyInstance.Status =
                         $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {StopLoss(data)}]";

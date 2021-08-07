@@ -74,7 +74,7 @@ namespace SteveTheTradeBot.Cmd
                     AnsiConsole.MarkupLine("No strategies yet, run [grey]`sttb stategy add`[/] to add one.");
                     return 0;
                 }
-                var table = strategyInstances.Select(x=>new {Name = x.Reference, x.IsActive,x.InvestmentAmount, x.QuoteAmount, x.TotalProfit });
+                var table = strategyInstances.Select(x=>new {Name = x.Reference, x.IsActive,x.InvestmentAmount, QuoteAmount = x.BaseAmount, x.TotalProfit });
                 
                 
                 Console.Out.WriteLine(table.ToTable());
