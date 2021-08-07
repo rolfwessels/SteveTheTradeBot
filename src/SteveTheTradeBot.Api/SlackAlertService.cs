@@ -1,9 +1,11 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using SteveTheTradeBot.Core;
 using SteveTheTradeBot.Core.Components.Notifications;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
+using SteveTheTradeBot.Core.Framework.Settings;
 using SteveTheTradeBot.Core.Framework.Slack;
 using SteveTheTradeBot.Core.Utils;
 
@@ -30,14 +32,32 @@ namespace SteveTheTradeBot.Api
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
-            await _notificationChannel.PostAsync("Morning, Im awake and up and running.");
+            await _notificationChannel.PostAsync($"{GetGreeting()}, Im awake and up and running v{Startup.InformationalVersion()}-{ConfigurationBuilderHelper.GetEnvironment().ToLower()} on {Environment.MachineName}.");
             await _slackService.Connect();
             MessengerHelper.RegisterAsync<TradeOrderMadeMessage>(_messenger,this, _messageToNotification.OnTradeOrderMade);
             MessengerHelper.RegisterAsync<PostSlackMessage>(_messenger,this,(r) => _notificationChannel.PostAsync(r.Message));
         }
 
-      
-       
+        private string GetGreeting()
+        {
+            if (DateTime.Now.Hour <= 12)
+            {
+                return "Good Morning";
+            }
+
+            if (DateTime.Now.Hour <= 16)
+            {
+                return ("Good Afternoon");
+            }
+            if (DateTime.Now.Hour <= 20)
+            {
+                return ("Good Evening");
+            }
+            
+            {
+                return ("Good Night");
+            }
+        }
 
         #endregion
     }
