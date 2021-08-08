@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Bumbershoot.Utilities.Helpers;
 
 namespace SteveTheTradeBot.Core.Utils
 {
@@ -19,9 +17,9 @@ namespace SteveTheTradeBot.Core.Utils
         } 
         public static Dictionary<T, T2> AddOrReplace<T,T2>(this Dictionary<T,T2> values, Dictionary<T, T2> call)
         {
-            foreach (var VARIABLE in call)
+            foreach (var keyValuePair in call)
             {
-                values.AddOrReplace(VARIABLE.Key, VARIABLE.Value);
+                values.AddOrReplace(keyValuePair.Key, keyValuePair.Value);
             }
             return values;
         }

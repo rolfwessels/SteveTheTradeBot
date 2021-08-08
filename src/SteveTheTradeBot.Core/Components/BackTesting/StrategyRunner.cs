@@ -24,7 +24,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
         private readonly IBrokerApi _broker;
         private readonly IMessenger _messenger;
-        private IParameterStore _parameterStore;
+        private readonly IParameterStore _parameterStore;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
             IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger, IParameterStore parameterStore)
@@ -38,7 +38,6 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _parameterStore = parameterStore;
         }
 
-
         #region Implementation of IStrategyRunner
 
         public async Task<bool> Process(StrategyInstance strategyInstance, DateTime time)
@@ -46,7 +45,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             if (strategyInstance.IsBackTest) throw new ArgumentException("Cannot process back test strategy!");
             if (!strategyInstance.IsActive)
                 throw new ArgumentException("Cannot process strategy that is marked as inactive!");
-            if (!IsCorrectTime(strategyInstance.PeriodSize, time)) return false;
+            if (time < strategyInstance.LastDate.Add(strategyInstance.PeriodSize.ToTimeSpan())) return false;
             var stopwatch = new Stopwatch().With(x => x.Start());
             return await _strategyInstanceStore.EnsureUpdate(strategyInstance.Id, async (strategy) => {
                 return await ProcessStrategy(strategy, time, stopwatch);
@@ -96,17 +95,18 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             if (lastQuoteDate == instanceLastDate)
             {
                 var timeSinceLastRun = (DateTime.Now.ToLocalTime() - instanceLastDate);
-                var allowedTime = (instance.PeriodSize.ToTimeSpan() * 10);
-                if (timeSinceLastRun > allowedTime)
+                var warningTime = instance.PeriodSize.ToTimeSpan() * 10;
+                if (timeSinceLastRun > warningTime)
+                {
                     _log.Warning(
                         $"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
+                }
                 else
                 {
                     _log.Debug(
                         $"StrategyRunner {instance.StrategyName} {instance.Id} last run date is *{instanceLastDate}* and we are trying to run it again at {time.ToLocalTime()} that's {timeSinceLastRun.ToShort()} ago!");
                 }
-
-                 return false;
+                return false;
             }
 
             return true;

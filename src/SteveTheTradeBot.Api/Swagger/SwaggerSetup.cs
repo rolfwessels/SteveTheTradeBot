@@ -7,13 +7,14 @@ using Bumbershoot.Utilities.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using SteveTheTradeBot.Core.Framework.Settings;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace SteveTheTradeBot.Api.Swagger
 {
     public static class SwaggerSetup
     {
-        private static string _informationalVersion = Startup.InformationalVersion();
+        private static string _informationalVersion = ConfigurationBuilderHelper.InformationalVersion();
 
         #region Private Methods
 

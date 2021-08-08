@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 
 namespace SteveTheTradeBot.Core.Framework.Settings
@@ -18,6 +19,13 @@ namespace SteveTheTradeBot.Core.Framework.Settings
         {
             var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
             return environment;
+        }
+
+        public static string InformationalVersion()
+        {
+            return Assembly.GetEntryAssembly()?
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                .InformationalVersion;
         }
     }
 }

@@ -87,12 +87,5 @@ namespace SteveTheTradeBot.Api
             app.UseSwagger();
             SimpleFileServer.Initialize(app);
         }
-
-        public static string InformationalVersion()
-        {
-            return Assembly.GetEntryAssembly()?
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                .InformationalVersion;
-        }
     }
 }

@@ -7,6 +7,7 @@ using SteveTheTradeBot.Dal.Models.Users;
 using FizzWare.NBuilder;
 using FizzWare.NBuilder.Generators;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Dal.Tests
@@ -43,8 +44,6 @@ namespace SteveTheTradeBot.Dal.Tests
 
             if (value is HistoricalTrade historicalTrade)
             {
-
-                _counter++;
                 historicalTrade.Price = 259653+ _random.Next(-1000, 1000);
                 historicalTrade.Quantity = _random.Next(1, 1000)/1000m;
                 historicalTrade.CurrencyPair = "BTCZAR";
@@ -57,7 +56,7 @@ namespace SteveTheTradeBot.Dal.Tests
             
             if (value is TradeFeedCandle tradeFeedCandle)
             {
-                _counter++;
+              
                 tradeFeedCandle.Volume = 259 + _random.Next(-1000, 1000);
                 tradeFeedCandle.Open = 259653+ _random.Next(-1000, 1000);
                 tradeFeedCandle.Close = 259653 + _random.Next(-1000, 1000);
@@ -68,8 +67,20 @@ namespace SteveTheTradeBot.Dal.Tests
                 tradeFeedCandle.Feed = "feed1";
                 tradeFeedCandle.Metric = new Dictionary<string, decimal?>() { { "ema", 12} , { "rsa", 3} };
             }
-            
 
+            if (value is StrategyInstance instance)
+            {
+               
+                instance.Feed = "test";
+                instance.Pair= new[] { CurrencyPair.BTCZAR , CurrencyPair.ETHZAR , CurrencyPair.XRPZAR}[_counter%3] ;
+                instance.IsActive = true;
+                instance.IsBackTest = false;
+                instance.InvestmentAmount = new[] {500, 1000, 1500}[_counter % 3];
+                instance.QuoteAmount = instance.InvestmentAmount * 1.1m;
+                instance.Recalculate();
+            }
+
+            _counter++;
             var userGrant = value as UserGrant;
             if (userGrant != null) userGrant.User = Builder<User>.CreateNew().Build().ToReference();
             return value;
