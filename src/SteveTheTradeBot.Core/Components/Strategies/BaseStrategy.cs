@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -34,10 +34,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var (trade, order) = data.StrategyInstance.AddBuyTradeOrder(randValue, estimatedPrice, currentTradeDate);
             try
             {
-              
+                _log.Information($"{data.StrategyInstance.Name} buying {randValue} of {data.StrategyInstance.Pair.BaseCurrency()}");
                 var response = await data.Broker.MarketOrder(BrokerUtils.ToOrderRequest(order));
                 BrokerUtils.ApplyValue(order, response);
-                trade.ApplyBuyInfo(order);
+                BrokerUtils.ApplyBuyInfo(trade, order);
                 BrokerUtils.ApplyBuyToStrategy(data, order);
                 await data.PlotRunData(currentTradeDate, "activeTrades", 1);
                 await data.PlotRunData(currentTradeDate, "sellPrice", randValue);
@@ -64,7 +64,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 return;
             }
 
-            if (activeTrade.GetValidStopLoss() != null) await CancelStopLoss(data, activeTrade.GetValidStopLoss());
+            await CancelExistingStopLoss(data, activeTrade);
             var currentTrade = data.LatestQuote();
             var estimatedQuantity = 0;
             var stopPrice = limitAmount * 1.001m;
@@ -83,6 +83,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 _log.Error(e, $"Failed to SetStopLoss order:{e.Message}");
             }
             
+        }
+
+        private async Task CancelExistingStopLoss(StrategyContext data, StrategyTrade activeTrade)
+        {
+            if (activeTrade.GetValidStopLoss() != null) await CancelStopLoss(data, activeTrade.GetValidStopLoss());
         }
 
         private async Task CancelStopLoss(StrategyContext data, TradeOrder tradeOrder)
@@ -106,17 +111,13 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.LatestQuote();
             var estimatedPrice = currentTrade.Close;
             var estimatedQuantity = trade.BuyQuantity * estimatedPrice;
+            await CancelExistingStopLoss(data, trade);
             var order = trade.AddOrderRequest(Side.Sell, trade.BuyQuantity, estimatedPrice, estimatedQuantity, data.StrategyInstance.Pair, currentTrade.Date, estimatedPrice);
             try
             {
                 var simpleOrderRequest = BrokerUtils.ToOrderRequest(order);
                 var response = await data.Broker.MarketOrder(simpleOrderRequest);
-                BrokerUtils.ApplyValue(order, response);
-                var close = BrokerUtils.ApplyCloseToActiveTrade(trade, currentTrade.Date, order);
-                BrokerUtils.ApplyCloseToStrategy(data, close);
-                await data.PlotRunData(currentTrade.Date, "activeTrades", 0);
-                await data.PlotRunData(currentTrade.Date, "sellPrice", close.SellValue);
-                await data.Messenger.Send(new TradeOrderMadeMessage(data.StrategyInstance, trade, order));
+                await BrokerUtils.ApplyOrderResultToStrategy(data, trade, order, response);
             }
             catch (Exception e)
             {

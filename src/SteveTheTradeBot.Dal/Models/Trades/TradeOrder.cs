@@ -24,6 +24,8 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string FeeCurrency { get; set; }
         public string PaidCurrency => CurrencyPair.SideOut(OrderSide);
         public decimal StopPrice { get; set; }
+        public decimal QuantityMinusFee => OriginalQuantity - TotalFee;
+        public decimal TotalMinusFee => Total - TotalFee;
 
         public decimal SwapFeeAmount(string feeCurrency)
         {

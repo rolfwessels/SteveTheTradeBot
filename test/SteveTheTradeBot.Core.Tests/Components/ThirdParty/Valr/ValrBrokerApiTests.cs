@@ -276,7 +276,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
                 {
                     ValrSettings.Instance.Secret.Should().NotStartWith("ENC");
                     // action
-                    var response = await _api.OrderStatusById(CurrencyPair.BTCZAR, "f2e9623d-f5df-4140-ac08-aa2bacf1042d");
+                    //  2021-08-08 15:02:03.337 +02:00 [WRN] Failed request [393.2ms] to GET:/v1/orders/history/summary/orderid/b785986b-d8eb-457e-ab35-afbc927a9594 Invalid Order.  (SteveTheTradeBot.Core.Components.ThirdParty.Valr.ValrBrokerApi)
+
+
+                    var response = await _api.OrderStatusById(CurrencyPair.BTCZAR, "b785986b-d8eb-457e-ab35-afbc927a9594");
                     // assert
                     response.OrderId.Should().HaveLength(36);
                     response.OrderStatusType.Should().Be("Cancelled");

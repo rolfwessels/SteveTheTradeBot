@@ -139,7 +139,7 @@ namespace SteveTheTradeBot.Cmd
                     .MinimumLevel.Override("Websocket.Client.WebsocketClient", LogEventLevel.Fatal) // slack messages
                     .Enrich.FromLogContext()
                     .WriteTo.File($@"{Settings.Instance.LogFolder}SteveTheTradeBot.Api.log",
-                        levelSwitch: new LoggingLevelSwitch(ConfigurationBuilderHelper.GetEnvironment()=="Development"? LogEventLevel.Information: LogEventLevel.Warning),
+                        levelSwitch: new LoggingLevelSwitch(ConfigurationBuilderHelper.GetEnvironment()=="Development"? LogEventLevel.Debug: LogEventLevel.Warning),
                         fileSizeLimitBytes: 10 * LoggingHelper.MB,
                         outputTemplate:
                         "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",
