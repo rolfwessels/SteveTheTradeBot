@@ -38,7 +38,6 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             _parameterStore = parameterStore;
         }
 
-
         #region Implementation of IStrategyRunner
 
         public async Task<bool> Process(StrategyInstance strategyInstance, DateTime time)

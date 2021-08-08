@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using Serilog;
 using Serilog.Sinks.Loki.Labels;
-using SteveTheTradeBot.Api;
 using SteveTheTradeBot.Core.Framework.Settings;
 
 namespace SteveTheTradeBot.Cmd
@@ -19,7 +18,7 @@ namespace SteveTheTradeBot.Cmd
             {
                 new LokiLabel("app", "steve-the-trading-bot"),
                 new LokiLabel("appenv", ConfigurationBuilderHelper.GetEnvironment().ToLower()),
-                new LokiLabel("appversion", Startup.InformationalVersion()),
+                new LokiLabel("appversion", ConfigurationBuilderHelper.InformationalVersion()),
                 new LokiLabel("machinename",  Environment.MachineName)
             };
         }

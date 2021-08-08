@@ -19,6 +19,7 @@ using MediatR;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Notifications;
+using SteveTheTradeBot.Core.Components.SlackResponders;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
@@ -113,7 +114,10 @@ namespace SteveTheTradeBot.Core.Startup
         {
             builder.Register(x => new RedisMessenger(Settings.Instance.RedisHost)).As<IMessenger>().SingleInstance();
             builder.RegisterType<MediatorCommander>();
-            builder.Register(x => new CommanderPersist(x.Resolve<MediatorCommander>(), x.Resolve<IRepository<SystemCommand>>(), x.Resolve<IStringify>(), x.Resolve<IEventStoreConnection>())).As<ICommander>();
+            builder.Register(x => new CommanderPersist(x.Resolve<MediatorCommander>(),
+                    x.Resolve<IRepository<SystemCommand>>(), x.Resolve<IStringify>(),
+                    x.Resolve<IEventStoreConnection>()))
+                .As<ICommander>();
             builder.RegisterType<SubscriptionNotifications>().SingleInstance();
             builder.RegisterType<StringifyJson>().As<IStringify>().SingleInstance();
             builder.RegisterType<EventStoreConnection>().As<IEventStoreConnection>();
@@ -126,10 +130,15 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<StrategyInstanceStore>().As<IStrategyInstanceStore>();
             builder.RegisterType<StrategyRunner>().As<IStrategyRunner>();
             builder.RegisterType<DynamicGraphs>().As<IDynamicGraphs>();
-            builder.RegisterType<ResponseBuilder>();
+            builder.Register(x => new ResponseBuilder(new[]
+            {
+                new ReportResponse(x.Resolve<ITradePersistenceFactory>()),
+            })).As<IResponseBuilder>();
             builder.RegisterType<MessageToNotification>();
 
-            builder.Register(x => new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret, Messenger.Default)).As<IBrokerApi>();
+            builder.Register(x =>
+                new ValrBrokerPaperTradingApi(ValrSettings.Instance.ApiKey, ValrSettings.Instance.Secret,
+                    Messenger.Default)).As<IBrokerApi>();
             builder.Register(x => new StrategyPicker()
                 .Add(RSiStrategy.Desc, () => new RSiStrategy())
                 .Add(RSiMslStrategy.Desc, () => new RSiMslStrategy())
@@ -138,10 +147,11 @@ namespace SteveTheTradeBot.Core.Startup
             ).As<StrategyPicker>();
 
 
-
-            builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection)).As<ITradePersistenceFactory>().SingleInstance();
+            builder.Register(x => new TradePersistenceFactory(Settings.Instance.NpgsqlConnection))
+                .As<ITradePersistenceFactory>().SingleInstance();
             builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result);
-            builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result).As<TradePersistenceStoreContext>();
+            builder.Register(x => x.Resolve<TradePersistenceFactory>().GetTradePersistence().Result)
+                .As<TradePersistenceStoreContext>();
         }
 
         #endregion

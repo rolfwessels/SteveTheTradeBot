@@ -1,4 +1,5 @@
-﻿using SlackConnector.Models;
+﻿using System.Threading.Tasks;
+using SlackConnector.Models;
 
 namespace SteveTheTradeBot.Core.Framework.Slack
 {
@@ -9,7 +10,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
             return context.IsForBot();
         }
 
-        public abstract BotMessage GetResponse(MessageContext context);
+        public abstract Task GetResponse(MessageContext context);
 
        
     }

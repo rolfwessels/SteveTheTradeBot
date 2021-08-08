@@ -6,6 +6,7 @@ using SteveTheTradeBot.Shared.Models.Ping;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using SteveTheTradeBot.Core.Framework.Settings;
 
 namespace SteveTheTradeBot.Api.WebApi.Controllers
 {
@@ -16,7 +17,7 @@ namespace SteveTheTradeBot.Api.WebApi.Controllers
     [Route(RouteHelper.PingController)]
     public class PingController : Controller
     {
-        private static readonly string _informationalVersion = Startup.InformationalVersion();
+        private static readonly string _informationalVersion = ConfigurationBuilderHelper.InformationalVersion();
         private readonly string _environmentName;
         private readonly IGeneralUnitOfWorkFactory _factory;
 

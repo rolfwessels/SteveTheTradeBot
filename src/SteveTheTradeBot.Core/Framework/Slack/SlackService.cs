@@ -19,7 +19,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
         private readonly TimeSpan _reconnectTime = TimeSpan.FromMinutes(5);
         public int ReconnectingCounter { get; set; }
 
-        public SlackService(string key, ResponseBuilder responseBuilder)
+        public SlackService(string key, IResponseBuilder responseBuilder)
         {
             _key = key;
             _connector = new SlackConnector.SlackConnector();
@@ -55,6 +55,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
             _log.Debug($"OnReconnecting {ReconnectingCounter}");
             if (ReconnectingCounter > 30)
             {
+                ReconnectingCounter = 0;
                 Close();
                 _log.Debug($"Wait a few {_reconnectTime.ToShort()} then reconnect...");
                 await Task.Delay(_reconnectTime);
@@ -117,17 +118,8 @@ namespace SteveTheTradeBot.Core.Framework.Slack
             {
                 if (responder.CanRespond(messageContext))
                 {
-                    var botMessage = responder.GetResponse(messageContext);
-                    if (botMessage != null)
-                    {
-                        if (botMessage.ChatHub == null)
-                        {
-                            botMessage.ChatHub = messageContext.Message.ChatHub;
-                        }
-                        await _connection.Say(botMessage);
-                        _log.Debug($"Message out {messageContext.Message.User.Name}: {botMessage.Text}");
-                        messageContext.BotHasResponded = true;
-                    }
+                    await responder.GetResponse(messageContext);
+                    
                 }
             }
         }

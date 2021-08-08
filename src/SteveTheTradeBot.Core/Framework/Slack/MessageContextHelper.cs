@@ -7,7 +7,7 @@ namespace SteveTheTradeBot.Core.Framework.Slack
     {
         public static bool IsForBot(this MessageContext context)
         {
-            return context.IsFromSlackbot == false && context.BotHasResponded == false &&
+            return context.IsFromSlackbot == false  &&
                    (context.Message.MentionsBot || context.Message.ChatHub.Type == SlackChatHubType.DM);
         }
 

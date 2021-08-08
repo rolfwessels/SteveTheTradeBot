@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using SlackConnector.Models;
+using SteveTheTradeBot.Core.Components.SlackResponders;
+using SteveTheTradeBot.Core.Framework.Settings;
 
 namespace SteveTheTradeBot.Core.Framework.Slack
 {
@@ -18,20 +21,19 @@ namespace SteveTheTradeBot.Core.Framework.Slack
         public override bool CanRespond(MessageContext context)
         {
             
-            return context.IsForBot() && context.HasMessage("help");
+            return context.IsForBot() && context.HasMessage("help") && context.HasMessage("hi");
         }
 
         #endregion
 
         #region Implementation of IResponder
 
-        public override BotMessage GetResponse(MessageContext context)
+        public override async Task GetResponse(MessageContext context)
         {
             var botMessage = new BotMessage() { Text =
-                $"Hi, You are currently connected to\n\n{GetCommands()}"
+                $"{SlackHelper.GetGreeting()}, You are currently connected to v{ConfigurationBuilderHelper.InformationalVersion()}-{ConfigurationBuilderHelper.GetEnvironment().ToLower()}\n\n{GetCommands()}"
             };
-
-            return botMessage;
+            await context.Say(botMessage);
         }
 
         private string GetCommands()
