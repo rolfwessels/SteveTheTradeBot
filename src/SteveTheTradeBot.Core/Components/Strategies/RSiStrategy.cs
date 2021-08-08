@@ -66,7 +66,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 {
                     var lossAmount = currentTrade.Close * _secondStopRisk;
                     await data.Messenger.Send(new PostSlackMessage()
-                        { Message = $"{data.StrategyInstance.Name} update stop loss to {lossAmount}." });
+                        { Message = $"{data.StrategyInstance.Name} update stop loss to {lossAmount}. :chart_with_upwards_trend: " });
                     await SetStopLoss(data, lossAmount);
                     data.StrategyInstance.Status = $"Update stop loss to {lossAmount}";
                 }

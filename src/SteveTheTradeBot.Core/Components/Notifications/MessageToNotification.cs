@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -29,16 +30,20 @@ namespace SteveTheTradeBot.Core.Components.Notifications
                 if (tradeOrder.StrategyTrade.IsProfit())
                 {
                     await _notification.PostSuccessAsync(
-                        $"{tradeOrder.StrategyInstance.Name} just *sold* *{cost}* for {buySell} at {price}! We made {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :moneybag:");
+                        $"{tradeOrder.StrategyInstance.Name} just *sold* *{cost}* for {buySell} at {price}! We made {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)}({Percent(tradeOrder.StrategyTrade.Profit)}) :moneybag:");
                 }
                 else
                 {
                     await _notification.PostFailedAsync(
-                        $"{tradeOrder.StrategyInstance.Name} just *sold* *{cost}* for {buySell} at {price}! We lost {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)} :money_with_wings:");
+                        $"{tradeOrder.StrategyInstance.Name} just *sold* *{cost}* for {buySell} at {price}! We lost {Amount.From(tradeOrder.StrategyTrade.PriceDifference(), tradeOrder.Order.FeeCurrency)}({Percent(tradeOrder.StrategyTrade.Profit)}) :money_with_wings:");
                 }
             }
         }
 
-        
+
+        private string Percent(decimal strategyTradeProfit)
+        {
+            return Math.Round(strategyTradeProfit) + "%";
+        }
     }
 }

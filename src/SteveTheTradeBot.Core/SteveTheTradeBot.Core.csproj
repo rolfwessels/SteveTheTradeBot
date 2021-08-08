@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SteveTheTradeBot.Dal\SteveTheTradeBot.Dal.csproj" />
+    <ProjectReference Include="..\SteveTheTradeBot.Ml.Model\SteveTheTradeBot.ML.Model.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <NoWarn>$(NoWarn);NU1605</NoWarn>

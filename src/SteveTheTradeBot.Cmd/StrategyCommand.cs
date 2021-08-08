@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using Skender.Stock.Indicators;
@@ -9,6 +11,7 @@ using Spectre.Console.Cli;
 using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -16,17 +19,11 @@ namespace SteveTheTradeBot.Cmd
 {
     public class StrategyCommand
     {
-        public class Add : Command<Add.Settings>
+        public class Add : AsyncCommandWithToken<BaseCommandSettings>
         {
-            
-            public sealed class Settings : BaseCommandSettings
-            {
-                
-            }
+            #region Overrides of AsyncCommandWithToken<BaseCommandSettings>
 
-            #region Overrides of Command<Settings>
-
-            public override int Execute(CommandContext context, Settings settings)
+            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
             {
                 var strategyStore = IocApi.Instance.Resolve<IStrategyInstanceStore>();
                 var strategyNames = IocApi.Instance.Resolve<StrategyPicker>().List;
@@ -45,40 +42,71 @@ namespace SteveTheTradeBot.Cmd
                 var selectedPeriodSize = AnsiConsole.Prompt(new TextPrompt<string>("Pick a [green]PeriodSize[/]?")
                     .InvalidChoiceMessage("[red]That's not a valid strategy[/]")
                     .DefaultValue(PeriodSize.FiveMinutes.ToString())
-                    .AddChoices(periodSizes.Select(x=>x.ToString())));
+                    .AddChoices(periodSizes.Select(x => x.ToString())));
 
                 var periodSize = Enum.Parse<PeriodSize>(selectedPeriodSize);
-                strategyStore.Add(StrategyInstance.From(strategy, pair, amount, periodSize)).Wait();
-                return 0;
+                await strategyStore.Add(StrategyInstance.From(strategy, pair, amount, periodSize));
             }
 
             #endregion
         }
 
        
-        public class List : Command<BaseCommandSettings>
+        public class List : AsyncCommandWithToken<BaseCommandSettings>
         {
-            private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-            private readonly TimeSpan _retryIn = TimeSpan.FromMinutes(1);
-
             
+            #region Overrides of AsyncCommandWithToken<BaseCommandSettings>
 
-            #region Overrides of Command<Settings>
-
-            public override int Execute(CommandContext context, BaseCommandSettings settings)
+            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
             {
                 var strategyInstanceStore = IocApi.Instance.Resolve<IStrategyInstanceStore>();
-                var strategyInstances = strategyInstanceStore.Find(x=>x.IsBackTest == false).Result;
+                var strategyInstances = await strategyInstanceStore.Find(x => x.IsBackTest == false);
                 if (!strategyInstances.Any())
                 {
                     AnsiConsole.MarkupLine("No strategies yet, run [grey]`sttb stategy add`[/] to add one.");
-                    return 0;
+                    return;
                 }
-                var table = strategyInstances.Select(x=>new {Name = x.Reference, x.IsActive,x.InvestmentAmount, QuoteAmount = x.BaseAmount, x.TotalProfit });
-                
-                
+                var table = strategyInstances.Select(x => new { Name = x.Reference, x.IsActive, x.InvestmentAmount, QuoteAmount = x.BaseAmount, x.TotalProfit });
                 Console.Out.WriteLine(table.ToTable());
-                return 0;
+            }
+
+            #endregion
+        }
+
+        public class All : AsyncCommandWithToken<BaseCommandSettings>
+        {
+  
+            #region Overrides of AsyncCommandWithToken<BaseCommandSettings>
+
+            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
+            {
+                var strategyStore = IocApi.Instance.Resolve<IStrategyInstanceStore>();
+                var strategyNames = IocApi.Instance.Resolve<StrategyPicker>().List;
+                var find = await strategyStore.Find(x => true);
+                const int amount = 1000;
+                var count = 0;
+                
+                foreach (var strategy in strategyNames.Where(x=>!x.Contains("Test")))
+                {
+                    foreach (var (periodSize, feed) in ValrFeeds.AllWithPeriods().Where(x=>x.Item1 != PeriodSize.Week))
+                    {
+                        var pair = feed.CurrencyPair;
+                        var exists = find.Any(x =>
+                            x.StrategyName == strategy && x.Pair == pair && x.PeriodSize == periodSize &&
+                            x.IsBackTest == false);
+                        if (exists) continue;
+
+                        var strategyInstance = StrategyInstance.From(strategy, pair, amount, periodSize);
+                        AnsiConsole.MarkupLine($"[grey]Adding[/] [white]{strategyInstance.Name}[/].");
+                        await strategyStore.Add(strategyInstance);
+                        count++;
+                    }
+                    
+                }
+
+                AnsiConsole.MarkupLine(count == 0
+                    ? "Done, [grey]looks like you have all the strategies already.[/]"
+                    : $"Done, adding [green]{count}[/] strategies.");
             }
 
             #endregion

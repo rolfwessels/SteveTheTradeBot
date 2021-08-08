@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BetterConsoleTables;
 using SteveTheTradeBot.Dal.Models.Trades;
+using SteveTheTradeBotML.Model;
 
 namespace SteveTheTradeBot.Core.Utils
 {
@@ -20,7 +21,6 @@ namespace SteveTheTradeBot.Core.Utils
             if (!table.Rows.Any()) return "No records found.\n";
             return new ConsoleTables(table).ToString();
         }
-
 
         public static TradeFeedCandle ForDate(this IEnumerable<TradeFeedCandle> updateFeed )
         {
@@ -61,5 +61,7 @@ namespace SteveTheTradeBot.Core.Utils
                 .ToTable()
                 .ToString());
         }
+
+       
     }
 }

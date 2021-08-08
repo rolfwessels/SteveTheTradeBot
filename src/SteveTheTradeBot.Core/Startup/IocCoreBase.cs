@@ -133,6 +133,7 @@ namespace SteveTheTradeBot.Core.Startup
             builder.Register(x => new StrategyPicker()
                 .Add(RSiStrategy.Desc, () => new RSiStrategy())
                 .Add(RSiMslStrategy.Desc, () => new RSiMslStrategy())
+                .Add(RSiConfirmStrategy.Desc, () => new RSiConfirmStrategy())
                 .Add(TestBuySellStrategy.Desc, () => new TestBuySellStrategy())
             ).As<StrategyPicker>();
 

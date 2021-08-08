@@ -14,7 +14,8 @@ jobs:
       NpgsqlConnection: Host=localhost;Database=steve-the-trade-bot-test;Username=postgres;Password=GRES_password
       MongoConnection: mongodb://localhost:27017/steve-the-trade-bot-test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2        with:
+          fetch-depth: 0
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:

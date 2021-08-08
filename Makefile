@@ -88,7 +88,7 @@ version:
 	@echo '{ "version": "${version}" }' > src/version.json
 
 publish: 
-	@echo  "${GREEN}Publish branch $(current-branch) to $(docker-tags) as user ${DOCKER_USER}${NC}"
+	@echo  "${GREEN}Publish branch $(current-branch) to $(docker-tags) to version $(version) as user ${DOCKER_USER}${NC}"
 	@docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 	@echo  "${GREEN}Building $(docker-tags)${NC}"
 	@cd src && docker build ${docker-tags} --build-arg VERSION=$(version) .

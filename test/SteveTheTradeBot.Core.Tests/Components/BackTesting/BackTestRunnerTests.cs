@@ -25,50 +25,73 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
-        public async Task Fast_recent_RSiStrategy()
+        public void Fast_recent_RSiConfirmStrategy()
         {
             // arrange
             Setup();
             var to = DateTime.Now;
-            var from = to.AddDays(-6);
+            var from = to.AddMonths(-3);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
-                BuildBackTestResult(@from, to, t => new RSiStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, t => new RSiConfirmStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
-                { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth }).ToTable();
+                { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth , x.PercentOfProfitableTrades }).ToTable();
             Console.Out.WriteLine(table);
 
                 // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╗                              
                 // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║                              
                 // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╣                              
-                // ║ BTCZAR ║ OneMinute      ║ 16.421              ║ -8.030        ║ 11.105                ║                              
-                // ║ BTCZAR ║ FiveMinutes    ║ 16.195              ║ 33.605        ║ 5.801                 ║                              
-                // ║ BTCZAR ║ FifteenMinutes ║ 16.508              ║ 63.823        ║ 3.647                 ║                              
-                // ║ BTCZAR ║ ThirtyMinutes  ║ 17.014              ║ -20.981       ║ 3.315                 ║                              
-                // ║ BTCZAR ║ OneHour        ║ 17.953              ║ -23.472       ║ 2.984                 ║                              
-                // ║ BTCZAR ║ Day            ║ 13.592              ║ 10.702        ║ 0.833                 ║                              
-                // ║ ETHZAR ║ OneMinute      ║ 86.754              ║ 144.199       ║ 13.757                ║                              
-                // ║ ETHZAR ║ FiveMinutes    ║ 85.317              ║ 65.962        ║ 8.122                 ║                              
-                // ║ ETHZAR ║ FifteenMinutes ║ 85.952              ║ 44.759        ║ 5.801                 ║                              
-                // ║ ETHZAR ║ ThirtyMinutes  ║ 85.380              ║ 10.046        ║ 4.476                 ║                              
-                // ║ ETHZAR ║ OneHour        ║ 86.330              ║ 101.948       ║ 2.984                 ║                              
-                // ║ ETHZAR ║ Day            ║ 65.079              ║ 0             ║ 0                     ║                              
-                // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════
+                // ║ BTCZAR ║ OneMinute      ║ -22.052             ║ -3.805        ║ 23.504                ║                              
+                // ║ BTCZAR ║ FiveMinutes    ║ -21.958             ║ 48.299        ║ 19.914                ║                              
+                // ║ BTCZAR ║ FifteenMinutes ║ -22.043             ║ 66.334        ║ 15.345                ║                              
+                // ║ BTCZAR ║ ThirtyMinutes  ║ -22.046             ║ 76.421        ║ 11.755                ║                              
+                // ║ BTCZAR ║ OneHour        ║ -23.042             ║ 72.472        ║ 7.84                  ║                              
+                // ║ BTCZAR ║ Day            ║ -23.769             ║ 0.299         ║ 0                     ║                              
+                // ║ ETHZAR ║ OneMinute      ║ -9.816              ║ 68.933        ║ 35.909                ║                              
+                // ║ ETHZAR ║ FiveMinutes    ║ -9.991              ║ 153.104       ║ 25.79                 ║                              
+                // ║ ETHZAR ║ FifteenMinutes ║ -10.165             ║ 208.410       ║ 19.263                ║                              
+                // ║ ETHZAR ║ ThirtyMinutes  ║ -10.712             ║ 265.288       ║ 14.367                ║                              
+                // ║ ETHZAR ║ OneHour        ║ -10.269             ║ 63.173        ║ 8.167                 ║                              
+                // ║ ETHZAR ║ Day            ║ -18.695             ║ 0             ║ 0                     ║                              
+                // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╝ 
         }
 
         [Test]
         [Timeout(240000)]
-        public async Task Fast_RSiStrategy()
+        public void Fast_recent_RSiMlStrategy()
         {
             // arrange
             Setup();
-            var from = DateTime.Parse("2021-02-01T00:00:00");
-            var to = from.AddMonths(1);
+            var to = DateTime.Now;
+            var from = to.AddMonths(-3);
 
-            var expected = 16m; //49
-            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
+                BuildBackTestResult(@from, to, t => new RSiMlStrategy(),  x.Item2.CurrencyPair, x.Item1).Result);
+
+            var table = strategyInstances.Select(x => new
+            { x.Pair, x.PeriodSize, x.PercentMarketProfit, x.PercentProfit, x.AverageTradesPerMonth, x.PercentOfProfitableTrades }).ToTable();
+            Console.Out.WriteLine(table);
+
+            // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╗                              
+            // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║                              
+            // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╣                              
+            // ║ BTCZAR ║ OneMinute      ║ -22.052             ║ -3.805        ║ 23.504                ║                              
+            // ║ BTCZAR ║ FiveMinutes    ║ -21.958             ║ 48.299        ║ 19.914                ║                              
+            // ║ BTCZAR ║ FifteenMinutes ║ -22.043             ║ 66.334        ║ 15.345                ║                              
+            // ║ BTCZAR ║ ThirtyMinutes  ║ -22.046             ║ 76.421        ║ 11.755                ║                              
+            // ║ BTCZAR ║ OneHour        ║ -23.042             ║ 72.472        ║ 7.84                  ║                              
+            // ║ BTCZAR ║ Day            ║ -23.769             ║ 0.299         ║ 0                     ║                              
+            // ║ ETHZAR ║ OneMinute      ║ -9.816              ║ 68.933        ║ 35.909                ║                              
+            // ║ ETHZAR ║ FiveMinutes    ║ -9.991              ║ 153.104       ║ 25.79                 ║                              
+            // ║ ETHZAR ║ FifteenMinutes ║ -10.165             ║ 208.410       ║ 19.263                ║                              
+            // ║ ETHZAR ║ ThirtyMinutes  ║ -10.712             ║ 265.288       ║ 14.367                ║                              
+            // ║ ETHZAR ║ OneHour        ║ -10.269             ║ 63.173        ║ 8.167                 ║                              
+            // ║ ETHZAR ║ Day            ║ -18.695             ║ 0             ║ 0                     ║                              
+            // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╝ 
         }
+
+
 
         [Test]
         [Timeout(240000)]
@@ -81,7 +104,20 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var expected = 49; 
             await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
-        
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_RSiConfirmStrategy()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 51;
+            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+
         [Test]
         [Timeout(240000)]
         [Explicit]
@@ -98,6 +134,20 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
+        [Explicit]
+        public async Task Run_GivenRSiConfirmStrategy_ShouldOver2YearsShouldMake400PlusProfit()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2019-11-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 470; // 209
+            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+
+        [Test]
+        [Timeout(240000)]
         public async Task Run_GivenRSiMslStrategy_ShouldOver1YearsShouldMake200PlusProfit()
         {
             // arrange
@@ -107,7 +157,19 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var expected = 94; // 
             await Test(@from, to, expected , t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
-        
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Run_GivenRSiConfirmStrategy_ShouldOver1YearsShouldMake200PlusProfit()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2020-11-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 294; // 
+            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
         private async Task Test(DateTime fromDate, DateTime to, decimal expected, Func<IBrokerApi,IStrategy> getStrategy, string currencyPair, PeriodSize size)
         {
             var backTestResult = await BuildBackTestResult(fromDate, to, getStrategy, currencyPair, size);

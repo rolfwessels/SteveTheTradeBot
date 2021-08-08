@@ -47,6 +47,10 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<StrategyCommand.Add>("add")
                         .WithDescription("List strategies.")
                         .WithExample(new[] { "strategy", "add" });
+
+                    conf.AddCommand<StrategyCommand.All>("add-all")
+                        .WithDescription("Add all strategies, periods.")
+                        .WithExample(new[] { "strategy", "add-all" });
                 });
 
                 config.AddBranch("data", conf =>
@@ -89,6 +93,22 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<DataCommand.Reset>("reset")
                         .WithDescription("Reset historical data to be a few days old.")
                         .WithExample(new[] { "data", "reset", "--days=5", "-m" });
+                });
+                
+                config.AddBranch("ml", conf =>
+                {
+                    conf.SetDescription("Common machine learning tasks.");
+
+                    conf.AddCommand<MlCommand.PlotModel>("plot")
+                        .WithDescription("Plot the model so that we can visualize.")
+                        .WithExample(new[] { "ml", "plot"});
+                    conf.AddCommand<MlCommand.ModelBuilder>("train")
+                        .WithDescription("Used to train new models.")
+                        .WithExample(new[] { "ml", "train" });
+
+                    conf.AddCommand<MlCommand.BuildTrainingData>("build")
+                        .WithDescription("Build training data.")
+                        .WithExample(new[] { "ml", "build" });
                 });
 
             });
