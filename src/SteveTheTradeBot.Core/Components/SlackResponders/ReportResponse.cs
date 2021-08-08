@@ -1,10 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
-using SlackConnector.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Framework.Slack;
 using SteveTheTradeBot.Core.Utils;
-using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.SlackResponders
 {
