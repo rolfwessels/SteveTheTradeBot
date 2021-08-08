@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using SlackConnector;
 using SlackConnector.Models;
+using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Core.Framework.Slack
 {
@@ -44,9 +47,14 @@ namespace SteveTheTradeBot.Core.Framework.Slack
             return _connection.Say(botMessage);
         }
 
-        public Task SayCode(string text)
+        public async Task SayCode(string text)
         {
-            return SayOutput(text);
+            var strings = text.Split('\n');
+            foreach (var group in strings.Select(x=>x.Trim()).BatchedBy(5))
+            {
+                await SayOutput(group.StringJoin("\n"));
+            }
+            
         }
     }
 }
