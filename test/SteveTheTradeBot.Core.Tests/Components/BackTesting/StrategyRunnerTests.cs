@@ -106,13 +106,14 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         }
 
         [Test]
-        public async Task Process_GivenInCorrectTime_ShouldDoNothing()
+        public async Task Process_GivenStrategyThatHasAlreadyRun_ShouldDoNothing()
         {
             // arrange
             Setup();
             var forBackTest = StrategyInstance.From("FakeStrategy", CurrencyPair.BTCZAR, 100, PeriodSize.FiveMinutes);
+            forBackTest.LastDate = DateTime.Parse("2021-07-23T01:01:00");
             // action
-            await _strategyRunner.Process(forBackTest, DateTime.Parse("2021-07-23T01:01:00"));
+            await _strategyRunner.Process(forBackTest, DateTime.Parse("2021-07-23T01:01:10"));
             // assert
             _mockITradeHistoryStore.Verify(mc => mc.FindRecentCandles(PeriodSize.FiveMinutes, It.IsAny<DateTime>(), 500, CurrencyPair.BTCZAR, forBackTest.Feed), Times.Never);
         }

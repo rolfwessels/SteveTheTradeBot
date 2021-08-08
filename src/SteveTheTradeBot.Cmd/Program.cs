@@ -151,8 +151,8 @@ namespace SteveTheTradeBot.Cmd
                         CustomChannel = Settings.Instance.LogsSlackChannel,
                         BatchSizeLimit = 20,
                         Period = TimeSpan.FromSeconds(5),
-                        ShowDefaultAttachments = true,
-                        ShowExceptionAttachments = true,
+                        ShowDefaultAttachments = false,
+                        ShowExceptionAttachments = false,
                     })
                     .WriteTo.LokiHttp(
                         new BasicAuthCredentials(Settings.Instance.LokiUrl, Settings.Instance.LokiUser,
