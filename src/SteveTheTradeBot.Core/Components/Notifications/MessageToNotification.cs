@@ -18,7 +18,7 @@ namespace SteveTheTradeBot.Core.Components.Notifications
         public async Task OnTradeOrderMade(TradeOrderMadeMessage tradeOrder)
         {
             var total = Amount.From(tradeOrder.Order.Total, tradeOrder.Order.PaidCurrency);
-            var buySell = Amount.From(tradeOrder.Order.OriginalQuantity, tradeOrder.Dump("").Order.FeeCurrency);
+            var buySell = Amount.From(tradeOrder.Order.QuantityMinusFee, tradeOrder.Order.FeeCurrency);
             var price = Amount.From(tradeOrder.Order.OrderPrice, tradeOrder.Order.PaidCurrency);
             if (tradeOrder.Order.OrderSide == Side.Buy)
             {
@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Core.Components.Notifications
             }
             else
             {
-                total = Amount.From(tradeOrder.Order.Total, tradeOrder.Order.FeeCurrency);
+                total = Amount.From(tradeOrder.Order.TotalMinusFee, tradeOrder.Order.FeeCurrency);
                 price = Amount.From(tradeOrder.Order.OrderPrice, tradeOrder.Order.FeeCurrency);
                 buySell = Amount.From(tradeOrder.Order.OriginalQuantity, tradeOrder.Order.PaidCurrency);
                 if (tradeOrder.StrategyTrade.IsProfit())
