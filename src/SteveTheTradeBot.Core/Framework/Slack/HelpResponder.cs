@@ -20,7 +20,6 @@ namespace SteveTheTradeBot.Core.Framework.Slack
 
         public override bool CanRespond(MessageContext context)
         {
-            
             return context.IsForBot() && ( context.HasMessage("help") || context.HasMessage("hi") );
         }
 
