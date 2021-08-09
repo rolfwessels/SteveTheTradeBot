@@ -48,7 +48,7 @@ namespace SteveTheTradeBot.Cmd
                         var stopwatch = new Stopwatch();
                         stopwatch.Start();
                         await using var writer = new StreamWriter(settings.TrainOnCsv);
-                        var strategyStore = IocApi.Instance.Resolve<ITradeFeedQuotesStore>();
+                        var strategyStore = IocApi.Instance.Resolve<ITradeQuoteStore>();
                         var fromDate = DateTime.UtcNow.AddYears(-2);
                         var toDate = DateTime.UtcNow.AddMonths(-4);
                         ctx.Status($"Reading data  {fromDate} and {toDate}");
@@ -126,7 +126,7 @@ namespace SteveTheTradeBot.Cmd
                 await AnsiConsole.Status()
                     .StartAsync("Starting...", async ctx =>
                     {
-                        var strategyStore = IocApi.Instance.Resolve<ITradeFeedQuotesStore>();
+                        var strategyStore = IocApi.Instance.Resolve<ITradeQuoteStore>();
                         var dynoDynamicGraphs = IocApi.Instance.Resolve<IDynamicGraphs>();
                         var tradeFeedQuotes = strategyStore.FindAllBetween(DateTime.Now.AddMonths(-12), DateTime.Now,
                             "valr",
