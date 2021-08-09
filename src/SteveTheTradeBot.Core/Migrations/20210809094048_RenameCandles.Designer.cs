@@ -3,16 +3,17 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SteveTheTradeBot.Core.Components.Storage;
 
 namespace SteveTheTradeBot.Core.Migrations
 {
     [DbContext(typeof(TradePersistenceStoreContext))]
-    partial class TradePersistenceStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20210809094048_RenameCandles")]
+    partial class RenameCandles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

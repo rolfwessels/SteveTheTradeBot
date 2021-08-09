@@ -195,7 +195,7 @@ namespace SteveTheTradeBot.Cmd
                 if (settings.ResetHistoricalCandles)
                 {
                     AnsiConsole.MarkupLine($"Resetting [yellow]historical candles[/].");
-                    persistence.TradeFeedCandles.RemoveRange(persistence.TradeFeedCandles.AsQueryable()
+                    persistence.TradeQuotes.RemoveRange(persistence.TradeQuotes.AsQueryable()
                         .Where(x => x.Date > dateTime));
                 }
 

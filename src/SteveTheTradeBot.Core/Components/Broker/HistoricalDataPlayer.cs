@@ -50,7 +50,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
             } while (counter > 0);
         }
 
-        public IEnumerable<TradeFeedCandle> ReadHistoricalData(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, CancellationToken cancellationToken = default, int batchSize = 1000)
+        public IEnumerable<TradeQuote> ReadHistoricalData(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, CancellationToken cancellationToken = default, int batchSize = 1000)
         {
             if (from.Kind != DateTimeKind.Utc) throw new ArgumentException("Please provide utc date for this call.", nameof(from));
             if (to.Kind != DateTimeKind.Utc) throw new ArgumentException("Please provide utc date for this call.", nameof(to));

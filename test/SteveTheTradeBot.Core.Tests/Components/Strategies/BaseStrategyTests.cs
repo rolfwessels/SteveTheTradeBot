@@ -36,7 +36,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             _requestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc);
             _fakeBroker = new FakeBroker(Messenger.Default).With(x => x.BuyFeePercent = 0.0075m);
             _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default,new ParameterStore(TestTradePersistenceFactory.InMemoryDb));
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(4)
+            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(4)
                 .WithValidData()
                 .All().With((x, r) => x.Date = _requestDate.AddDays(-1 * r))
                 .Build();
@@ -467,9 +467,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             return expectedTrade;
         }
 
-        private TradeFeedCandle AddCandle(int close, DateTime dateTime)
+        private TradeQuote AddCandle(int close, DateTime dateTime)
         {
-            var tradeFeedCandle = Builder<TradeFeedCandle>.CreateNew().WithValidData()
+            var tradeFeedCandle = Builder<TradeQuote>.CreateNew().WithValidData()
                 .With(x => x.Close = close)
                 .With(x => x.Date = dateTime)
                 .Build();

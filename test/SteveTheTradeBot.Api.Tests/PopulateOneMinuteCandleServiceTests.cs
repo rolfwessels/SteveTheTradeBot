@@ -36,7 +36,7 @@ namespace SteveTheTradeBot.Api.Tests
             await _service.Populate(cancellationToken, CurrencyPair.BTCZAR, "valr");
             // assert
             _mockIHistoricalDataPlayer.VerifyAll();
-            var tradeFeedCandles = _factory.GetTradePersistence().Result.TradeFeedCandles.AsQueryable().ToList();
+            var tradeFeedCandles = _factory.GetTradePersistence().Result.TradeQuotes.AsQueryable().ToList();
             tradeFeedCandles.Should().HaveCount(2);
         }
 
@@ -51,16 +51,16 @@ namespace SteveTheTradeBot.Api.Tests
             context.HistoricalTrades.AddRange(historicalTrades);
             context.SaveChanges();
 
-            context.TradeFeedCandles.AddRange(historicalTrades.Take(2)
+            context.TradeQuotes.AddRange(historicalTrades.Take(2)
                 .ToCandleOneMinute()
-                .Select(x => TradeFeedCandle.From(x, "valr", PeriodSize.OneMinute, CurrencyPair.BTCZAR)));
+                .Select(x => TradeQuote.From(x, "valr", PeriodSize.OneMinute, CurrencyPair.BTCZAR)));
             context.SaveChanges();
             
             // action
             await _service.Populate(cancellationToken, CurrencyPair.BTCZAR, "valr");
             // assert
             _mockIHistoricalDataPlayer.VerifyAll();
-            var tradeFeedCandles = context.TradeFeedCandles.AsQueryable().ToList();
+            var tradeFeedCandles = context.TradeQuotes.AsQueryable().ToList();
             tradeFeedCandles.Should().HaveCount(5);
         }
 

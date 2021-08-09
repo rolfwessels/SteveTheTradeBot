@@ -91,7 +91,7 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        private static void AddSuperTrend(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddSuperTrend(List<TradeQuote> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
             if (tradeFeedCandles.Count < 250) return;
             var rsiResults = tradeFeedCandles.GetSuperTrend();
@@ -104,7 +104,7 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        private static void AddRsi(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddRsi(List<TradeQuote> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
             if (tradeFeedCandles.Count < 140) return;
             var rsiResults = tradeFeedCandles.GetRsi();
@@ -116,7 +116,7 @@ namespace SteveTheTradeBot.Api
         }
 
 
-        private static void AddRoc(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddRoc(List<TradeQuote> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
             if (tradeFeedCandles.Count < 101) return;
             var roc = tradeFeedCandles.GetRoc(100, 100);
@@ -146,7 +146,7 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        private static void AddGetMacd(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddGetMacd(List<TradeQuote> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
             if (tradeFeedCandles.Count < 135) return;
             var rsiResults = tradeFeedCandles.GetMacd();
@@ -158,7 +158,7 @@ namespace SteveTheTradeBot.Api
                 orAdd.Add("macd", rsiResult.Macd);
             }
         }
-        private static void AddEmi(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddEmi(List<TradeQuote> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
             if (tradeFeedCandles.Count < 200) return;
             var rsiResults = tradeFeedCandles.GetEma(100);

@@ -112,13 +112,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             return true;
         }
 
-        public void PostRun(StrategyInstance strategyInstance, TradeFeedCandle last)
+        public void PostRun(StrategyInstance strategyInstance, TradeQuote last)
         {
             strategyInstance.LastClose = last.Close;
             strategyInstance.LastDate = last.Date;
         }
 
-        public void PreRun(StrategyInstance strategyInstance, TradeFeedCandle last)
+        public void PreRun(StrategyInstance strategyInstance, TradeQuote last)
         {
             if (strategyInstance.FirstClose != 0) return;
             strategyInstance.FirstClose = last.Close;

@@ -9,7 +9,7 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
     {
         public static void CreateTradesMap(IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap<TradeFeedCandle, TradeFeedCandle>()
+            cfg.CreateMap<TradeQuote, TradeQuote>()
                 .ForMember(x => x.CreateDate, opt => opt.Ignore())
                 .ForMember(x => x.UpdateDate, opt => opt.Ignore());
             cfg.CreateMap<TradeResponseDto, HistoricalTrade>()
@@ -18,7 +18,7 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
             cfg.CreateMap<HistoricalTrade, TradeResponseDto>();
         }
 
-        public static TradeFeedCandle CopyValuesTo(this TradeFeedCandle fromValue, TradeFeedCandle to)
+        public static TradeQuote CopyValuesTo(this TradeQuote fromValue, TradeQuote to)
         {
             return GetInstance().Map(fromValue, to);
         }
@@ -33,7 +33,7 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
             return GetInstance().Map(project, projectReference);
         }
 
-        public static ModelInput ToModelInput(this TradeFeedCandle tradeFeedCandle)
+        public static ModelInput ToModelInput(this TradeQuote tradeQuote)
         {
             static float ToFloat(decimal? @decimal)
             {
@@ -43,21 +43,21 @@ namespace SteveTheTradeBot.Core.Framework.Mappers
 
             var sampleData = new ModelInput()
             {
-                Close = (float)tradeFeedCandle.Close,
-                Volume = (float)tradeFeedCandle.Volume,
-                Macd = ToFloat(tradeFeedCandle.Metric["macd"]),
-                Rsi14 = ToFloat(tradeFeedCandle.Metric["rsi14"]),
-                Ema100 = ToFloat(tradeFeedCandle.Metric["ema100"]),
-                Ema200 = ToFloat(tradeFeedCandle.Metric["ema200"]),
-                Roc100 = ToFloat(tradeFeedCandle.Metric["roc100"]),
-                Roc200 = ToFloat(tradeFeedCandle.Metric["roc200"]),
-                Roc100sma = ToFloat(tradeFeedCandle.Metric["roc100-sma"]),
-                Roc200sma = ToFloat(tradeFeedCandle.Metric["roc200-sma"]),
-                Supertrend = ToFloat(tradeFeedCandle.Metric["supertrend"]),
-                Macdsignal = ToFloat(tradeFeedCandle.Metric["macd-signal"]),
-                Macdhistogram = ToFloat(tradeFeedCandle.Metric["macd-histogram"]),
-                Supertrendlower = ToFloat(tradeFeedCandle.Metric["supertrend-lower"]),
-                Supertrendupper = ToFloat(tradeFeedCandle.Metric["supertrend-upper"]),
+                Close = (float)tradeQuote.Close,
+                Volume = (float)tradeQuote.Volume,
+                Macd = ToFloat(tradeQuote.Metric["macd"]),
+                Rsi14 = ToFloat(tradeQuote.Metric["rsi14"]),
+                Ema100 = ToFloat(tradeQuote.Metric["ema100"]),
+                Ema200 = ToFloat(tradeQuote.Metric["ema200"]),
+                Roc100 = ToFloat(tradeQuote.Metric["roc100"]),
+                Roc200 = ToFloat(tradeQuote.Metric["roc200"]),
+                Roc100sma = ToFloat(tradeQuote.Metric["roc100-sma"]),
+                Roc200sma = ToFloat(tradeQuote.Metric["roc200-sma"]),
+                Supertrend = ToFloat(tradeQuote.Metric["supertrend"]),
+                Macdsignal = ToFloat(tradeQuote.Metric["macd-signal"]),
+                Macdhistogram = ToFloat(tradeQuote.Metric["macd-histogram"]),
+                Supertrendlower = ToFloat(tradeQuote.Metric["supertrend-lower"]),
+                Supertrendupper = ToFloat(tradeQuote.Metric["supertrend-upper"]),
             };
             return sampleData;
         }

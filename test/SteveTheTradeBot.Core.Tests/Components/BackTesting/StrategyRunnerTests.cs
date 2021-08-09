@@ -236,7 +236,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         private void SetupContext(DateTime beforeDate, StrategyInstance forBackTest, bool addMetric = true)
         {
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(100).WithValidData().Build().ToList();
+            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(100).WithValidData().Build().ToList();
             if (!addMetric)
                 tradeFeedCandles.ForEach(x=>x.Metric.Clear());
             _strategyInstanceStore.Add(forBackTest).Wait();

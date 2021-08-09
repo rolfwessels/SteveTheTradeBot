@@ -22,12 +22,12 @@ namespace SteveTheTradeBot.Core.Utils
             return new ConsoleTables(table).ToString();
         }
 
-        public static TradeFeedCandle ForDate(this IEnumerable<TradeFeedCandle> updateFeed )
+        public static TradeQuote ForDate(this IEnumerable<TradeQuote> updateFeed )
         {
             return ForDate(updateFeed, DateTime.Now);
         }
 
-        public static TradeFeedCandle ForDate(this IEnumerable<TradeFeedCandle> updateFeed,
+        public static TradeQuote ForDate(this IEnumerable<TradeQuote> updateFeed,
             DateTime dateTime )
         {
             foreach (var tradeFeedCandle in updateFeed)

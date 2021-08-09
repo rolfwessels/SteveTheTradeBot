@@ -48,12 +48,12 @@ namespace SteveTheTradeBot.Api
             await _messenger.Send(new OneMinuteCandleAvailable(tasks.Select(x => x.Result).ToList()));
         }
 
-        public async Task<TradeFeedCandle> Populate(CancellationToken token, string currencyPair, string feed)
+        public async Task<TradeQuote> Populate(CancellationToken token, string currencyPair, string feed)
         {
             var periodSize = PeriodSize.OneMinute;
             var from = DateTime.Now.AddYears(-10);
             var context = await _factory.GetTradePersistence();
-            var foundCandle = context.TradeFeedCandles.AsQueryable()
+            var foundCandle = context.TradeQuotes.AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize)
                 .OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
             if (foundCandle != null)
@@ -68,8 +68,8 @@ namespace SteveTheTradeBot.Api
             var candles = readHistoricalTrades
                 .ForAll(x=>lastTrade = x.TradedAt)
                 .ToCandleOneMinute()
-                .Select(x => TradeFeedCandle.From(x, feed, periodSize, currencyPair));
-            TradeFeedCandle lastCandle = null;
+                .Select(x => TradeQuote.From(x, feed, periodSize, currencyPair));
+            TradeQuote lastCandle = null;
             foreach (var feedCandles in candles.BatchedBy())
             {
                 
@@ -78,11 +78,11 @@ namespace SteveTheTradeBot.Api
                 {
                     if (cdl.Date == foundCandle?.Date)
                     {   
-                        context.TradeFeedCandles.Update(cdl.CopyValuesTo(foundCandle));
+                        context.TradeQuotes.Update(cdl.CopyValuesTo(foundCandle));
                     }
                     else
                     {
-                        context.TradeFeedCandles.Add(cdl);
+                        context.TradeQuotes.Add(cdl);
                     }
                 }
                 
@@ -101,9 +101,9 @@ namespace SteveTheTradeBot.Api
 
         public class OneMinuteCandleAvailable
         {
-            public List<TradeFeedCandle> Candles { get; }
+            public List<TradeQuote> Candles { get; }
 
-            public OneMinuteCandleAvailable(List<TradeFeedCandle> candles)
+            public OneMinuteCandleAvailable(List<TradeQuote> candles)
             {
                 Candles = candles;
             }

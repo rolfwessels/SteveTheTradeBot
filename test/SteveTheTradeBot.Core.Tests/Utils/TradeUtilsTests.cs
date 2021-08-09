@@ -17,7 +17,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         public void ForDate_GivenValuesInThePast_ShouldReturnNull()
         {
             // arrange
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x=>x.Date = new DateTime(2001,01,01,1,1,0))
@@ -34,7 +34,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 1, 1, 0);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x => x.Date = dateTime)
@@ -51,7 +51,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 1, 1, 0);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x => x.Date = dateTime)
@@ -67,7 +67,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 1, 0, 0);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x => x.Date = dateTime)

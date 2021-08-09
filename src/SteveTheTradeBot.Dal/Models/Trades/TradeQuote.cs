@@ -5,7 +5,7 @@ using SteveTheTradeBot.Dal.Models.Base;
 
 namespace SteveTheTradeBot.Dal.Models.Trades
 {
-    public class TradeFeedCandle : BaseDalModel, IQuote
+    public class TradeQuote : BaseDalModel, IQuote
     {
         public string Feed { get; set; }
         public PeriodSize PeriodSize { get; set; }
@@ -18,9 +18,9 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         public string CurrencyPair { get; set; }
         public Dictionary<string,decimal?> Metric { get; set; } = new Dictionary<string, decimal?>();
 
-        public static TradeFeedCandle From(IQuote trade, string feed , PeriodSize periodSize, string currencyPair)
+        public static TradeQuote From(IQuote trade, string feed , PeriodSize periodSize, string currencyPair)
         {
-            return new TradeFeedCandle {
+            return new TradeQuote {
                 Feed = feed,
                 PeriodSize = periodSize,
                 Date = trade.Date,

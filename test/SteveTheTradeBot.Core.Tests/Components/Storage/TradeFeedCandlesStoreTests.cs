@@ -30,7 +30,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
             // arrange
             Setup();
             var trades = Builder<HistoricalTrade>.CreateListOfSize(10).WithValidData().Build().ToCandleOneMinute();
-            var tradeFeedCandles = trades.Select(x => TradeFeedCandle.From(x, "F", PeriodSize.OneMinute, CurrencyPair.XRPZAR)).ToList();
+            var tradeFeedCandles = trades.Select(x => TradeQuote.From(x, "F", PeriodSize.OneMinute, CurrencyPair.XRPZAR)).ToList();
             await _store.AddRange(tradeFeedCandles);
             // action
             var existingRecords = await _store.FindRecentCandles(PeriodSize.OneMinute, tradeFeedCandles.Max(x => x.Date), 100, CurrencyPair.XRPZAR, "F");

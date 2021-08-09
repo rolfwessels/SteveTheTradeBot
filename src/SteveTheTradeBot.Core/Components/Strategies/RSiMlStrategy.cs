@@ -64,7 +64,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
         }
 
-        private bool IsPositiveTrend(IEnumerable<TradeFeedCandle> values)
+        private bool IsPositiveTrend(IEnumerable<TradeQuote> values)
         {
             decimal lastValue = -1;
             foreach (var value in values)
