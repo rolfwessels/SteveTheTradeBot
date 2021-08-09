@@ -18,7 +18,7 @@ namespace SteveTheTradeBot.Api.Tests
 {
     public class PopulateOneMinuteCandleServiceTests
     {
-        private PopulateOneMinuteCandleService _service;
+        private PopulateOneMinuteQuoteService _service;
         private Mock<IHistoricalDataPlayer> _mockIHistoricalDataPlayer;
         private ITradePersistenceFactory _factory;
 
@@ -69,7 +69,7 @@ namespace SteveTheTradeBot.Api.Tests
             _mockIHistoricalDataPlayer = new Mock<IHistoricalDataPlayer>();
             _factory = TestTradePersistenceFactory.UniqueDb();
             var tradeHistoryStore = new TradeHistoryStore(_factory);
-            _service = new PopulateOneMinuteCandleService(_factory, new HistoricalDataPlayer(tradeHistoryStore, new TradeFeedCandlesStore(_factory)),new Messenger());
+            _service = new PopulateOneMinuteQuoteService(_factory, new HistoricalDataPlayer(tradeHistoryStore, new TradeQuoteStore(_factory)),new Messenger());
         }
     }
 }

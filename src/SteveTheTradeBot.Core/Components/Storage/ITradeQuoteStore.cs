@@ -7,12 +7,12 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public interface ITradeFeedCandlesStore
+    public interface ITradeQuoteStore
     {
-        Task<List<TradeQuote>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000);
-        Task<List<TradeQuote>> FindRecentCandles(PeriodSize periodSize, DateTime beforeDate, int take, string currencyPair, string feed);
+        Task<List<TradeQuote>> FindByDate(string currencyPair, DateTime @from, DateTime to, PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000);
+        Task<List<TradeQuote>> FindRecent(PeriodSize periodSize, DateTime beforeDate, int take, string currencyPair, string feed);
 
-        Task<TradeQuote> FindLatestCandle(string feed, string currencyPair, PeriodSize periodSize);
+        Task<TradeQuote> FindLatest(string feed, string currencyPair, PeriodSize periodSize);
         Task<int> Remove(TradeQuote foundCandle);
         IEnumerable<TradeQuote> FindAllBetween( DateTime fromDate,  DateTime toDate, string feed,
             string currencyPair, PeriodSize periodSize, int batchSize = 1000);

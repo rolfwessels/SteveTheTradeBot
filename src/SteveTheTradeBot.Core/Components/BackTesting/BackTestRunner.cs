@@ -17,7 +17,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
     public class BackTestRunner
     {
-        private readonly CandleBuilder _candleBuilder;
+        private readonly QuoteBuilder _quoteBuilder;
         private readonly DynamicGraphs _dynamicGraphs;
         private readonly StrategyPicker _picker;
         private readonly StrategyInstanceStore _strategyInstanceStore;
@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore, IBrokerApi broker, IMessenger messenger, StrategyRunner strategyRunner)
         {
-            _candleBuilder = new CandleBuilder();
+            _quoteBuilder = new QuoteBuilder();
             _dynamicGraphs = dynamicGraphs;
             _picker = picker;
             _strategyInstanceStore = strategyInstanceStore;

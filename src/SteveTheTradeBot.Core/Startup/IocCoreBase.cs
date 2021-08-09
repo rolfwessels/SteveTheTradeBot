@@ -125,7 +125,7 @@ namespace SteveTheTradeBot.Core.Startup
             builder.RegisterType<ValrHistoricalDataApi>().As<IHistoricalDataApi>();
             builder.RegisterType<HistoricalDataPlayer>().As<IHistoricalDataPlayer>();
             builder.RegisterType<TradeHistoryStore>().As<ITradeHistoryStore>();
-            builder.RegisterType<TradeFeedCandlesStore>().As<ITradeFeedCandlesStore>();
+            builder.RegisterType<TradeQuoteStore>().As<ITradeQuoteStore>();
             builder.RegisterType<ParameterStore>().As<IParameterStore>();
             builder.RegisterType<StrategyInstanceStore>().As<IStrategyInstanceStore>();
             builder.RegisterType<StrategyRunner>().As<IStrategyRunner>();

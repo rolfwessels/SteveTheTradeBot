@@ -15,12 +15,12 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public class TradeFeedCandlesStore : StoreBase<TradeQuote>, ITradeFeedCandlesStore
+    public class TradeQuoteStore : StoreBase<TradeQuote>, ITradeQuoteStore
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         #region Implementation of ITradeFeedCandlesStore
 
-        public async Task<TradeQuote> FindLatestCandle(string feed, string currencyPair, PeriodSize periodSize)
+        public async Task<TradeQuote> FindLatest(string feed, string currencyPair, PeriodSize periodSize)
         {
             return FindLatestCandle(feed, currencyPair, periodSize,  await _factory.GetTradePersistence());
         }
@@ -111,7 +111,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<List<TradeQuote>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to,
+        public async Task<List<TradeQuote>> FindByDate(string currencyPair, DateTime @from, DateTime to,
             PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000)
         {
             await using var context = await _factory.GetTradePersistence();
@@ -126,7 +126,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<List<TradeQuote>> FindRecentCandles(PeriodSize periodSize, DateTime beforeDate, int take,
+        public async Task<List<TradeQuote>> FindRecent(PeriodSize periodSize, DateTime beforeDate, int take,
             string currencyPair, string feed)
         {
             if (feed == null) throw new ArgumentNullException(nameof(feed));
@@ -166,7 +166,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         #endregion
 
-        public TradeFeedCandlesStore(ITradePersistenceFactory factory) : base(factory)
+        public TradeQuoteStore(ITradePersistenceFactory factory) : base(factory)
         {
         }
 

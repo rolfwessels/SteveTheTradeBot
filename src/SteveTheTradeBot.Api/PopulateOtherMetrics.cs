@@ -20,11 +20,11 @@ namespace SteveTheTradeBot.Api
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
-        private readonly ITradeFeedCandlesStore _store;
+        private readonly ITradeQuoteStore _store;
         private readonly IParameterStore _parameterStore;
         private readonly IMessenger _messenger;
 
-        public PopulateOtherMetrics(ITradeFeedCandlesStore store, IParameterStore parameterStore, IMessenger messenger)
+        public PopulateOtherMetrics(ITradeQuoteStore store, IParameterStore parameterStore, IMessenger messenger)
         {
             _store = store;
             _parameterStore = parameterStore;
@@ -35,7 +35,7 @@ namespace SteveTheTradeBot.Api
 
         protected override void RegisterSetter()
         {
-            _messenger.Register<PopulateOtherCandlesService.UpdatedOtherCandles>(this, x => _delayWorker.Set());
+            _messenger.Register<PopulateOtherQuotesService.UpdatedOtherCandles>(this, x => _delayWorker.Set());
         }
 
         protected override async Task ExecuteAsyncInRetry(CancellationToken token)

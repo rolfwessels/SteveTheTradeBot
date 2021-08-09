@@ -18,7 +18,7 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Api
 {
-    public class PopulateOneMinuteCandleService : BackgroundServiceWithResetAndRetry
+    public class PopulateOneMinuteQuoteService : BackgroundServiceWithResetAndRetry
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -26,7 +26,7 @@ namespace SteveTheTradeBot.Api
         private readonly IHistoricalDataPlayer _historicalDataPlayer;
         private readonly IMessenger _messenger;
 
-        public PopulateOneMinuteCandleService(ITradePersistenceFactory factory,
+        public PopulateOneMinuteQuoteService(ITradePersistenceFactory factory,
             IHistoricalDataPlayer historicalDataPlayer, IMessenger messenger)
         {
             _factory = factory;

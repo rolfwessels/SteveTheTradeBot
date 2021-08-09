@@ -186,7 +186,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
-            var tradeFeedCandleStore = new TradeFeedCandlesStore(factory);
+            var tradeFeedCandleStore = new TradeQuoteStore(factory);
             var strategyInstanceStore = new StrategyInstanceStore(factory);
             var parameterStore = new ParameterStore(factory);
             var player = new HistoricalDataPlayer(tradeHistoryStore, tradeFeedCandleStore);

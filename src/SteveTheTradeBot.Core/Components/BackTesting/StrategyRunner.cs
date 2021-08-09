@@ -21,19 +21,19 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly StrategyPicker _strategyPicker;
         private readonly IDynamicGraphs _dynamicGraphs;
         private readonly IStrategyInstanceStore _strategyInstanceStore;
-        private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
+        private readonly ITradeQuoteStore _tradeQuoteStore;
         private readonly IBrokerApi _broker;
         private readonly IMessenger _messenger;
         private readonly IParameterStore _parameterStore;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
-            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger, IParameterStore parameterStore)
+            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeQuoteStore tradeQuoteStore, IMessenger messenger, IParameterStore parameterStore)
         {
             _strategyPicker = strategyPicker;
             _dynamicGraphs = dynamicGraphs;
             _strategyInstanceStore = strategyInstanceStore;
             _broker = broker;
-            _tradeFeedCandleStore = tradeFeedCandleStore;
+            _tradeQuoteStore = tradeQuoteStore;
             _messenger = messenger;
             _parameterStore = parameterStore;
         }
@@ -135,7 +135,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         {
             var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger,_parameterStore);
             var findRecentCandles =
-                await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
+                await _tradeQuoteStore.FindRecent(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
           
             var tradeFeedCandles = findRecentCandles
                     .Where(x=> x.Metric != null && x.Metric.Count > 1)
