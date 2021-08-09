@@ -19,11 +19,13 @@ namespace SteveTheTradeBot.Cmd
 {
     public class StrategyCommand
     {
-        public class Add : AsyncCommandWithToken<BaseCommandSettings>
+        public class Add : AsyncCommand<BaseCommandSettings>
         {
-            #region Overrides of AsyncCommandWithToken<BaseCommandSettings>
+         
 
-            public override async Task ExecuteAsync(BaseCommandSettings settings, CancellationToken token)
+            #region Overrides of AsyncCommand<BaseCommandSettings>
+
+            public override async Task<int> ExecuteAsync(CommandContext context, BaseCommandSettings settings)
             {
                 var strategyStore = IocApi.Instance.Resolve<IStrategyInstanceStore>();
                 var strategyNames = IocApi.Instance.Resolve<StrategyPicker>().List;
@@ -38,7 +40,7 @@ namespace SteveTheTradeBot.Cmd
                     .AddChoice(CurrencyPair.BTCZAR)
                     .AddChoice(CurrencyPair.ETHZAR));
                 var amount = AnsiConsole.Prompt(new TextPrompt<int>("Pick a investment [green]amount[/]?"));
-                var periodSizes = EnumHelper.ToArray<PeriodSize>();
+                var periodSizes = ValrFeeds.All.First().PeriodSizes;
                 var selectedPeriodSize = AnsiConsole.Prompt(new TextPrompt<string>("Pick a [green]PeriodSize[/]?")
                     .InvalidChoiceMessage("[red]That's not a valid strategy[/]")
                     .DefaultValue(PeriodSize.FiveMinutes.ToString())
@@ -46,6 +48,7 @@ namespace SteveTheTradeBot.Cmd
 
                 var periodSize = Enum.Parse<PeriodSize>(selectedPeriodSize);
                 await strategyStore.Add(StrategyInstance.From(strategy, pair, amount, periodSize));
+                return 0;
             }
 
             #endregion

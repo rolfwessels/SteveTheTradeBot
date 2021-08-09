@@ -23,7 +23,7 @@ namespace SteveTheTradeBot.Core.Utils
                 strategyInstance.PercentOfProfitableTrades = strategyInstance.TotalNumberOfTrades==0?0:Math.Round(strategyInstance.NumberOfProfitableTrades / strategyInstance.TotalNumberOfTrades * 100,2);
                 strategyInstance.TotalProfit = strategyInstance.Trades.Where(x => !x.IsActive && x.IsProfit()).Sum(x => x.PriceDifference());
                 strategyInstance.TotalLoss = strategyInstance.Trades.Where(x => !x.IsActive && !x.IsProfit()).Sum(x => x.PriceDifference());
-                strategyInstance.PercentProfit = TradeUtils.MovementPercent(strategyInstance.QuoteAmount, strategyInstance.InvestmentAmount);
+                strategyInstance.PercentProfit = TradeUtils.MovementPercent(strategyInstance.CurrentQuoteAmount, strategyInstance.InvestmentAmount);
                 strategyInstance.LargestProfit = strategyInstance.TotalNumberOfTrades == 0 ? 0 : strategyInstance.Trades.Where(x => !x.IsActive && x.IsProfit())
                     .Select(x => x.PriceDifference()).DefaultIfEmpty().Max();
                 strategyInstance.LargestLoss = strategyInstance.TotalNumberOfTrades == 0 ? 0 : strategyInstance.Trades.Where(x => !x.IsActive && !x.IsProfit())

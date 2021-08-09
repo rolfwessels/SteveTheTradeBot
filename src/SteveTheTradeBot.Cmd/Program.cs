@@ -82,17 +82,9 @@ namespace SteveTheTradeBot.Cmd
                         .WithDescription("Encrypt a secret using the keys.")
                         .WithExample(new[] { "utils", "encrypt", "--enc=valuetoencrypt" });
 
-                    conf.AddCommand<DataCommand.Import>("import")
-                        .WithDescription("Download import initial data from csv files.")
-                        .WithExample(new[] { "data", "import" });
-
-                    conf.AddCommand<DataCommand.Export>("export")
-                        .WithDescription("Export data to csv files.")
-                        .WithExample(new[] { "data", "export" });
-
-                    conf.AddCommand<DataCommand.Reset>("reset")
-                        .WithDescription("Reset historical data to be a few days old.")
-                        .WithExample(new[] { "data", "reset", "--days=5", "-m" });
+                    conf.AddCommand<UtilCommand.Environment>("env")
+                        .WithDescription("Show details on current environment.")
+                        .WithExample(new[] { "utils", "env" });
                 });
                 
                 config.AddBranch("ml", conf =>
@@ -139,7 +131,7 @@ namespace SteveTheTradeBot.Cmd
                     .MinimumLevel.Override("Websocket.Client.WebsocketClient", LogEventLevel.Fatal) // slack messages
                     .Enrich.FromLogContext()
                     .WriteTo.File($@"{Settings.Instance.LogFolder}SteveTheTradeBot.Api.log",
-                        levelSwitch: new LoggingLevelSwitch(ConfigurationBuilderHelper.GetEnvironment()=="Development"? LogEventLevel.Information: LogEventLevel.Warning),
+                        levelSwitch: new LoggingLevelSwitch(ConfigurationBuilderHelper.GetEnvironment()=="Development"? LogEventLevel.Debug: LogEventLevel.Warning),
                         fileSizeLimitBytes: 10 * LoggingHelper.MB,
                         outputTemplate:
                         "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message} ({SourceContext}){NewLine}{Exception} ",

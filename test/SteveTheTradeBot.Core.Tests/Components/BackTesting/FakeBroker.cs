@@ -33,39 +33,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         #region Implementation of IBrokerApi
 
-        public async Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest request)
-        {
-
-            Requests.Add(request);
-            var price = await GetAskPrice(request.RequestDate, request.Side, request.CurrencyPair);
-            
-            
-            var totalAmount = Math.Round(request.PayAmount/ price,8);
-            var feeAmount = Math.Round(totalAmount * BuyFeePercent, 12);
-            var receivedAmount = Math.Round(totalAmount - feeAmount, 8);
-            if (request.Side == Side.Sell)
-            {
-                totalAmount = Math.Round(request.PayAmount * price, 2);
-                feeAmount = Math.Round(totalAmount * BuyFeePercent, 2);
-                receivedAmount = Math.Round(totalAmount - feeAmount, 2);
-            }
-
-    
-            
-            return new SimpleOrderStatusResponse()
-            {
-                OrderId = request.CustomerOrderId + "_broker",
-                Success = true,
-                Processing = false,
-                PaidAmount = request.PayAmount,
-                PaidCurrency = request.PayInCurrency,
-                ReceivedAmount = receivedAmount,
-                ReceivedCurrency = request.CurrencyPair.SideIn(request.Side),
-                FeeAmount = feeAmount,
-                FeeCurrency = request.CurrencyPair.SideIn(request.Side),
-                OrderExecutedAt = request.RequestDate.AddSeconds(1),   
-            };
-        }
 
         public Task CancelOrder(string brokerOrderId, string pair)
         {
@@ -78,7 +45,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var validStopLoss = activeTrades?.GetValidStopLoss();
             if (validStopLoss != null && strategyContext.LatestQuote().Low <= validStopLoss.OrderPrice)
             {
-                await BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, BuyFeePercent);
+                await BrokerUtils.ApplyOrderResultToStrategy(strategyContext, activeTrades, validStopLoss, BuyFeePercent);
             }
         }
 
@@ -131,10 +98,71 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             };
         }
 
+
+        public async Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest request)
+        {
+
+            Requests.Add(request);
+            var price = await GetAskPrice(request.RequestDate, request.Side, request.CurrencyPair);
+
+
+            var totalAmount = Math.Round(request.PayAmount / price, 8);
+            var feeAmount = Math.Round(totalAmount * BuyFeePercent, 12);
+            var receivedAmount = Math.Round(totalAmount - feeAmount, 8);
+            if (request.Side == Side.Sell)
+            {
+                totalAmount = Math.Round(request.PayAmount * price, 2);
+                feeAmount = Math.Round(totalAmount * BuyFeePercent, 2);
+                receivedAmount = Math.Round(totalAmount - feeAmount, 2);
+            }
+
+
+
+            return new SimpleOrderStatusResponse()
+            {
+                OrderId = request.CustomerOrderId + "_broker",
+                Success = true,
+                Processing = false,
+                PaidAmount = request.PayAmount,
+                PaidCurrency = request.PayInCurrency,
+                ReceivedAmount = receivedAmount,
+                ReceivedCurrency = request.CurrencyPair.SideIn(request.Side),
+                FeeAmount = feeAmount,
+                FeeCurrency = request.CurrencyPair.SideIn(request.Side),
+                OrderExecutedAt = request.RequestDate.AddSeconds(1),
+            };
+        }
+
         public async Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request)
         {
-            var order = await Order(request);
-            return ValrBrokerPaperTradingApi.ToHistorySummary(order, request);
+            
+            Requests.Add(request);
+            var price = await GetAskPrice(request.RequestDate, request.Side, request.CurrencyPair);
+
+
+            var totalAmount = Math.Round(request.PayAmount / price, 8);
+            var feeAmount = Math.Round(totalAmount * BuyFeePercent, 12);
+            if (request.Side == Side.Sell)
+            {
+                totalAmount = Math.Round(request.PayAmount * price, 2);
+                feeAmount = Math.Round(totalAmount * BuyFeePercent, 2);
+            }
+            return new OrderHistorySummaryResponse
+            {
+                OrderId = request.CustomerOrderId+ "_broker",
+                OrderStatusType = "Filled",
+                CustomerOrderId = request.CustomerOrderId,
+                CurrencyPair = request.CurrencyPair,
+                AveragePrice = price,
+                OriginalPrice = request.PayAmount,
+                Total = (request.Side == Side.Buy)? request.PayAmount : totalAmount,
+                OriginalQuantity = (request.Side != Side.Buy) ? request.PayAmount : totalAmount,
+                FeeCurrency = request.CurrencyPair.SideIn(request.Side),
+                TotalFee = feeAmount,
+                OrderType = "simple",
+                FailedReason = "",
+                OrderUpdatedAt = request.RequestDate,
+            };
         }
 
         public Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request)

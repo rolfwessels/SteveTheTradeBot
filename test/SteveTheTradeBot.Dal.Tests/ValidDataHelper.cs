@@ -54,7 +54,7 @@ namespace SteveTheTradeBot.Dal.Tests
                 historicalTrade.QuoteVolume = 259.653m + _random.Next(-20, 20);
             }
             
-            if (value is TradeFeedCandle tradeFeedCandle)
+            if (value is TradeQuote tradeFeedCandle)
             {
               
                 tradeFeedCandle.Volume = 259 + _random.Next(-1000, 1000);

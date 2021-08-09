@@ -64,14 +64,6 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             return tradeOrder;
         }
 
-        public void ApplyBuyInfo(TradeOrder tradeOrder)
-        {
-            BuyPrice = tradeOrder.OrderPrice;
-            BuyQuantity = tradeOrder.OriginalQuantity;
-            FeeCurrency = tradeOrder.FeeCurrency;
-            FeeAmount = tradeOrder.SwapFeeAmount(FeeCurrency);
-        }
-
         public decimal PriceDifference()
         {
             return Math.Abs(BuyValue - SellValue);

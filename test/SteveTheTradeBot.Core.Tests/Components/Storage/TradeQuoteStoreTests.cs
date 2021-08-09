@@ -11,29 +11,29 @@ using SteveTheTradeBot.Dal.Tests;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Storage
 {
-    public class TradeFeedCandlesStoreTests
+    public class TradeFeedQuotesStoreTests
     {
-        private TradeFeedCandlesStore _store;
+        private TradeQuoteStore _store;
 
         #region Setup/Teardown
 
         public void Setup()
         {
-            _store = new TradeFeedCandlesStore(TestTradePersistenceFactory.UniqueDb());
+            _store = new TradeQuoteStore(TestTradePersistenceFactory.UniqueDb());
         }
 
         #endregion
 
         [Test]
-        public async Task FindRecentCandles_GivenSomeData_ShouldFindRecentTrades()
+        public async Task FindRecentQuotes_GivenSomeData_ShouldFindRecentTrades()
         {
             // arrange
             Setup();
             var trades = Builder<HistoricalTrade>.CreateListOfSize(10).WithValidData().Build().ToCandleOneMinute();
-            var tradeFeedCandles = trades.Select(x => TradeFeedCandle.From(x, "F", PeriodSize.OneMinute, CurrencyPair.XRPZAR)).ToList();
-            await _store.AddRange(tradeFeedCandles);
+            var tradeFeedQuotes = trades.Select(x => TradeQuote.From(x, "F", PeriodSize.OneMinute, CurrencyPair.XRPZAR)).ToList();
+            await _store.AddRange(tradeFeedQuotes);
             // action
-            var existingRecords = await _store.FindRecentCandles(PeriodSize.OneMinute, tradeFeedCandles.Max(x => x.Date), 100, CurrencyPair.XRPZAR, "F");
+            var existingRecords = await _store.FindRecent(PeriodSize.OneMinute, tradeFeedQuotes.Max(x => x.Date), 100, CurrencyPair.XRPZAR, "F");
             // assert
             existingRecords.Should().HaveCount(9);
         }

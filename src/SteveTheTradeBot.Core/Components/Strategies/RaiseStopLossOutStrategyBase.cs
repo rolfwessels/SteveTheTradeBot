@@ -19,7 +19,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _moveProfitPercent = moveProfitPercent;
         }
 
-        protected async Task RaiseStopLoss(StrategyContext data, TradeFeedCandle currentTrade, StrategyTrade activeTrade)
+        protected async Task RaiseStopLoss(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade)
         {
             if (currentTrade.Close > MoveProfit(data))
             {
@@ -66,7 +66,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             return setValue;
         }
 
-        protected void ResetStops(TradeFeedCandle currentTrade, StrategyContext data)
+        protected void ResetStops(TradeQuote currentTrade, StrategyContext data)
         {
             StopLoss(data, currentTrade.Close * _initialStopRisk);
             MoveProfit(data, currentTrade.Close * _moveProfitPercent);

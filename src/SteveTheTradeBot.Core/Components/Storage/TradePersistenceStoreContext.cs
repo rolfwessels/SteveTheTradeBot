@@ -21,10 +21,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
         }
 
+        public DbSet<TradeOrder> TradeOrders { get; set; }
         public DbSet<StrategyTrade> Trades { get; set; }
         public DbSet<StrategyInstance> Strategies { get; set; }
         public DbSet<HistoricalTrade> HistoricalTrades { get; set; }
-        public DbSet<TradeFeedCandle> TradeFeedCandles { get; set; }
+        public DbSet<TradeQuote> TradeQuotes { get; set; }
         public DbSet<DynamicPlotter> DynamicPlots { get; set; }
         public DbSet<SimpleParam> SimpleParam { get; set; }
 
@@ -43,21 +44,23 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .HasKey(c => c.Id);
             modelBuilder.Entity<StrategyTrade>()
                 .HasKey(c => c.Id);
+            modelBuilder.Entity<TradeOrder>()
+                .HasKey(c => c.Id);
             modelBuilder.Entity<StrategyInstance>()
                 .HasMany(p => p.Trades)
                 .WithOne();
-
             modelBuilder.Entity<HistoricalTrade>()
                 .HasIndex(b => new { b.TradedAt, b.SequenceId });
-            modelBuilder.Entity<TradeFeedCandle>()
+            modelBuilder.Entity<TradeQuote>()
                 .HasKey(b => new { b.Feed, b.CurrencyPair, b.PeriodSize, b.Date });
+
             if (_isInMemoryContainer)
             {
-                modelBuilder.Entity<TradeFeedCandle>().Ignore(t => t.Metric);
+                modelBuilder.Entity<TradeQuote>().Ignore(t => t.Metric);
             }
             else
             {
-                modelBuilder.Entity<TradeFeedCandle>().Property(x => x.Metric).HasColumnType("jsonb");
+                modelBuilder.Entity<TradeQuote>().Property(x => x.Metric).HasColumnType("jsonb");
             }
 
             modelBuilder.Entity<DynamicPlotter>()

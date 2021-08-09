@@ -18,12 +18,12 @@ namespace SteveTheTradeBot.Api.Tests
 {
     public class PopulateOneMinuteCandleServiceTests
     {
-        private PopulateOneMinuteCandleService _service;
+        private PopulateOneMinuteQuoteService _service;
         private Mock<IHistoricalDataPlayer> _mockIHistoricalDataPlayer;
         private ITradePersistenceFactory _factory;
 
         [Test]
-        public async Task Populate_GivenNoExistingRecords_ShouldLoadAllCandles()  
+        public async Task Populate_GivenNoExistingRecords_ShouldLoadAllQuotes()  
         {
             // arrange
             Setup();
@@ -36,12 +36,12 @@ namespace SteveTheTradeBot.Api.Tests
             await _service.Populate(cancellationToken, CurrencyPair.BTCZAR, "valr");
             // assert
             _mockIHistoricalDataPlayer.VerifyAll();
-            var tradeFeedCandles = _factory.GetTradePersistence().Result.TradeFeedCandles.AsQueryable().ToList();
-            tradeFeedCandles.Should().HaveCount(2);
+            var tradeFeedQuotes = _factory.GetTradePersistence().Result.TradeQuotes.AsQueryable().ToList();
+            tradeFeedQuotes.Should().HaveCount(2);
         }
 
         [Test]
-        public async Task Populate_GivenSomeExistingRecords_ShouldSaveAllCandles()      
+        public async Task Populate_GivenSomeExistingRecords_ShouldSaveAllQuotes()      
         {
             // arrange
             Setup();
@@ -51,17 +51,17 @@ namespace SteveTheTradeBot.Api.Tests
             context.HistoricalTrades.AddRange(historicalTrades);
             context.SaveChanges();
 
-            context.TradeFeedCandles.AddRange(historicalTrades.Take(2)
+            context.TradeQuotes.AddRange(historicalTrades.Take(2)
                 .ToCandleOneMinute()
-                .Select(x => TradeFeedCandle.From(x, "valr", PeriodSize.OneMinute, CurrencyPair.BTCZAR)));
+                .Select(x => TradeQuote.From(x, "valr", PeriodSize.OneMinute, CurrencyPair.BTCZAR)));
             context.SaveChanges();
             
             // action
             await _service.Populate(cancellationToken, CurrencyPair.BTCZAR, "valr");
             // assert
             _mockIHistoricalDataPlayer.VerifyAll();
-            var tradeFeedCandles = context.TradeFeedCandles.AsQueryable().ToList();
-            tradeFeedCandles.Should().HaveCount(5);
+            var tradeFeedQuotes = context.TradeQuotes.AsQueryable().ToList();
+            tradeFeedQuotes.Should().HaveCount(5);
         }
 
         private void Setup()
@@ -69,7 +69,7 @@ namespace SteveTheTradeBot.Api.Tests
             _mockIHistoricalDataPlayer = new Mock<IHistoricalDataPlayer>();
             _factory = TestTradePersistenceFactory.UniqueDb();
             var tradeHistoryStore = new TradeHistoryStore(_factory);
-            _service = new PopulateOneMinuteCandleService(_factory, new HistoricalDataPlayer(tradeHistoryStore, new TradeFeedCandlesStore(_factory)),new Messenger());
+            _service = new PopulateOneMinuteQuoteService(_factory, new HistoricalDataPlayer(tradeHistoryStore, new TradeQuoteStore(_factory)),new Messenger());
         }
     }
 }

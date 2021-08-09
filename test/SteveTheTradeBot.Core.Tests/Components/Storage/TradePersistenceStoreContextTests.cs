@@ -42,16 +42,16 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
         
         
         [Test]
-        public async Task Add_GivenTradeFeedCandles_ShouldStoreRecord()
+        public async Task Add_GivenTradeFeedQuotes_ShouldStoreRecord()
         {
             // arrange
             Setup();
             var historicalTrade = Builder<HistoricalTrade>.CreateListOfSize(10).WithValidData().Build().ToCandleOneMinute();
             var feedName = "test"+Guid.NewGuid().ToString("n");
-            _tradePersistenceStoreContext.TradeFeedCandles.AddRange(historicalTrade.Select(x=>TradeFeedCandle.From(x,feedName,Skender.Stock.Indicators.PeriodSize.OneMinute, "BTCZAR")));
+            _tradePersistenceStoreContext.TradeQuotes.AddRange(historicalTrade.Select(x=>TradeQuote.From(x,feedName,Skender.Stock.Indicators.PeriodSize.OneMinute, "BTCZAR")));
             await _tradePersistenceStoreContext.SaveChangesAsync();
             // action
-            var historicalTrades = _tradePersistenceStoreContext.TradeFeedCandles.AsQueryable().ToList();
+            var historicalTrades = _tradePersistenceStoreContext.TradeQuotes.AsQueryable().ToList();
             // assert
             historicalTrades.Where(x => x.Feed == feedName).Should().HaveCount(10);
         }

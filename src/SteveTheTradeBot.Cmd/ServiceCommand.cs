@@ -41,8 +41,8 @@ namespace SteveTheTradeBot.Cmd
                 {
                     services.AddHostedService<SlackAlertService>();
                     services.AddHostedService<TickerTrackerService>();
-                    services.AddHostedService<PopulateOneMinuteCandleService>();
-                    services.AddHostedService<PopulateOtherCandlesService>();
+                    services.AddHostedService<PopulateOneMinuteQuoteService>();
+                    services.AddHostedService<PopulateOtherQuotesService>();
                     services.AddHostedService<PopulateOtherMetrics>();
                     services.AddHostedService<StrategyService>();
                 })

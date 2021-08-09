@@ -20,11 +20,11 @@ namespace SteveTheTradeBot.Api
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
-        private readonly ITradeFeedCandlesStore _store;
+        private readonly ITradeQuoteStore _store;
         private readonly IParameterStore _parameterStore;
         private readonly IMessenger _messenger;
 
-        public PopulateOtherMetrics(ITradeFeedCandlesStore store, IParameterStore parameterStore, IMessenger messenger)
+        public PopulateOtherMetrics(ITradeQuoteStore store, IParameterStore parameterStore, IMessenger messenger)
         {
             _store = store;
             _parameterStore = parameterStore;
@@ -35,7 +35,7 @@ namespace SteveTheTradeBot.Api
 
         protected override void RegisterSetter()
         {
-            _messenger.Register<PopulateOtherCandlesService.UpdatedOtherCandles>(this, x => _delayWorker.Set());
+            _messenger.Register<PopulateOtherQuotesService.UpdatedOtherQuotes>(this, x => _delayWorker.Set());
         }
 
         protected override async Task ExecuteAsyncInRetry(CancellationToken token)
@@ -91,10 +91,10 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        private static void AddSuperTrend(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddSuperTrend(List<TradeQuote> tradeFeedQuotes, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
-            if (tradeFeedCandles.Count < 250) return;
-            var rsiResults = tradeFeedCandles.GetSuperTrend();
+            if (tradeFeedQuotes.Count < 250) return;
+            var rsiResults = tradeFeedQuotes.GetSuperTrend();
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
@@ -104,10 +104,10 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        private static void AddRsi(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddRsi(List<TradeQuote> tradeFeedQuotes, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
-            if (tradeFeedCandles.Count < 140) return;
-            var rsiResults = tradeFeedCandles.GetRsi();
+            if (tradeFeedQuotes.Count < 140) return;
+            var rsiResults = tradeFeedQuotes.GetRsi();
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
@@ -116,10 +116,10 @@ namespace SteveTheTradeBot.Api
         }
 
 
-        private static void AddRoc(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddRoc(List<TradeQuote> tradeFeedQuotes, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
-            if (tradeFeedCandles.Count < 101) return;
-            var roc = tradeFeedCandles.GetRoc(100, 100);
+            if (tradeFeedQuotes.Count < 101) return;
+            var roc = tradeFeedQuotes.GetRoc(100, 100);
             foreach (var rsiResult in roc)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
@@ -127,8 +127,8 @@ namespace SteveTheTradeBot.Api
                 orAdd.Add("roc100-sma", rsiResult.RocSma);
             }
 
-            if (tradeFeedCandles.Count < 202) return;
-            roc = tradeFeedCandles.GetRoc(200,200).ToList();
+            if (tradeFeedQuotes.Count < 202) return;
+            roc = tradeFeedQuotes.GetRoc(200,200).ToList();
             if (roc.TakeLast(30).Any(x => x.RocSma == null))
             {
                 foreach (var rsi in roc)
@@ -146,10 +146,10 @@ namespace SteveTheTradeBot.Api
             }
         }
 
-        private static void AddGetMacd(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddGetMacd(List<TradeQuote> tradeFeedQuotes, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
-            if (tradeFeedCandles.Count < 135) return;
-            var rsiResults = tradeFeedCandles.GetMacd();
+            if (tradeFeedQuotes.Count < 135) return;
+            var rsiResults = tradeFeedQuotes.GetMacd();
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
@@ -158,17 +158,17 @@ namespace SteveTheTradeBot.Api
                 orAdd.Add("macd", rsiResult.Macd);
             }
         }
-        private static void AddEmi(List<TradeFeedCandle> tradeFeedCandles, IDictionary<DateTime, Dictionary<string, decimal?>> values)
+        private static void AddEmi(List<TradeQuote> tradeFeedQuotes, IDictionary<DateTime, Dictionary<string, decimal?>> values)
         {
-            if (tradeFeedCandles.Count < 200) return;
-            var rsiResults = tradeFeedCandles.GetEma(100);
+            if (tradeFeedQuotes.Count < 200) return;
+            var rsiResults = tradeFeedQuotes.GetEma(100);
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
                 orAdd.Add("ema100", rsiResult.Ema);
             }
-            if (tradeFeedCandles.Count < 400) return;
-            rsiResults = tradeFeedCandles.GetEma(200);
+            if (tradeFeedQuotes.Count < 400) return;
+            rsiResults = tradeFeedQuotes.GetEma(200);
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());

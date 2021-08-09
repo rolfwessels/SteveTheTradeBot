@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using Slack.Webhooks;
 using SteveTheTradeBot.Core;
@@ -16,7 +17,7 @@ namespace SteveTheTradeBot.Api.Components.Integration
 
         public SlackNotification()
         {
-            _slackClient = new SlackClient(Settings.Instance.SlackWebhookUrl);
+            _slackClient = new SlackClient(Settings.Instance.SlackWebhookUrl.Dump("SlackWebhookUrl"));
             _channel = Settings.Instance.SlackChannel;
         }
 
@@ -25,7 +26,8 @@ namespace SteveTheTradeBot.Api.Components.Integration
         public async Task PostAsync(string message)
         {
             var slackMessage = DefaultSlackMessage(message);
-            _log.Debug($"SlackNotification:PostAsync {slackMessage}");
+            _log.Debug($"SlackNotification:PostAsync {slackMessage.Text}");
+
             await _slackClient.PostAsync(slackMessage);
         }
 

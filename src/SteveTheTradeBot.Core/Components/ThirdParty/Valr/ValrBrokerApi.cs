@@ -13,6 +13,8 @@ using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
+using SteveTheTradeBot.Core.Framework.Slack;
+using SteveTheTradeBot.Core.Framework.Subscriptions;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -121,8 +123,18 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             var validStopLoss = activeTrades?.GetValidStopLoss();
             if (validStopLoss != null )
             {
-                var orderStatusById = await OrderHistorySummaryById(validStopLoss.BrokerOrderId);
-                await BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, orderStatusById);   
+                var orderStatusResponse = await OrderStatus(instance.Pair, validStopLoss.Id);
+                if (orderStatusResponse.OrderStatusType == "Active")
+                {
+                    return;
+                }
+                var orderStatusById = await OrderHistorySummary(validStopLoss.Id);
+                await BrokerUtils.ApplyOrderResultToStrategy(strategyContext, activeTrades, validStopLoss, orderStatusById);
+                _log.Debug($"ValrBrokerApi:SyncOrderStatus {instance.Id} {instance.Name} stop loss status changed to {validStopLoss.OrderStatusType}!");    
+                if (validStopLoss.OrderStatusType != OrderStatusTypes.Filled)
+                {
+                    await strategyContext.Messenger.Send(PostSlackMessage.From($"{instance.Name} had a stop loss which now has status of `{validStopLoss.OrderStatusType}`"));
+                }
             }
             
         }

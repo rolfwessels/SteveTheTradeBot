@@ -39,7 +39,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.ThirdParty.Valr
                 response.FeeCurrency.Should().Be("ETH");
                 response.OrderSide.Should().Be(0);
                 response.OrderType.Should().Be("simple");
-                response.FailedReason.Should().Be(null);
+                response.FailedReason.Should().BeNullOrEmpty();
                
             });
         }

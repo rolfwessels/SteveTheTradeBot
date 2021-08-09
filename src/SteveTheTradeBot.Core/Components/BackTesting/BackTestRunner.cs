@@ -17,7 +17,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
     public class BackTestRunner
     {
-        private readonly CandleBuilder _candleBuilder;
+        private readonly QuoteBuilder _quoteBuilder;
         private readonly DynamicGraphs _dynamicGraphs;
         private readonly StrategyPicker _picker;
         private readonly StrategyInstanceStore _strategyInstanceStore;
@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore, IBrokerApi broker, IMessenger messenger, StrategyRunner strategyRunner)
         {
-            _candleBuilder = new CandleBuilder();
+            _quoteBuilder = new QuoteBuilder();
             _dynamicGraphs = dynamicGraphs;
             _picker = picker;
             _strategyInstanceStore = strategyInstanceStore;
@@ -37,7 +37,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
 
         public async Task<StrategyInstance> Run(StrategyInstance instance,
-            IEnumerable<TradeFeedCandle> enumerable, 
+            IEnumerable<TradeQuote> enumerable, 
             CancellationToken cancellationToken)
         {
             
@@ -74,12 +74,12 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             StrategyInstance = strategyInstance;
             _parameterStore = parameterStore;
             Messenger = messenger;
-            ByMinute = new Recent<TradeFeedCandle>(1000);
+            ByMinute = new Recent<TradeQuote>(1000);
             Broker = broker;
 
         }
 
-        public Recent<TradeFeedCandle> ByMinute { get; }
+        public Recent<TradeQuote> ByMinute { get; }
         public StrategyInstance StrategyInstance { get; }
 
         public IBrokerApi Broker { get; }
@@ -104,7 +104,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             await _dynamicGraphs.Plot(StrategyInstance.Reference, date, label, value);
         }
 
-        public TradeFeedCandle LatestQuote()
+        public TradeQuote LatestQuote()
         {
             return ByMinute.Last();
         }

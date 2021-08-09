@@ -21,19 +21,19 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         private readonly StrategyPicker _strategyPicker;
         private readonly IDynamicGraphs _dynamicGraphs;
         private readonly IStrategyInstanceStore _strategyInstanceStore;
-        private readonly ITradeFeedCandlesStore _tradeFeedCandleStore;
+        private readonly ITradeQuoteStore _tradeQuoteStore;
         private readonly IBrokerApi _broker;
         private readonly IMessenger _messenger;
         private readonly IParameterStore _parameterStore;
 
         public StrategyRunner(StrategyPicker strategyPicker, IDynamicGraphs dynamicGraphs,
-            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeFeedCandlesStore tradeFeedCandleStore, IMessenger messenger, IParameterStore parameterStore)
+            IStrategyInstanceStore strategyInstanceStore, IBrokerApi broker, ITradeQuoteStore tradeQuoteStore, IMessenger messenger, IParameterStore parameterStore)
         {
             _strategyPicker = strategyPicker;
             _dynamicGraphs = dynamicGraphs;
             _strategyInstanceStore = strategyInstanceStore;
             _broker = broker;
-            _tradeFeedCandleStore = tradeFeedCandleStore;
+            _tradeQuoteStore = tradeQuoteStore;
             _messenger = messenger;
             _parameterStore = parameterStore;
         }
@@ -112,13 +112,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             return true;
         }
 
-        public void PostRun(StrategyInstance strategyInstance, TradeFeedCandle last)
+        public void PostRun(StrategyInstance strategyInstance, TradeQuote last)
         {
             strategyInstance.LastClose = last.Close;
             strategyInstance.LastDate = last.Date;
         }
 
-        public void PreRun(StrategyInstance strategyInstance, TradeFeedCandle last)
+        public void PreRun(StrategyInstance strategyInstance, TradeQuote last)
         {
             if (strategyInstance.FirstClose != 0) return;
             strategyInstance.FirstClose = last.Close;
@@ -134,13 +134,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
         {
             var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger,_parameterStore);
-            var findRecentCandles =
-                await _tradeFeedCandleStore.FindRecentCandles(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
+            var findRecentQuotes =
+                await _tradeQuoteStore.FindRecent(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
           
-            var tradeFeedCandles = findRecentCandles
+            var tradeFeedQuotes = findRecentQuotes
                     .Where(x=> x.Metric != null && x.Metric.Count > 1)
                     .OrderBy(x => x.Date);
-            strategyContext.ByMinute.AddRange(tradeFeedCandles);
+            strategyContext.ByMinute.AddRange(tradeFeedQuotes);
 
             if (strategyContext.ByMinute.Count < 100) throw new Exception("Missing ByMinute data!");
             _log.Debug($"StrategyRunner:PopulateStrategyContext Look for trades before: {time.ToUniversalTime()} and found {strategyContext.LatestQuote().Date}!");

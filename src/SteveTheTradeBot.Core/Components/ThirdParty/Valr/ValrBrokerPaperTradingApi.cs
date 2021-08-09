@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
@@ -24,8 +25,25 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
 
         public async Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request)
         {
-            var orderHistorySummary = await Order(request);
-            return ToHistorySummary(orderHistorySummary, request);
+            var quoteResponse = await _valrBrokerApi.Quote(request); 
+            return new OrderHistorySummaryResponse
+            {
+                OrderId = quoteResponse.Id,
+                OrderStatusType = "Filled",
+                CustomerOrderId = request.CustomerOrderId,
+                CurrencyPair = request.CurrencyPair,
+                AveragePrice = quoteResponse.OrdersToMatch.Average(x=>x.Price),
+
+                OriginalPrice = quoteResponse.PayAmount,
+                Total = request.Side == Side.Buy ? quoteResponse.PayAmount : quoteResponse.ReceiveAmount,
+                OriginalQuantity = request.Side == Side.Buy ? quoteResponse.ReceiveAmount : quoteResponse.PayAmount,
+
+                FeeCurrency = quoteResponse.FeeCurrency,
+                TotalFee = quoteResponse.Fee,
+                OrderType = "simple",
+                FailedReason = "",
+                OrderUpdatedAt = quoteResponse.CreatedAt,
+            };
         }
 
         public static OrderHistorySummaryResponse ToHistorySummary(SimpleOrderStatusResponse simpleResponse, SimpleOrderRequest request)
@@ -38,8 +56,8 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                 CurrencyPair = request.CurrencyPair,
                 AveragePrice = simpleResponse.OriginalPrice(request.Side),
                 OriginalPrice = simpleResponse.PaidAmount,
-                Total = simpleResponse.PaidAmount,
-                OriginalQuantity = simpleResponse.ReceivedAmount,
+                Total = request.Side == Side.Buy? simpleResponse.PaidAmount : simpleResponse.ReceivedAmount,
+                OriginalQuantity = request.Side == Side.Buy ? simpleResponse.ReceivedAmount: simpleResponse.PaidAmount,
                 FeeCurrency = simpleResponse.ReceivedCurrency,
                 TotalFee = simpleResponse.FeeAmount,
                 OrderType = "simple",
@@ -84,7 +102,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             var validStopLoss = activeTrades?.GetValidStopLoss();
             if (validStopLoss != null && strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
             {
-                await BrokerUtils.ActivateStopLoss(strategyContext, activeTrades, validStopLoss, 0.001m);
+                await BrokerUtils.ApplyOrderResultToStrategy(strategyContext, activeTrades, validStopLoss, 0.001m);
             }
         }
 

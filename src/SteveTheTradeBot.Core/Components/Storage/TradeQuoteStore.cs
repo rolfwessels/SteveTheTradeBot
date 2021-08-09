@@ -15,17 +15,17 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Storage
 {
-    public class TradeFeedCandlesStore : StoreBase<TradeFeedCandle>, ITradeFeedCandlesStore
+    public class TradeQuoteStore : StoreBase<TradeQuote>, ITradeQuoteStore
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-        #region Implementation of ITradeFeedCandlesStore
+        #region Implementation of ITradeFeedQuotesStore
 
-        public async Task<TradeFeedCandle> FindLatestCandle(string feed, string currencyPair, PeriodSize periodSize)
+        public async Task<TradeQuote> FindLatest(string feed, string currencyPair, PeriodSize periodSize)
         {
             return FindLatestCandle(feed, currencyPair, periodSize,  await _factory.GetTradePersistence());
         }
 
-        public TradeFeedCandle FindLatestCandle(string feed, string currencyPair, PeriodSize periodSize, TradePersistenceStoreContext context)
+        public TradeQuote FindLatestCandle(string feed, string currencyPair, PeriodSize periodSize, TradePersistenceStoreContext context)
         {
             return DbSet(context).AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize)
@@ -33,14 +33,14 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<int> AddRange(List<TradeFeedCandle> feedCandles)
+        public async Task<int> AddRange(List<TradeQuote> feedQuotes)
         {
             await using var context = await _factory.GetTradePersistence();
-            context.TradeFeedCandles.AddRange(feedCandles);
+            context.TradeQuotes.AddRange(feedQuotes);
             return await context.SaveChangesAsync();
         }
 
-        public async Task<List<TradeFeedCandle>> UpdateFeed(
+        public async Task<List<TradeQuote>> UpdateFeed(
             IEnumerable<KeyValuePair<DateTime, Dictionary<string, decimal?>>> store,
             string feed, string currencyPair,
             PeriodSize periodSize)
@@ -65,11 +65,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
             return candles;
         }
 
-        public async Task<List<TradeFeedCandle>> FindBefore(DateTime startDate, string feed, string currencyPair,
+        public async Task<List<TradeQuote>> FindBefore(DateTime startDate, string feed, string currencyPair,
             PeriodSize periodSize, int take)
         {
             await using var context = await _factory.GetTradePersistence();
-            var tradeFeedCandles = context.TradeFeedCandles.AsNoTracking().AsQueryable()
+            var tradeFeedQuotes = context.TradeQuotes.AsNoTracking().AsQueryable()
                 .Where(x => x.Feed == feed &&
                             x.CurrencyPair == currencyPair
                             && x.PeriodSize == periodSize &&
@@ -77,7 +77,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .OrderByDescending(x => x.Date)
                 .Take(take)
                 .ToList();
-            return tradeFeedCandles;
+            return tradeFeedQuotes;
         }
 
         public async Task Populate(CancellationToken token, string currencyPair, string feed, PeriodSize periodSize)
@@ -91,18 +91,18 @@ namespace SteveTheTradeBot.Core.Components.Storage
             }
 
             var stopwatch = new Stopwatch().With(x => x.Start());
-            var tradeFeedCandles = FindAllBetween(@from, DateTime.Now, feed, currencyPair, PeriodSize.OneMinute);
-            var candles = tradeFeedCandles.Aggregate(periodSize)
-                .Select(x => TradeFeedCandle.From(x, feed, periodSize, currencyPair));
+            var tradeFeedQuotes = FindAllBetween(@from, DateTime.Now, feed, currencyPair, PeriodSize.OneMinute);
+            var candles = tradeFeedQuotes.Aggregate(periodSize)
+                .Select(x => TradeQuote.From(x, feed, periodSize, currencyPair));
 
-            foreach (var feedCandles in candles.BatchedBy())
+            foreach (var feedQuotes in candles.BatchedBy())
             {
                 if (token.IsCancellationRequested) return;
-                foreach (var fromValue in feedCandles.Where(x => x.Date == from))
+                foreach (var fromValue in feedQuotes.Where(x => x.Date == from))
                 {
-                    context.TradeFeedCandles.Update(fromValue.CopyValuesTo(foundCandle));
+                    context.TradeQuotes.Update(fromValue.CopyValuesTo(foundCandle));
                 }
-                await context.AddRangeAsync(feedCandles.Where(x => x.Date != from).ToList(), token);
+                await context.AddRangeAsync(feedQuotes.Where(x => x.Date != from).ToList(), token);
                 var count = context.SaveChanges();
                 _log.Information(
                     $"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
@@ -111,11 +111,11 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<List<TradeFeedCandle>> FindCandlesByDate(string currencyPair, DateTime @from, DateTime to,
+        public async Task<List<TradeQuote>> FindByDate(string currencyPair, DateTime @from, DateTime to,
             PeriodSize periodSize, string feed = "valr", int skip = 0, int take = 1000000)
         {
             await using var context = await _factory.GetTradePersistence();
-            return await context.TradeFeedCandles.AsQueryable()
+            return await context.TradeQuotes.AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
                             x.Date >= from && x.Date <= to)
                 .OrderBy(x => x.Date)
@@ -126,12 +126,12 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<List<TradeFeedCandle>> FindRecentCandles(PeriodSize periodSize, DateTime beforeDate, int take,
+        public async Task<List<TradeQuote>> FindRecent(PeriodSize periodSize, DateTime beforeDate, int take,
             string currencyPair, string feed)
         {
             if (feed == null) throw new ArgumentNullException(nameof(feed));
             await using var context = await _factory.GetTradePersistence();
-            return await context.TradeFeedCandles.AsQueryable()
+            return await context.TradeQuotes.AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
                             x.Date < beforeDate)
                 .OrderByDescending(x => x.Date)
@@ -139,7 +139,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .ToListAsync();
         }
 
-        public IEnumerable<TradeFeedCandle> FindAllBetween(DateTime fromDate, DateTime toDate, string feed,
+        public IEnumerable<TradeQuote> FindAllBetween(DateTime fromDate, DateTime toDate, string feed,
             string currencyPair, PeriodSize periodSize, int batchSize = 1000)
         {
             using var context = _factory.GetTradePersistence().Result;
@@ -147,7 +147,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var counter = 0;
             do
             {
-                var tradeFeedCandles = context.TradeFeedCandles.AsQueryable()
+                var tradeFeedQuotes = context.TradeQuotes.AsQueryable()
                     .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
                                 x.Date >= fromDate && x.Date <= toDate)
                     .OrderBy(x => x.Date)
@@ -156,7 +156,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
                 skip += batchSize;
                 counter = 0;
-                foreach (var historicalTrade in tradeFeedCandles)
+                foreach (var historicalTrade in tradeFeedQuotes)
                 {
                     yield return historicalTrade;
                     counter++;
@@ -166,15 +166,15 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
         #endregion
 
-        public TradeFeedCandlesStore(ITradePersistenceFactory factory) : base(factory)
+        public TradeQuoteStore(ITradePersistenceFactory factory) : base(factory)
         {
         }
 
         #region Overrides of StoreBase<TradeFeedCandle>
 
-        protected override DbSet<TradeFeedCandle> DbSet(TradePersistenceStoreContext context)
+        protected override DbSet<TradeQuote> DbSet(TradePersistenceStoreContext context)
         {
-            return context.TradeFeedCandles;
+            return context.TradeQuotes;
         }
 
         #endregion

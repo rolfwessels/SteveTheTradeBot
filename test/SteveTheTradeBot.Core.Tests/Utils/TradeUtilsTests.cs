@@ -17,13 +17,13 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         public void ForDate_GivenValuesInThePast_ShouldReturnNull()
         {
             // arrange
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedQuotes = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x=>x.Date = new DateTime(2001,01,01,1,1,0))
                 .ForEach(x => x.PeriodSize = PeriodSize.FiveMinutes);
             // action
-            var result = tradeFeedCandles.ForDate(new DateTime(2001, 01, 02, 1, 1, 0));
+            var result = tradeFeedQuotes.ForDate(new DateTime(2001, 01, 02, 1, 1, 0));
             // assert
             result.Should().BeNull();
         }
@@ -34,13 +34,13 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 1, 1, 0);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedQuotes = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x => x.Date = dateTime)
                 .ForEach(x => x.PeriodSize = PeriodSize.FiveMinutes);
             // action
-            var result = tradeFeedCandles.ForDate(dateTime.Add(PeriodSize.FiveMinutes.ToTimeSpan()));
+            var result = tradeFeedQuotes.ForDate(dateTime.Add(PeriodSize.FiveMinutes.ToTimeSpan()));
             // assert
             result.Should().BeNull();
         }
@@ -51,13 +51,13 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 1, 1, 0);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedQuotes = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x => x.Date = dateTime)
                 .ForEach(x => x.PeriodSize = PeriodSize.FiveMinutes);
             // action
-            var result = tradeFeedCandles.ForDate(dateTime);
+            var result = tradeFeedQuotes.ForDate(dateTime);
             // assert
             result.Should().NotBeNull();
         }
@@ -67,13 +67,13 @@ namespace SteveTheTradeBot.Core.Tests.Utils
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 1, 0, 0);
-            var tradeFeedCandles = Builder<TradeFeedCandle>.CreateListOfSize(1)
+            var tradeFeedQuotes = Builder<TradeQuote>.CreateListOfSize(1)
                 .All().WithValidData()
                 .WithValidData().Build()
                 .ForEach(x => x.Date = dateTime)
                 .ForEach(x => x.PeriodSize = PeriodSize.FiveMinutes);
             // action
-            var result = tradeFeedCandles.ForDate(dateTime.Add(PeriodSize.FiveMinutes.ToTimeSpan()).AddSeconds(-1));
+            var result = tradeFeedQuotes.ForDate(dateTime.Add(PeriodSize.FiveMinutes.ToTimeSpan()).AddSeconds(-1));
             // assert
             result.Should().NotBeNull();
         }

@@ -5,78 +5,78 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Broker
 {
-    public static class CandleBuilderHelper
+    public static class QuoteBuilderHelper
     {
-        public static IEnumerable<CandleBuilder.Candle> ToCandleOneMinute(this IEnumerable<HistoricalTrade> trades)
+        public static IEnumerable<QuoteBuilder.QuoteDto> ToCandleOneMinute(this IEnumerable<HistoricalTrade> trades)
         {
-            return new CandleBuilder().ToCandleOneMinute(trades);
+            return new QuoteBuilder().ToOneMinuteQuote(trades);
         }
     }
 
 
-    public class CandleBuilder
+    public class QuoteBuilder
     {
-        Candle currentCandle = null;
-        public Action<Candle> OnMinute { get; set; } = (z) => { };
+        QuoteDto _currentQuote = null;
+        public Action<QuoteDto> OnMinute { get; set; } = (z) => { };
         public void Feed(HistoricalTrade trade)
         {
             var candleDate = ToMinute(trade);
-            if (currentCandle == null)
+            if (_currentQuote == null)
             {
-                currentCandle = InitializeCandle(candleDate, trade);
+                _currentQuote = InitializeCandle(candleDate, trade);
             }
             else
             {
-                if (currentCandle.Date == candleDate)
+                if (_currentQuote.Date == candleDate)
                 {
-                    UpdateCandle(currentCandle,trade);
+                    UpdateQuote(_currentQuote,trade);
                 }
                 else
                 {
-                    OnMinute(currentCandle);
-                    currentCandle = InitializeCandle(candleDate, trade);
+                    OnMinute(_currentQuote);
+                    _currentQuote = InitializeCandle(candleDate, trade);
                 }
             }
         }
 
 
-        public IEnumerable<Candle> ToCandleOneMinute(IEnumerable<HistoricalTrade> trades)
+        public IEnumerable<QuoteDto> ToOneMinuteQuote(IEnumerable<HistoricalTrade> trades)
         {
-            Candle candle = null;
+            QuoteDto quoteDto = null;
             foreach (var trade in trades)
             {
                 var candleDate = ToMinute(trade);
-                if (candle == null)
+                if (quoteDto == null)
                 {
-                    candle = InitializeCandle(candleDate, trade);
+                    quoteDto = InitializeCandle(candleDate, trade);
                 }
                 else
                 {
-                    if (candle.Date == candleDate)
+                    if (quoteDto.Date == candleDate)
                     {
-                        UpdateCandle(candle, trade);
+                        UpdateQuote(quoteDto, trade);
                     }
                     else
                     {
-                        yield return candle;
-                        candle = InitializeCandle(candleDate, trade);
+                        yield return quoteDto;
+                        quoteDto = InitializeCandle(candleDate, trade);
                     }
                 }
             }
-            if (candle != null) yield return candle;
+            if (quoteDto != null) yield return quoteDto;
         }
 
-        private static void UpdateCandle(Candle candle, HistoricalTrade trade)
+        private static void UpdateQuote(QuoteDto quoteDto, HistoricalTrade trade)
         {
-            candle.Close = trade.Price;
-            candle.High = Math.Max(candle.High, trade.Price);
-            candle.Low = Math.Min(candle.Low, trade.Price);
-            candle.Volume += trade.Quantity;
+            quoteDto.Close = trade.Price;
+            quoteDto.High = Math.Max(quoteDto.High, trade.Price);
+            quoteDto.Low = Math.Min(quoteDto.Low, trade.Price);
+            quoteDto.Volume += trade.Quantity;
         }
 
-        private static Candle InitializeCandle(DateTime candleDate, HistoricalTrade historicalTrade)
+        private static QuoteDto InitializeCandle(DateTime candleDate, HistoricalTrade historicalTrade)
         {
-            return new Candle
+            return new QuoteDto
             {
                 Date = candleDate,
                 Open = historicalTrade.Price,
@@ -93,7 +93,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
                 historicalTrade.TradedAt.Minute, 0, historicalTrade.TradedAt.Kind);
         }
 
-        public class Candle : IQuote
+        public class QuoteDto : IQuote
         {
             public DateTime Date { get; set; }
             public decimal Open { get; set; }

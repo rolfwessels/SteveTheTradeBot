@@ -72,8 +72,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.Notifications
         private static TradeOrder CloseTrade(StrategyTrade strategyTrade, decimal estimatedPrice, StrategyInstance forBackTest)
         {
             var estimatedQuantity = strategyTrade.BuyQuantity * estimatedPrice;
-            var tradeOrder = strategyTrade.AddOrderRequest(Side.Sell, strategyTrade.BuyQuantity, estimatedPrice,
-                estimatedQuantity, forBackTest.Pair, DateTime.Now, estimatedPrice);
+            var tradeOrder = strategyTrade.AddOrderRequest(Side.Sell, estimatedQuantity , estimatedPrice,
+                strategyTrade.BuyQuantity, forBackTest.Pair, DateTime.Now, estimatedPrice);
             BrokerUtils.ApplyCloseToActiveTrade(strategyTrade, tradeOrder.CreateDate, tradeOrder);
             return tradeOrder;
         }

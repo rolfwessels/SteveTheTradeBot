@@ -18,7 +18,7 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Api
 {
-    public class PopulateOneMinuteCandleService : BackgroundServiceWithResetAndRetry
+    public class PopulateOneMinuteQuoteService : BackgroundServiceWithResetAndRetry
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -26,7 +26,7 @@ namespace SteveTheTradeBot.Api
         private readonly IHistoricalDataPlayer _historicalDataPlayer;
         private readonly IMessenger _messenger;
 
-        public PopulateOneMinuteCandleService(ITradePersistenceFactory factory,
+        public PopulateOneMinuteQuoteService(ITradePersistenceFactory factory,
             IHistoricalDataPlayer historicalDataPlayer, IMessenger messenger)
         {
             _factory = factory;
@@ -48,12 +48,12 @@ namespace SteveTheTradeBot.Api
             await _messenger.Send(new OneMinuteCandleAvailable(tasks.Select(x => x.Result).ToList()));
         }
 
-        public async Task<TradeFeedCandle> Populate(CancellationToken token, string currencyPair, string feed)
+        public async Task<TradeQuote> Populate(CancellationToken token, string currencyPair, string feed)
         {
             var periodSize = PeriodSize.OneMinute;
             var from = DateTime.Now.AddYears(-10);
             var context = await _factory.GetTradePersistence();
-            var foundCandle = context.TradeFeedCandles.AsQueryable()
+            var foundCandle = context.TradeQuotes.AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize)
                 .OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
             if (foundCandle != null)
@@ -68,26 +68,26 @@ namespace SteveTheTradeBot.Api
             var candles = readHistoricalTrades
                 .ForAll(x=>lastTrade = x.TradedAt)
                 .ToCandleOneMinute()
-                .Select(x => TradeFeedCandle.From(x, feed, periodSize, currencyPair));
-            TradeFeedCandle lastCandle = null;
-            foreach (var feedCandles in candles.BatchedBy())
+                .Select(x => TradeQuote.From(x, feed, periodSize, currencyPair));
+            TradeQuote lastCandle = null;
+            foreach (var feedQuotes in candles.BatchedBy())
             {
                 
                 if (token.IsCancellationRequested) return null;
-                foreach (var cdl in feedCandles)
+                foreach (var cdl in feedQuotes)
                 {
                     if (cdl.Date == foundCandle?.Date)
                     {   
-                        context.TradeFeedCandles.Update(cdl.CopyValuesTo(foundCandle));
+                        context.TradeQuotes.Update(cdl.CopyValuesTo(foundCandle));
                     }
                     else
                     {
-                        context.TradeFeedCandles.Add(cdl);
+                        context.TradeQuotes.Add(cdl);
                     }
                 }
                 
                 var count = await context.SaveChangesAsync(token);
-                lastCandle = feedCandles.OrderBy(x=>x.Date).Last();
+                lastCandle = feedQuotes.OrderBy(x=>x.Date).Last();
                 _log.Information(
                     $"Saved {count} {periodSize} candles for {currencyPair} found candle {from} [{(DateTime.UtcNow - from).ToShort()}] saved {lastCandle.Date} [{(DateTime.UtcNow - lastCandle.Date).ToShort()}] [LT:{lastTrade}] in {stopwatch.Elapsed.ToShort()}.");
                 stopwatch.Restart();
@@ -101,11 +101,11 @@ namespace SteveTheTradeBot.Api
 
         public class OneMinuteCandleAvailable
         {
-            public List<TradeFeedCandle> Candles { get; }
+            public List<TradeQuote> Quotes { get; }
 
-            public OneMinuteCandleAvailable(List<TradeFeedCandle> candles)
+            public OneMinuteCandleAvailable(List<TradeQuote> candles)
             {
-                Candles = candles;
+                Quotes = candles;
             }
         }
     }

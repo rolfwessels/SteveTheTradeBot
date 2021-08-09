@@ -11,7 +11,7 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Create dummy broker.
 - [x] Create simple bot.
 - [x] Add a way do some back testing.
-- [x] Store metrics when importing data [RSI, Super trend,EMA100 , EMA200 ].
+- [x] Store metrics when importing data [RSI, Super trend, EMA100 , EMA200 ].
 - [x] Have a BTC bot that actually makes money!
 - [x] Store back test results
 - [x] Run paper trades

@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Core
         public string SlackBotKey => ReadEncryptedValue("SlackBotKey", "ENC:U2FsdGVkX1/aMryp50WI/N7Sx3Mo6zIBHbdqAn4Rv8KGJGi897/ETE2bYjQglxxperpnQvp2e9Dr9NlP931+dLbs6U7PPWzFp+32DVVYxsA=");
         public string SlackChannel => ReadConfigValue("SlackChannel", "#steve-trader-dev");
         public string LogsSlackChannel => ReadConfigValue("LogsSlackChannel", "#steve-trader-dev-logs");
-        public string SlackWebhookUrl => ReadEncryptedValue("SlackWebhookUrl", "ENC:U2FsdGVkX1845EU+6zoYfd2f/S+ZRR1eyTEcR9x3ryflytzvvBVRCzt7HwSQh6gq6HJZwfZeLfus66N5BVRQ9QVhBN+VWZsd/MBDAScrZLmxB4tyglVc7V+vCVuj9TWZ");
+        public string SlackWebhookUrl => ReadEncryptedValue("SlackWebhookUrl", "ENC:U2FsdGVkX19BcF7bp+Ckgo2z5hu8nEu6eFOQ0hNXlkIEM42tMZ04bcOXVfUQiBjD4sPxCUmwPBzNWzaUpEPVu/T3mOmxz9T6aXDQyNL7sTNOuBEpVQksHctzpe2gq/EF");
         public string LogFolder => ReadEncryptedValue("LogFolder", @"c:\temp\logs\");
         public string DataProtectionFolder => ReadEncryptedValue("DataProtectionFolder", @"c:\temp\sttb\");
         public string LokiUrl => ReadConfigValue("LokiUrl", @"https://logs-prod-us-central1.grafana.net");
