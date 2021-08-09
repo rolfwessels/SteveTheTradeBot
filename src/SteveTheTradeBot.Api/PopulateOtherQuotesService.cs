@@ -19,7 +19,6 @@ namespace SteveTheTradeBot.Api
             _messenger = messenger;
         }
 
-
         #region Overrides of BackgroundService
 
         protected override void RegisterSetter()

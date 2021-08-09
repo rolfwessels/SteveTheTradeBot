@@ -45,7 +45,7 @@ namespace SteveTheTradeBot.Api
         {
             var tasks = ValrFeeds.All.Select(valrFeed => Populate(token, valrFeed.CurrencyPair, valrFeed.Name)).ToList();
             await Task.WhenAll(tasks);
-            await _messenger.Send(new OneMinuteCandleAvailable(tasks.Select(x => x.Result).ToList()));
+            await _messenger.Send(new OneMinuteCandleAvailable());
         }
 
         public async Task<TradeQuote> Populate(CancellationToken token, string currencyPair, string feed)
@@ -101,12 +101,7 @@ namespace SteveTheTradeBot.Api
 
         public class OneMinuteCandleAvailable
         {
-            public List<TradeQuote> Quotes { get; }
-
-            public OneMinuteCandleAvailable(List<TradeQuote> candles)
-            {
-                Quotes = candles;
-            }
+            
         }
     }
 
