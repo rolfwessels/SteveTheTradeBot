@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -23,10 +24,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             if (currentTrade.Close > MoveProfit(data))
             {
+                var oldStopLoss = StopLoss(data).GetValueOrDefault();
                 ResetStops(currentTrade, data);
-                data.StrategyInstance.Status = $"Update stop loss to {StopLoss(data)}";
+                var newStopLoss = StopLoss(data).GetValueOrDefault();
+                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} by {TradeUtils.MovementPercent(newStopLoss, oldStopLoss)}%";
                 await data.Messenger.Send(
-                    $"{data.StrategyInstance.Name} has updated its stop loss to {StopLoss(data)}");
+                    $"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:");
             }
             else if (currentTrade.Close <= StopLoss(data))
             {

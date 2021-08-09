@@ -57,7 +57,7 @@ namespace SteveTheTradeBot.Api.Tests.Integration
                 var insert = await _userApiClient.ById(insertCommand.Id);
                 await _userApiClient.Remove(insert.Id);
 
-                items.WaitFor(x => x.Count >= 2, 10000);
+                items.WaitFor(x => x.Count >= 2, 20000);
                 items.Select(x => x.Event).Should().Contain("UserRemoved");
                 items.Should().HaveCountGreaterOrEqualTo(2);
                 error.Should().BeNull();

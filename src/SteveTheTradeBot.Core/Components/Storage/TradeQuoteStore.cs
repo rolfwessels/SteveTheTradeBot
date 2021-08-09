@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Skender.Stock.Indicators;
@@ -29,7 +28,9 @@ namespace SteveTheTradeBot.Core.Components.Storage
         {
             return DbSet(context).AsQueryable()
                 .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize)
-                .OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
+                .OrderByDescending(x => x.Date)
+                .Take(1)
+                .FirstOrDefault();
         }
 
 
@@ -69,7 +70,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             PeriodSize periodSize, int take)
         {
             await using var context = await _factory.GetTradePersistence();
-            var tradeFeedQuotes = context.TradeQuotes.AsNoTracking().AsQueryable()
+            var tradeFeedQuotes = context.TradeQuotes.AsQueryable()
                 .Where(x => x.Feed == feed &&
                             x.CurrencyPair == currencyPair
                             && x.PeriodSize == periodSize &&
