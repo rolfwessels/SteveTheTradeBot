@@ -23,7 +23,7 @@ namespace SteveTheTradeBot.Api.Tests
         private ITradePersistenceFactory _factory;
 
         [Test]
-        public async Task Populate_GivenNoExistingRecords_ShouldLoadAllCandles()  
+        public async Task Populate_GivenNoExistingRecords_ShouldLoadAllQuotes()  
         {
             // arrange
             Setup();
@@ -36,12 +36,12 @@ namespace SteveTheTradeBot.Api.Tests
             await _service.Populate(cancellationToken, CurrencyPair.BTCZAR, "valr");
             // assert
             _mockIHistoricalDataPlayer.VerifyAll();
-            var tradeFeedCandles = _factory.GetTradePersistence().Result.TradeQuotes.AsQueryable().ToList();
-            tradeFeedCandles.Should().HaveCount(2);
+            var tradeFeedQuotes = _factory.GetTradePersistence().Result.TradeQuotes.AsQueryable().ToList();
+            tradeFeedQuotes.Should().HaveCount(2);
         }
 
         [Test]
-        public async Task Populate_GivenSomeExistingRecords_ShouldSaveAllCandles()      
+        public async Task Populate_GivenSomeExistingRecords_ShouldSaveAllQuotes()      
         {
             // arrange
             Setup();
@@ -60,8 +60,8 @@ namespace SteveTheTradeBot.Api.Tests
             await _service.Populate(cancellationToken, CurrencyPair.BTCZAR, "valr");
             // assert
             _mockIHistoricalDataPlayer.VerifyAll();
-            var tradeFeedCandles = context.TradeQuotes.AsQueryable().ToList();
-            tradeFeedCandles.Should().HaveCount(5);
+            var tradeFeedQuotes = context.TradeQuotes.AsQueryable().ToList();
+            tradeFeedQuotes.Should().HaveCount(5);
         }
 
         private void Setup()

@@ -18,7 +18,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
     public class TradeQuoteStore : StoreBase<TradeQuote>, ITradeQuoteStore
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-        #region Implementation of ITradeFeedCandlesStore
+        #region Implementation of ITradeFeedQuotesStore
 
         public async Task<TradeQuote> FindLatest(string feed, string currencyPair, PeriodSize periodSize)
         {
@@ -33,10 +33,10 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
 
-        public async Task<int> AddRange(List<TradeQuote> feedCandles)
+        public async Task<int> AddRange(List<TradeQuote> feedQuotes)
         {
             await using var context = await _factory.GetTradePersistence();
-            context.TradeQuotes.AddRange(feedCandles);
+            context.TradeQuotes.AddRange(feedQuotes);
             return await context.SaveChangesAsync();
         }
 
@@ -69,7 +69,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             PeriodSize periodSize, int take)
         {
             await using var context = await _factory.GetTradePersistence();
-            var tradeFeedCandles = context.TradeQuotes.AsNoTracking().AsQueryable()
+            var tradeFeedQuotes = context.TradeQuotes.AsNoTracking().AsQueryable()
                 .Where(x => x.Feed == feed &&
                             x.CurrencyPair == currencyPair
                             && x.PeriodSize == periodSize &&
@@ -77,7 +77,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
                 .OrderByDescending(x => x.Date)
                 .Take(take)
                 .ToList();
-            return tradeFeedCandles;
+            return tradeFeedQuotes;
         }
 
         public async Task Populate(CancellationToken token, string currencyPair, string feed, PeriodSize periodSize)
@@ -91,18 +91,18 @@ namespace SteveTheTradeBot.Core.Components.Storage
             }
 
             var stopwatch = new Stopwatch().With(x => x.Start());
-            var tradeFeedCandles = FindAllBetween(@from, DateTime.Now, feed, currencyPair, PeriodSize.OneMinute);
-            var candles = tradeFeedCandles.Aggregate(periodSize)
+            var tradeFeedQuotes = FindAllBetween(@from, DateTime.Now, feed, currencyPair, PeriodSize.OneMinute);
+            var candles = tradeFeedQuotes.Aggregate(periodSize)
                 .Select(x => TradeQuote.From(x, feed, periodSize, currencyPair));
 
-            foreach (var feedCandles in candles.BatchedBy())
+            foreach (var feedQuotes in candles.BatchedBy())
             {
                 if (token.IsCancellationRequested) return;
-                foreach (var fromValue in feedCandles.Where(x => x.Date == from))
+                foreach (var fromValue in feedQuotes.Where(x => x.Date == from))
                 {
                     context.TradeQuotes.Update(fromValue.CopyValuesTo(foundCandle));
                 }
-                await context.AddRangeAsync(feedCandles.Where(x => x.Date != from).ToList(), token);
+                await context.AddRangeAsync(feedQuotes.Where(x => x.Date != from).ToList(), token);
                 var count = context.SaveChanges();
                 _log.Information(
                     $"Saved {count} {periodSize} candles for {currencyPair} in {stopwatch.Elapsed.ToShort()}.");
@@ -147,7 +147,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
             var counter = 0;
             do
             {
-                var tradeFeedCandles = context.TradeQuotes.AsQueryable()
+                var tradeFeedQuotes = context.TradeQuotes.AsQueryable()
                     .Where(x => x.Feed == feed && x.CurrencyPair == currencyPair && x.PeriodSize == periodSize &&
                                 x.Date >= fromDate && x.Date <= toDate)
                     .OrderBy(x => x.Date)
@@ -156,7 +156,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
 
                 skip += batchSize;
                 counter = 0;
-                foreach (var historicalTrade in tradeFeedCandles)
+                foreach (var historicalTrade in tradeFeedQuotes)
                 {
                     yield return historicalTrade;
                     counter++;

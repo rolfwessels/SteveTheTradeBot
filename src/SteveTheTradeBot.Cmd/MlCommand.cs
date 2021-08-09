@@ -48,7 +48,7 @@ namespace SteveTheTradeBot.Cmd
                         var stopwatch = new Stopwatch();
                         stopwatch.Start();
                         await using var writer = new StreamWriter(settings.TrainOnCsv);
-                        var strategyStore = IocApi.Instance.Resolve<ITradeFeedCandlesStore>();
+                        var strategyStore = IocApi.Instance.Resolve<ITradeFeedQuotesStore>();
                         var fromDate = DateTime.UtcNow.AddYears(-2);
                         var toDate = DateTime.UtcNow.AddMonths(-4);
                         ctx.Status($"Reading data  {fromDate} and {toDate}");
@@ -126,9 +126,9 @@ namespace SteveTheTradeBot.Cmd
                 await AnsiConsole.Status()
                     .StartAsync("Starting...", async ctx =>
                     {
-                        var strategyStore = IocApi.Instance.Resolve<ITradeFeedCandlesStore>();
+                        var strategyStore = IocApi.Instance.Resolve<ITradeFeedQuotesStore>();
                         var dynoDynamicGraphs = IocApi.Instance.Resolve<IDynamicGraphs>();
-                        var tradeFeedCandles = strategyStore.FindAllBetween(DateTime.Now.AddMonths(-12), DateTime.Now,
+                        var tradeFeedQuotes = strategyStore.FindAllBetween(DateTime.Now.AddMonths(-12), DateTime.Now,
                             "valr",
                             CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
                         var feedName = "ml-magic";
@@ -136,7 +136,7 @@ namespace SteveTheTradeBot.Cmd
                         await dynoDynamicGraphs.Clear(feedName);
                         var consumeModel = new ConsumeModel(settings.Model);
                         var counter = 0;
-                        foreach (var tradeFeedCandle in tradeFeedCandles)
+                        foreach (var tradeFeedCandle in tradeFeedQuotes)
                         {
                             var modelInput = tradeFeedCandle.ToModelInput();
                             var predictionResult = consumeModel.Predict(modelInput);

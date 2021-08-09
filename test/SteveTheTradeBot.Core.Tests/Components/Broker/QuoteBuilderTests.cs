@@ -85,7 +85,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Broker
         }
 
         [Test]
-        public void ToCandle_GivenGivenMissingValues_ShouldNotReturnAllCandles()
+        public void ToCandle_GivenGivenMissingValues_ShouldNotReturnAllQuotes()
         {
             // arrange
             var dateTime = new DateTime(2001, 01, 01, 6, 0, 0);

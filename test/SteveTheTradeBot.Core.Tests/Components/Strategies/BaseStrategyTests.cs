@@ -36,12 +36,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             _requestDate = new DateTime(2001, 01, 01, 1, 2, 3, DateTimeKind.Utc);
             _fakeBroker = new FakeBroker(Messenger.Default).With(x => x.BuyFeePercent = 0.0075m);
             _data = new StrategyContext(new DynamicGraphsTests.FakeGraph(), StrategyInstance.ForBackTest("BTCZAR", CurrencyPair.BTCZAR), _fakeBroker, Messenger.Default,new ParameterStore(TestTradePersistenceFactory.InMemoryDb));
-            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(4)
+            var tradeFeedQuotes = Builder<TradeQuote>.CreateListOfSize(4)
                 .WithValidData()
                 .All().With((x, r) => x.Date = _requestDate.AddDays(-1 * r))
                 .Build();
 
-            _data.ByMinute.AddRange(tradeFeedCandles);
+            _data.ByMinute.AddRange(tradeFeedQuotes);
             _fakeStrategy = new FakeStrategy();
         }
 

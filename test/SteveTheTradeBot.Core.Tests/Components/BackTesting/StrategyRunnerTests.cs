@@ -120,7 +120,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
 
         [Test]
-        public async Task Process_GivenCorrectTime_ShouldLoadTheRecentCandles() 
+        public async Task Process_GivenCorrectTime_ShouldLoadTheRecentQuotes() 
         {
             // arrange
             Setup();
@@ -236,12 +236,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         private void SetupContext(DateTime beforeDate, StrategyInstance forBackTest, bool addMetric = true)
         {
-            var tradeFeedCandles = Builder<TradeQuote>.CreateListOfSize(100).WithValidData().Build().ToList();
+            var tradeFeedQuotes = Builder<TradeQuote>.CreateListOfSize(100).WithValidData().Build().ToList();
             if (!addMetric)
-                tradeFeedCandles.ForEach(x=>x.Metric.Clear());
+                tradeFeedQuotes.ForEach(x=>x.Metric.Clear());
             _strategyInstanceStore.Add(forBackTest).Wait();
             _mockITradeHistoryStore.Setup(mc => mc.FindRecent(PeriodSize.FiveMinutes, beforeDate.ToUniversalTime(), 500, CurrencyPair.BTCZAR, forBackTest.Feed))
-                .ReturnsAsync(tradeFeedCandles);
+                .ReturnsAsync(tradeFeedQuotes);
         }
 
         #endregion

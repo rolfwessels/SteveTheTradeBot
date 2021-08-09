@@ -164,7 +164,7 @@ namespace SteveTheTradeBot.Cmd
 
                 [CommandOption("-c")]
                 [Description("Reset histotrical candles.")]
-                public bool ResetHistoricalCandles { get; set; } = false;
+                public bool ResetHistoricalQuotes { get; set; } = false;
 
                 [CommandOption("-m")]
                 [Description("Reset histotrical metrics.")]
@@ -179,7 +179,7 @@ namespace SteveTheTradeBot.Cmd
                 var persistence = await IocApi.Instance.Resolve<ITradePersistenceFactory>().GetTradePersistence();
                 var dateTime = DateTime.Now.Date.AddDays(-settings.Days);
                 AnsiConsole.MarkupLine($"Resetting date to be re-processed after [yellow]{dateTime}[/].");
-                if (!settings.ResetHistoricalTrades && !settings.ResetHistoricalCandles &&
+                if (!settings.ResetHistoricalTrades && !settings.ResetHistoricalQuotes &&
                     !settings.ResetHistoricalMetrics)
                 {
                     AnsiConsole.MarkupLine($"Please select something to reset [yellow]add --help to see options[/].");
@@ -192,7 +192,7 @@ namespace SteveTheTradeBot.Cmd
                         .Where(x => x.TradedAt > dateTime));
                 }
 
-                if (settings.ResetHistoricalCandles)
+                if (settings.ResetHistoricalQuotes)
                 {
                     AnsiConsole.MarkupLine($"Resetting [yellow]historical candles[/].");
                     persistence.TradeQuotes.RemoveRange(persistence.TradeQuotes.AsQueryable()

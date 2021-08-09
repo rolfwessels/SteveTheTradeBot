@@ -134,13 +134,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public async Task<StrategyContext> PopulateStrategyContext(StrategyInstance strategyInstance, DateTime time)
         {
             var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger,_parameterStore);
-            var findRecentCandles =
+            var findRecentQuotes =
                 await _tradeQuoteStore.FindRecent(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
           
-            var tradeFeedCandles = findRecentCandles
+            var tradeFeedQuotes = findRecentQuotes
                     .Where(x=> x.Metric != null && x.Metric.Count > 1)
                     .OrderBy(x => x.Date);
-            strategyContext.ByMinute.AddRange(tradeFeedCandles);
+            strategyContext.ByMinute.AddRange(tradeFeedQuotes);
 
             if (strategyContext.ByMinute.Count < 100) throw new Exception("Missing ByMinute data!");
             _log.Debug($"StrategyRunner:PopulateStrategyContext Look for trades before: {time.ToUniversalTime()} and found {strategyContext.LatestQuote().Date}!");

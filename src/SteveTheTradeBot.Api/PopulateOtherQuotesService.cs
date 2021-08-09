@@ -36,12 +36,12 @@ namespace SteveTheTradeBot.Api
                     return _store.Populate(token, feed.CurrencyPair, feed.Name, periodSize);
                 });
             await Task.WhenAll(tasks);
-            await _messenger.Send(new UpdatedOtherCandles());
+            await _messenger.Send(new UpdatedOtherQuotes());
         }
 
         #endregion
 
-        public class UpdatedOtherCandles
+        public class UpdatedOtherQuotes
         {
         }
     }

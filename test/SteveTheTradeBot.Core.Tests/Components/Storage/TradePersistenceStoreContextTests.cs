@@ -42,7 +42,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Storage
         
         
         [Test]
-        public async Task Add_GivenTradeFeedCandles_ShouldStoreRecord()
+        public async Task Add_GivenTradeFeedQuotes_ShouldStoreRecord()
         {
             // arrange
             Setup();

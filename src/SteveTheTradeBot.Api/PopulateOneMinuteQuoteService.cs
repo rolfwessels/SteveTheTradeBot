@@ -70,11 +70,11 @@ namespace SteveTheTradeBot.Api
                 .ToCandleOneMinute()
                 .Select(x => TradeQuote.From(x, feed, periodSize, currencyPair));
             TradeQuote lastCandle = null;
-            foreach (var feedCandles in candles.BatchedBy())
+            foreach (var feedQuotes in candles.BatchedBy())
             {
                 
                 if (token.IsCancellationRequested) return null;
-                foreach (var cdl in feedCandles)
+                foreach (var cdl in feedQuotes)
                 {
                     if (cdl.Date == foundCandle?.Date)
                     {   
@@ -87,7 +87,7 @@ namespace SteveTheTradeBot.Api
                 }
                 
                 var count = await context.SaveChangesAsync(token);
-                lastCandle = feedCandles.OrderBy(x=>x.Date).Last();
+                lastCandle = feedQuotes.OrderBy(x=>x.Date).Last();
                 _log.Information(
                     $"Saved {count} {periodSize} candles for {currencyPair} found candle {from} [{(DateTime.UtcNow - from).ToShort()}] saved {lastCandle.Date} [{(DateTime.UtcNow - lastCandle.Date).ToShort()}] [LT:{lastTrade}] in {stopwatch.Elapsed.ToShort()}.");
                 stopwatch.Restart();
@@ -101,11 +101,11 @@ namespace SteveTheTradeBot.Api
 
         public class OneMinuteCandleAvailable
         {
-            public List<TradeQuote> Candles { get; }
+            public List<TradeQuote> Quotes { get; }
 
             public OneMinuteCandleAvailable(List<TradeQuote> candles)
             {
-                Candles = candles;
+                Quotes = candles;
             }
         }
     }
