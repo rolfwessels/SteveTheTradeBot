@@ -184,7 +184,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         private async Task<StrategyInstance> BuildBackTestResult(DateTime fromDate, DateTime to, Func<IBrokerApi, IStrategy> getStrategy, string currencyPair,
             PeriodSize size)
         {
-            throw new Exception("nope");
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
             var tradeFeedCandleStore = new TradeFeedCandlesStore(factory);

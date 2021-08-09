@@ -82,17 +82,9 @@ namespace SteveTheTradeBot.Cmd
                         .WithDescription("Encrypt a secret using the keys.")
                         .WithExample(new[] { "utils", "encrypt", "--enc=valuetoencrypt" });
 
-                    conf.AddCommand<DataCommand.Import>("import")
-                        .WithDescription("Download import initial data from csv files.")
-                        .WithExample(new[] { "data", "import" });
-
-                    conf.AddCommand<DataCommand.Export>("export")
-                        .WithDescription("Export data to csv files.")
-                        .WithExample(new[] { "data", "export" });
-
-                    conf.AddCommand<DataCommand.Reset>("reset")
-                        .WithDescription("Reset historical data to be a few days old.")
-                        .WithExample(new[] { "data", "reset", "--days=5", "-m" });
+                    conf.AddCommand<UtilCommand.Environment>("env")
+                        .WithDescription("Show details on current environment.")
+                        .WithExample(new[] { "utils", "env" });
                 });
                 
                 config.AddBranch("ml", conf =>
