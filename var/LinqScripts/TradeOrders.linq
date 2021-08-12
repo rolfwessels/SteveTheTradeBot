@@ -1,18 +1,19 @@
 <Query Kind="Program">
   <Connection>
-    <ID>18641041-a990-4c4d-b2dd-334372ce0522</ID>
+    <ID>59553889-9cb7-45f9-a747-6a218e67e869</ID>
     <NamingServiceVersion>2</NamingServiceVersion>
     <Persist>true</Persist>
     <Driver Assembly="(internal)" PublicKeyToken="no-strong-name">LINQPad.Drivers.EFCore.DynamicDriver</Driver>
-    <Server>localhost</Server>
-    <UserName>postgres</UserName>
-    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAANRiZPWt3i0eTcfnz8b/cSwAAAAACAAAAAAAQZgAAAAEAACAAAAAzRGQtPIz0fWP4ZcuVKDqPmSKOVK4QwzGg4csqUyJFMgAAAAAOgAAAAAIAACAAAACf/UG3QqStqkJucj0NLSm/BulV+Waws09KXTCx/pX9NhAAAAD2ncCaYOP3XH9KCTdrFzzNQAAAAGLxdy0rvXH+mDzR2RsWlD3vj9WNWEK8Rz9ewQ9AZoJU4wu2j2yxuCyiHNGcF8KxsUxMruMzLKoQfCTQaaD8yCI=</Password>
-    <Database>SteveTheTradeBotSample</Database>
-    <DisplayName>SteveTheTradeBotSample</DisplayName>
+    <Server>192.168.1.250</Server>
+    <Database>steve_the_trade_bot_prod</Database>
+    <UserName>sttb_prod</UserName>
+    <SqlSecurity>true</SqlSecurity>
+    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAAAtP4ZBCQIDPzDo2a5crzLdOk6849tdqjT+pXPc1GrBeAAAAAAOgAAAAAIAACAAAAAgQfg49zfj1DEoRDgdZZegKXOfP5Gciaq+Hxn6J6qOWSAAAABCZiZjCRBS1q6p28rH3Z7p4KXrDohziTx4ZSaxhMDTWkAAAAB/K+FUYvfBwvYysKWJh4cnAJqFk6pXmflg2CxYinI0wh3lbwZ7k4fIugQLjFaODym/ZmP6wz8IQuMP1lL+tCSO</Password>
+    <IsProduction>true</IsProduction>
     <DriverData>
+      <PreserveNumeric1>True</PreserveNumeric1>
       <EFProvider>Npgsql.EntityFrameworkCore.PostgreSQL</EFProvider>
       <UseNativeScaffolder>True</UseNativeScaffolder>
-      <Port>15432</Port>
     </DriverData>
   </Connection>
   <Reference Relative="..\..\src\SteveTheTradeBot.Cmd\bin\Debug\netcoreapp3.1\SteveTheTradeBot.Core.dll">D:\Work\Home\SteveTheTradeBot\src\SteveTheTradeBot.Cmd\bin\Debug\netcoreapp3.1\SteveTheTradeBot.Core.dll</Reference>
@@ -27,7 +28,7 @@
 void Main()
 {
 	//RemoveStrategy("8220e8f153be4abdaf66c35957b5e257");
-	//CheckRun();
+	CheckRun();
 	var strategies = Strategies.Where(x => !x.IsBackTest)
 	.ToList()
 	.Select(x => new
@@ -52,6 +53,7 @@ void Main()
 		RunningFor = (DateTime.Now.ToLocalTime() - x.CreateDate.ToLocalTime()).Days + " days",
 		LastRunAgo = (DateTime.Now.ToLocalTime() - x.LastDate.ToLocalTime()).Humanize(),
 		BoughtInAt = x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault(),
+		CurrentTradeProfit = x.TotalActiveTrades == 1 ? MovementPercent(x.LastClose, x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault()) : 0,
 		x.Status,
 		x.Id
 	})
@@ -64,7 +66,7 @@ void Main()
 	Values = strategies.Sum(x=>x.Value),
 	Profit = strategies.Average(x=>x.PercentProfit)
 	}.Dump();
-	var summary = strategies.Select(x => new {x.Reference,x.PercentMarketProfit,x.PercentProfit,x.RunningFor, x.TotalActiveTrades , x.TotalNumberOfTrades , x.LargestLoss,x.LargestProfit, x.AverageTradesPerMonth,x.PercentOfProfitableTrades});
+	var summary = strategies.Select(x => new {x.Reference,x.PercentMarketProfit,x.PercentProfit,x.RunningFor, x.TotalActiveTrades , x.TotalNumberOfTrades , x.LargestLoss,x.LargestProfit, x.AverageTradesPerMonth,x.PercentOfProfitableTrades, x.CurrentTradeProfit});
 	summary.OrderByDescending(x=>x.PercentProfit).Take(5).Dump("Best performers");
 	summary.OrderBy(x=>x.PercentProfit).Take(5).Dump("Worst performers");
 	strategies.Dump("strategies");
@@ -109,6 +111,13 @@ public void CheckRun() {
 
 
 }
+
+public static decimal MovementPercent(decimal currentValue, decimal fromValue, int decimals = 3)
+{
+	if (fromValue == 0) fromValue = 0.00001m;
+	return Math.Round((currentValue - fromValue) / fromValue * 100, decimals);
+}
+
 public T CastIt<T>(object value) {
 	var x = JsonSerializer.Serialize(value);
 	return JsonSerializer.Deserialize<T>(x);

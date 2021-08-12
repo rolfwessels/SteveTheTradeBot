@@ -13,7 +13,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
         Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request);
         Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest simpleOrderRequest);
         Task CancelOrder(string brokerOrderId, string pair);
-        Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext);
+        Task<bool> SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext);
     }
 
     

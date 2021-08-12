@@ -96,15 +96,19 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             await Task.Delay(1000);
         }
 
-        public async Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        public async Task<bool> SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
             var activeTrades = instance.ActiveTrade();
             var validStopLoss = activeTrades?.GetValidStopLoss();
             if (validStopLoss != null && strategyContext.LatestQuote().Low < validStopLoss.OrderPrice)
             {
                 await BrokerUtils.ApplyOrderResultToStrategy(strategyContext, activeTrades, validStopLoss, 0.001m);
+                return true;
             }
+
+            return false;
         }
+
 
         #endregion
     }

@@ -102,24 +102,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
             var expected = 49;
             await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
-                // ╔═════════════════════╦══════════╦═══════════════╦══════════╦═══════════╦════════╦═══════════════╗                     
-                // ║ StartDate           ║ BuyValue ║ Quantity      ║ BuyPrice ║ SellPrice ║ Profit ║ FeeAmount     ║                     
-                // ╠═════════════════════╬══════════╬═══════════════╬══════════╬═══════════╬════════╬═══════════════╣                     
-                // ║ 2021/02/01 13:50:00 ║ 1000     ║ 0.00190285524 ║ 525001   ║ 598001    ║ 13.677 ║ 2.14000090476 ║                     
-                // ║ 2021/02/09 09:30:00 ║ 1136.77  ║ 0.00159993846 ║ 709800   ║ 688001    ║ -3.265 ║ 2.23677309200 ║                     
-                // ║ 2021/02/11 20:50:00 ║ 1099.66  ║ 0.00154784061 ║ 709736   ║ 855001    ║ 20.227 ║ 2.41965786104 ║                     
-                // ║ 2021/02/24 13:15:00 ║ 1322.09  ║ 0.00170155674 ║ 776210   ║ 748072    ║ -3.817 ║ 2.59208744460 ║                     
-                // ║ 2021/02/25 17:10:00 ║ 1271.62  ║ 0.00164971863 ║ 770038   ║ 740101    ║ -4.080 ║ 2.49161765206 ║                     
-                // ╚═════════════════════╩══════════╩═══════════════╩══════════╩═══════════╩════════╩═══════════════╝
-                // ╔═════════════════════╦══════════╦═══════════════╦══════════╦═══════════╦════════╦═══════════════╗                     
-                // ║ StartDate           ║ BuyValue ║ Quantity      ║ BuyPrice ║ SellPrice ║ Profit ║ FeeAmount     ║                     
-                // ╠═════════════════════╬══════════╬═══════════════╬══════════╬═══════════╬════════╬═══════════════╣                     
-                // ║ 2021/02/01 13:50:00 ║ 1000     ║ 0.00190285524 ║ 525001   ║ 592799.04 ║ 12.575 ║ 2.13000090476 ║                     
-                // ║ 2021/02/09 09:30:00 ║ 1125.75  ║ 0.00158442399 ║ 709800   ║ 681408.00 ║ -4.288 ║ 2.20574989800 ║                     
-                // ║ 2021/02/11 20:50:00 ║ 1077.48  ║ 0.00151662186 ║ 709736   ║ 845760.00 ║ 18.809 ║ 2.35747861104 ║                     
-                // ║ 2021/02/24 13:15:00 ║ 1280.14  ║ 0.00164757078 ║ 776210   ║ 745161.60 ║ -4.288 ║ 2.51014105620 ║                     
-                // ║ 2021/02/25 17:10:00 ║ 1225.25  ║ 0.00158956884 ║ 770038   ║ 739236.48 ║ -4.288 ║ 2.40525366408 ║                     
-                // ╚═════════════════════╩══════════╩═══════════════╩══════════╩═══════════╩════════╩═══════════════╝
         }
 
 
@@ -146,6 +128,20 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
             var expected = 51;
             await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+
+        [Test]
+        [Timeout(240000)]
+        [Explicit]
+        public async Task Run_GivenRSiStrategy_ShouldOver2YearsShouldMake400PlusProfit()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2019-11-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 470; // 209
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -205,7 +201,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
             var backTestResult = await BuildBackTestResult(fromDate, to, getStrategy, currencyPair, size);
             // assert
-            Console.Out.WriteLine($"{fromDate.ToLocalTime()} to {to.ToLocalTime()} {(to-fromDate).ToShort()} ");
+            Console.Out.WriteLine($"{fromDate.ToLocalTime()} to {to} {(to-fromDate).ToShort()} ");
             backTestResult.Print();
 
             backTestResult.PercentProfit.Should().BeGreaterThan(expected);

@@ -16,7 +16,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly int _buySignal;
         private readonly decimal _buy200rocsma;
 
-        public RSiStrategy() : base(0.96m, 1.03m)
+        public RSiStrategy() : base(0.94m, 1.05m)
         {
             _buySignal = 30;
             _buy200rocsma = 0.5m;

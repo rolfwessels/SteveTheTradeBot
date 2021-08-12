@@ -39,14 +39,16 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             return Task.CompletedTask;
         }
 
-        public async Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        public async Task<bool> SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
             var activeTrades = instance.ActiveTrade();
             var validStopLoss = activeTrades?.GetValidStopLoss();
             if (validStopLoss != null && strategyContext.LatestQuote().Low <= validStopLoss.OrderPrice)
             {
                 await BrokerUtils.ApplyOrderResultToStrategy(strategyContext, activeTrades, validStopLoss, BuyFeePercent);
+                return true;
             }
+            return false;
         }
 
         private async Task<decimal> GetAskPrice(DateTime requestRequestDate, Side side, string currencyPair)

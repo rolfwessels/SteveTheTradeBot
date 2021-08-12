@@ -117,7 +117,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
             await ExecuteAsync<IdResponse>(request);
         }
 
-        public async Task SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
+        public async Task<bool> SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext)
         {
             var activeTrades = instance.ActiveTrade();
             var validStopLoss = activeTrades?.GetValidStopLoss();
@@ -126,7 +126,7 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                 var orderStatusResponse = await OrderStatus(instance.Pair, validStopLoss.Id);
                 if (orderStatusResponse.OrderStatusType == "Active")
                 {
-                    return;
+                    return false;
                 }
                 var orderStatusById = await OrderHistorySummary(validStopLoss.Id);
                 await BrokerUtils.ApplyOrderResultToStrategy(strategyContext, activeTrades, validStopLoss, orderStatusById);
@@ -135,8 +135,11 @@ namespace SteveTheTradeBot.Core.Components.ThirdParty.Valr
                 {
                     await strategyContext.Messenger.Send(PostSlackMessage.From($"{instance.Name} had a stop loss which now has status of `{validStopLoss.OrderStatusType}`"));
                 }
+                return true;
             }
-            
+
+            return false;
+
         }
 
         public async Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request)

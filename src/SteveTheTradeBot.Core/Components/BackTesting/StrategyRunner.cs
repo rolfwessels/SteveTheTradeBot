@@ -76,8 +76,11 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         public async Task Process(StrategyInstance instance, StrategyContext strategyContext, IStrategy strategy)
         {
             PreRun(instance, strategyContext.ByMinute.Last());
-            await strategyContext.Broker.SyncOrderStatus(instance, strategyContext);
-            await strategy.DataReceived(strategyContext);
+            var syncOrderStatus = await strategyContext.Broker.SyncOrderStatus(instance, strategyContext);
+            if (!syncOrderStatus)
+            {
+                await strategy.DataReceived(strategyContext);
+            }
             PostRun(instance, strategyContext.ByMinute.Last());
         }
 
