@@ -92,6 +92,19 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         }
 
 
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_RSiStrategy()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 39;
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+
 
         [Test]
         [Timeout(240000)]
@@ -115,6 +128,20 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
             var expected = 51;
             await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+
+        [Test]
+        [Timeout(240000)]
+        [Explicit]
+        public async Task Run_GivenRSiStrategy_ShouldOver2YearsShouldMake400PlusProfit()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2019-11-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 470; // 209
+            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -174,7 +201,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         {
             var backTestResult = await BuildBackTestResult(fromDate, to, getStrategy, currencyPair, size);
             // assert
-
+            Console.Out.WriteLine($"{fromDate.ToLocalTime()} to {to} {(to-fromDate).ToShort()} ");
             backTestResult.Print();
 
             backTestResult.PercentProfit.Should().BeGreaterThan(expected);

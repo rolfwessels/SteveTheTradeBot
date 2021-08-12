@@ -44,7 +44,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
-                    ResetStops(currentTrade, data);
+                    await ResetStops(data, currentTrade.Close);
                     data.StrategyInstance.Status =
                         $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {StopLoss(data)}]";
                 }
@@ -56,7 +56,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                await RaiseStopLoss(data, currentTrade, activeTrade);
+                await FollowClosingStrategy(data, currentTrade, activeTrade);
             }
         }
 

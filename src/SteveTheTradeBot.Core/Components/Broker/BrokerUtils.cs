@@ -122,7 +122,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
                 Total = receivedAmount,
                 FeeCurrency = order.FeeCurrency,
                 FailedReason = "",
-            }.Dump("");
+            };
             await ApplyOrderResultToStrategy(strategyContext, trade, order, orderStatusById);
         }
 

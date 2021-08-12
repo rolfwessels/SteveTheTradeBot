@@ -5,6 +5,7 @@ using AutoMapper.Internal;
 using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
@@ -20,7 +21,6 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public RSiMslStrategy() : base(0.96m, 1.05m)
         {
-           
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }
@@ -38,9 +38,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
-                    ResetStops(currentTrade, data);
+                    var resetStops = await ResetStops(data, currentTrade.Close);
                     data.StrategyInstance.Status =
-                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {StopLoss(data)}]";
+                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {resetStops}]";
                 }
                 else
                 {
@@ -50,7 +50,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                await RaiseStopLoss(data, currentTrade, activeTrade);
+                await FollowClosingStrategy(data, currentTrade, activeTrade);
             }
         }
 
