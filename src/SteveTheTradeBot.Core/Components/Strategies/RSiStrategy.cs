@@ -1,11 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Framework.Slack;
 using SteveTheTradeBot.Dal.Models.Trades;
 

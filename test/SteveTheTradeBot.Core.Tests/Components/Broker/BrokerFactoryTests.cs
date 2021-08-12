@@ -10,14 +10,22 @@ namespace SteveTheTradeBot.Core.Tests.Components.Broker
     public class BrokerFactoryTests
     {
         [Test]
-        public void GetBroker_GivenStandardSettings_ShouldReturnValrBrokerPaperTradingApi()
+        public void GetBroker_GivenValrBrokerPaperTradingApi_ShouldReturnValrBrokerApi()
         {
             // arrange
-            var brokerApi = new BrokerFactory(ValrSettings.Instance).GetBroker();
+            var keyValuePairs = new Dictionary<string, string> {
+                {"Valr:EncryptionKey", "ValrBrokerApi"},
+                {"Valr:ApiName", "ValrBrokerPaperTradingApi"}
+            };
+            var configurationRoot = new ConfigurationBuilder()
+                .AddInMemoryCollection(keyValuePairs).Build();
+            var settings = new ValrSettings(configurationRoot);
             // action
-            brokerApi.GetType().Name.Should().Be("ValrBrokerPaperTradingApi");
+            var brokerApi = new BrokerFactory(settings).GetBroker();
             // assert
+            brokerApi.GetType().Name.Should().Be("ValrBrokerPaperTradingApi");
         }
+
 
         [Test]
         public void GetBroker_GivenValrBrokerApi_ShouldReturnValrBrokerApi()
