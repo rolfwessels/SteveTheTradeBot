@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BetterConsoleTables;
 using SteveTheTradeBot.Dal.Models.Trades;
-using SteveTheTradeBotML.Model;
 
 namespace SteveTheTradeBot.Core.Utils
 {
@@ -42,6 +41,7 @@ namespace SteveTheTradeBot.Core.Utils
         public static void Print(this StrategyInstance backTestResult)
         {
             Console.Out.WriteLine("Reference: " + backTestResult.Reference);
+            Console.Out.WriteLine("CurrentQuoteAmount: " + backTestResult.CurrentQuoteAmount);
             Console.Out.WriteLine("BalanceMoved: " + backTestResult.PercentProfit);
             Console.Out.WriteLine("MarketMoved: " + backTestResult.PercentMarketProfit);
             Console.Out.WriteLine("Trades: " + backTestResult.TotalNumberOfTrades);

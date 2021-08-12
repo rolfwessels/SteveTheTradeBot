@@ -1,19 +1,18 @@
 <Query Kind="Program">
   <Connection>
-    <ID>59553889-9cb7-45f9-a747-6a218e67e869</ID>
+    <ID>18641041-a990-4c4d-b2dd-334372ce0522</ID>
     <NamingServiceVersion>2</NamingServiceVersion>
     <Persist>true</Persist>
     <Driver Assembly="(internal)" PublicKeyToken="no-strong-name">LINQPad.Drivers.EFCore.DynamicDriver</Driver>
-    <Server>192.168.1.250</Server>
-    <Database>steve_the_trade_bot_prod</Database>
-    <UserName>sttb_prod</UserName>
-    <SqlSecurity>true</SqlSecurity>
-    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAAAtP4ZBCQIDPzDo2a5crzLdOk6849tdqjT+pXPc1GrBeAAAAAAOgAAAAAIAACAAAAAgQfg49zfj1DEoRDgdZZegKXOfP5Gciaq+Hxn6J6qOWSAAAABCZiZjCRBS1q6p28rH3Z7p4KXrDohziTx4ZSaxhMDTWkAAAAB/K+FUYvfBwvYysKWJh4cnAJqFk6pXmflg2CxYinI0wh3lbwZ7k4fIugQLjFaODym/ZmP6wz8IQuMP1lL+tCSO</Password>
-    <IsProduction>true</IsProduction>
+    <Server>localhost</Server>
+    <UserName>postgres</UserName>
+    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAANRiZPWt3i0eTcfnz8b/cSwAAAAACAAAAAAAQZgAAAAEAACAAAAAzRGQtPIz0fWP4ZcuVKDqPmSKOVK4QwzGg4csqUyJFMgAAAAAOgAAAAAIAACAAAACf/UG3QqStqkJucj0NLSm/BulV+Waws09KXTCx/pX9NhAAAAD2ncCaYOP3XH9KCTdrFzzNQAAAAGLxdy0rvXH+mDzR2RsWlD3vj9WNWEK8Rz9ewQ9AZoJU4wu2j2yxuCyiHNGcF8KxsUxMruMzLKoQfCTQaaD8yCI=</Password>
+    <Database>SteveTheTradeBotSample</Database>
+    <DisplayName>SteveTheTradeBotSample</DisplayName>
     <DriverData>
-      <PreserveNumeric1>True</PreserveNumeric1>
       <EFProvider>Npgsql.EntityFrameworkCore.PostgreSQL</EFProvider>
       <UseNativeScaffolder>True</UseNativeScaffolder>
+      <Port>15432</Port>
     </DriverData>
   </Connection>
   <Reference Relative="..\..\src\SteveTheTradeBot.Cmd\bin\Debug\netcoreapp3.1\SteveTheTradeBot.Core.dll">D:\Work\Home\SteveTheTradeBot\src\SteveTheTradeBot.Cmd\bin\Debug\netcoreapp3.1\SteveTheTradeBot.Core.dll</Reference>
@@ -28,7 +27,7 @@
 void Main()
 {
 	//RemoveStrategy("8220e8f153be4abdaf66c35957b5e257");
-	CheckRun();
+	//CheckRun();
 	var strategies = Strategies.Where(x => !x.IsBackTest)
 	.ToList()
 	.Select(x => new
@@ -76,6 +75,7 @@ void Main()
 public void RemoveStrategy(string id)
 {
 	var strategies = Strategies.Where(x => x.Id == id).ToList();
+	//strategies = Strategies.Where(x => x.IsBackTest).ToList();
 	var trades = Trades.Where(x => strategies.Select(r => r.Id).Contains(x.StrategyInstanceId)).ToList();
 	var tradeOrders = TradeOrders.Where(x => trades.Select(r => r.Id).Contains(x.StrategyTradeId)).ToList();
 	$"Found {strategies.Count} stategy with {trades.Count} trades and {tradeOrders.Count} trade orders".Dump("Confirm by typing yes!");
