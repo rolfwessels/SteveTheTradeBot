@@ -8,44 +8,47 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public abstract class RaiseStopLossOutStrategyBase : BaseStrategy
+    public class RaiseStopLossOutCloseSignal : ICloseSignal
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         protected decimal _initialStopRisk;
         protected decimal _moveProfitPercent;
 
-        protected RaiseStopLossOutStrategyBase(decimal initialStopRisk, decimal moveProfitPercent)
+        public RaiseStopLossOutCloseSignal(decimal initialStopRisk, decimal moveProfitPercent)
         {
             _initialStopRisk = initialStopRisk;
             _moveProfitPercent = moveProfitPercent;
         }
 
-        protected async Task<decimal> SetFirstStopLossFromPrice(StrategyContext data, decimal strategyTradeBuyPrice)
+        public async Task<decimal> Initialize(StrategyContext data, decimal boughtAtPrice,
+            BaseStrategy strategy)
         {
-            return await ResetStops(data, strategyTradeBuyPrice);
+            return await ResetStops(data, boughtAtPrice);
         }
 
-        protected async Task FollowClosingStrategy(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade)
+        public async Task DetectClose(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade, BaseStrategy strategy)
         {
-            if (currentTrade.Close > await MoveProfit(data))
+            var moveProfit = await MoveProfit(data);
+            var stopLoss = await StopLoss(data);
+            if (currentTrade.Close > moveProfit)
             {
-                var oldStopLoss = await StopLoss(data);
+                var oldStopLoss = stopLoss;
                 var newStopLoss = await ResetStops(data, currentTrade.Close);
                 data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} by {TradeUtils.MovementPercent(newStopLoss, oldStopLoss.GetValueOrDefault())}%";
                 await data.Messenger.Send(
                     $"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:");
             }
-            else if (currentTrade.Close <= await StopLoss(data))
+            else if (currentTrade.Close <= stopLoss)
             {
                 _log.Information(
                     $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} ");
 
-                await Sell(data, activeTrade);
+                await strategy.Sell(data, activeTrade);
                 data.StrategyInstance.Status = $"Sold! {activeTrade.SellPrice} at profit {activeTrade.Profit}";
             }
             else
             {
-                data.StrategyInstance.Status = $"Waiting for price above {MoveProfit(data)} or stop loss {StopLoss(data)}";
+                data.StrategyInstance.Status = $"Waiting for price above {moveProfit} or stop loss {stopLoss}";
             }
         }
 

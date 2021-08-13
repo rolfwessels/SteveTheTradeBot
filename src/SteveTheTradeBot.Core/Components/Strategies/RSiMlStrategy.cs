@@ -11,19 +11,20 @@ using SteveTheTradeBot.ML.Model;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RSiMlStrategy : RaiseStopLossOutStrategyBase
+    public class RSiMlStrategy : BaseStrategy
     {
         public const string Desc = nameof(RSiMlStrategy);
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly int _buySignal;
         private readonly int _quotesToCheckRsi;
         private readonly ConsumeModel _consumeModel;
+        private readonly ICloseSignal _closeSignal;
 
 
-        public RSiMlStrategy() : base(0.96m, 1.05m)
+        public RSiMlStrategy() 
         {
+            _closeSignal = new RaiseStopLossOutCloseSignal(0.96m, 1.05m);
             _buySignal = 30;
             _quotesToCheckRsi = 10;
             _consumeModel = new ConsumeModel(@"C:\temp\MLModel.zip");
@@ -44,9 +45,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
-                    await ResetStops(data, currentTrade.Close);
+                    var stopLoss = await _closeSignal.Initialize(data, currentTrade.Close,this);
                     data.StrategyInstance.Status =
-                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {StopLoss(data)}]";
+                        $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {stopLoss}]";
                 }
                 else
                 {
@@ -56,7 +57,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                await FollowClosingStrategy(data, currentTrade, activeTrade);
+                await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
             }
         }
 

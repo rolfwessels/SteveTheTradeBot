@@ -1,14 +1,13 @@
 <Query Kind="Program">
   <Connection>
-    <ID>59553889-9cb7-45f9-a747-6a218e67e869</ID>
+    <ID>a366774d-8d24-465f-a121-d2144bef0089</ID>
     <NamingServiceVersion>2</NamingServiceVersion>
     <Persist>true</Persist>
     <Driver Assembly="(internal)" PublicKeyToken="no-strong-name">LINQPad.Drivers.EFCore.DynamicDriver</Driver>
     <Server>192.168.1.250</Server>
-    <Database>steve_the_trade_bot_prod</Database>
-    <UserName>sttb_prod</UserName>
-    <SqlSecurity>true</SqlSecurity>
-    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAAAtP4ZBCQIDPzDo2a5crzLdOk6849tdqjT+pXPc1GrBeAAAAAAOgAAAAAIAACAAAAAgQfg49zfj1DEoRDgdZZegKXOfP5Gciaq+Hxn6J6qOWSAAAABCZiZjCRBS1q6p28rH3Z7p4KXrDohziTx4ZSaxhMDTWkAAAAB/K+FUYvfBwvYysKWJh4cnAJqFk6pXmflg2CxYinI0wh3lbwZ7k4fIugQLjFaODym/ZmP6wz8IQuMP1lL+tCSO</Password>
+    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAABfJWr5G1GsTK2MSO61f/U5lj5E3VC0+FKcn4G3WsQJdwAAAAAOgAAAAAIAACAAAADAuSEP2ohkFxjpIIDrhUJxPkX+1FkYDoeujkjMPXns0SAAAADL2MhnaJjj+jQ9pu6wGxZbxsEA9tzItxtMjImUNA25DEAAAABJ/TnKZ/k8iH9E8YQhK8U8Ai8s6szMuM1vpnoW4mbLIE6jCIR/YJeLabgQxgzp/9WxSZEOaeEMqRKjUjm1cYvm</Password>
+    <UserName>postgres</UserName>
+    <Database>steve_the_trade_bot_staging</Database>
     <IsProduction>true</IsProduction>
     <DriverData>
       <PreserveNumeric1>True</PreserveNumeric1>

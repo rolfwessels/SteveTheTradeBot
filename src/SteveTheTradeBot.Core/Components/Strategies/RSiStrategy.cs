@@ -7,7 +7,7 @@ using SteveTheTradeBot.Core.Components.BackTesting;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RSiStrategy : FollowStopLossOutStrategyBase
+    public class RSiStrategy : BaseStrategy
     {
         public const string Desc = "SimpleRsi";
 
@@ -15,9 +15,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         
         private readonly int _buySignal;
         private readonly decimal _buy200rocsma;
+        private readonly ICloseSignal _closeSignal;
 
-        public RSiStrategy() : base(0.94m, 1.05m)
+        public RSiStrategy() 
         {
+            _closeSignal = new FollowStopLossOutCloseSignal(0.94m, 1.05m);
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }
@@ -36,7 +38,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{rsiResults} Rsi:{roc200sma.Value}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
-                    var lossAmount = await SetFirstStopLossFromPrice(data, strategyTrade.BuyPrice);
+                    var lossAmount = await _closeSignal.Initialize(data, strategyTrade.BuyPrice,this);
                     data.StrategyInstance.Status =
                         $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {lossAmount}]";
                 }
@@ -48,7 +50,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                await FollowClosingStrategy(data, currentTrade, activeTrade);
+                await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
             }
         }
 

@@ -79,5 +79,12 @@ namespace SteveTheTradeBot.Dal.Models.Trades
             return Orders.FirstOrDefault(x =>
                 x.OrderType == OrderTypeStopLoss && x.OrderStatusType == OrderStatusTypes.Placed);
         }
+
+        public string ToString(StrategyInstance forBackTest)
+        {
+            if (IsActive) 
+                return $"Bought {Amount.From(BuyQuantity, forBackTest.Pair.BaseCurrency())} at {Amount.From(BuyPrice, forBackTest.Pair.QuoteCurrency())} for {Amount.From(BuyValue, forBackTest.Pair.QuoteCurrency())} (Fee {Amount.From(FeeAmount,FeeCurrency)})";
+            return "";
+        }
     }
 }

@@ -8,7 +8,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
 {
     public static class ParameterStoreHelper
     {
-        public static async Task<decimal?> Get(this IParamsStoreSimple data, string key, decimal? value)
+        public static async Task<decimal> Get(this IParamsStoreSimple data, string key, decimal value)
         {
             var get = await data.Get(key, null);    
             if (decimal.TryParse(get, out var result))
