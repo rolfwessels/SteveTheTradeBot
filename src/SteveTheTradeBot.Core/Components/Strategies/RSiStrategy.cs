@@ -19,7 +19,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public RSiStrategy() 
         {
-            _closeSignal = new FollowStopLossOutCloseSignal(0.94m);
+            _closeSignal = new RaiseStopLossCloseSignal(0.94m);
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }

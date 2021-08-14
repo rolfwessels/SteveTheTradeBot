@@ -8,13 +8,13 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RaiseStopLossOutCloseSignal : ICloseSignal
+    public class RaiseManualStopLossCloseSignal : ICloseSignal
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         protected decimal _initialStopRisk;
         protected decimal _moveProfitPercent;
 
-        public RaiseStopLossOutCloseSignal(decimal initialStopRisk= 0.96m, decimal moveProfitPercent = 1.05m)
+        public RaiseManualStopLossCloseSignal(decimal initialStopRisk= 0.96m, decimal moveProfitPercent = 1.05m)
         {
             _initialStopRisk = initialStopRisk;
             _moveProfitPercent = moveProfitPercent;
@@ -42,9 +42,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 _log.Information(
                     $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} ");
-
                 await strategy.Sell(data, activeTrade);
-                data.StrategyInstance.Status = $"Sold! {activeTrade.SellPrice} at profit {activeTrade.Profit}";
+                data.StrategyInstance.Status = $"Sold! {activeTrade}";
             }
             else
             {
@@ -57,7 +56,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             if (setValue == null)
             {
                 var moveProfitPercent = data.LatestQuote().Close * _moveProfitPercent;
-                return await data.Get(StrategyProperty.UpdateStopLossAt, await data.Get("MoveProfit", moveProfitPercent));
+                return await data.Get(StrategyProperty.UpdateStopLossAt, moveProfitPercent);
             }
             await data.Set(StrategyProperty.UpdateStopLossAt, setValue.Value);
             return setValue;
@@ -76,10 +75,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         protected async Task<decimal> ResetStops(StrategyContext data, decimal currentTradeClose)
         {
-            var initialStopRisk = currentTradeClose * _initialStopRisk;
-            await StopLoss(data, initialStopRisk);
+            await StopLoss(data, currentTradeClose * _initialStopRisk);
             await UpdateStopLossAt(data, currentTradeClose * _moveProfitPercent);
-            return initialStopRisk;
+            return currentTradeClose * _initialStopRisk;
         }
     }
 }

@@ -9,13 +9,13 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class FollowStopLossOutCloseSignal : ICloseSignal
+    public class RaiseStopLossCloseSignal : ICloseSignal
     {
         private readonly decimal _initialStopRisk;
         private readonly decimal _moveProfitPercent;
         private readonly decimal _secondStopRisk;
 
-        public FollowStopLossOutCloseSignal(decimal initialStopRisk = 0.96m, decimal moveProfitPercent = 1.05m)
+        public RaiseStopLossCloseSignal(decimal initialStopRisk = 0.96m, decimal moveProfitPercent = 1.05m)
         {
             _initialStopRisk = initialStopRisk;
             _secondStopRisk = initialStopRisk;
@@ -23,9 +23,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         }
 
         
-        private async Task<decimal> GetMoveProfit(StrategyTrade activeTrade, StrategyContext data)
+        private async Task<decimal> GetUpdateStopLossAt(StrategyTrade activeTrade, StrategyContext data)
         {
-            var movePercent = await data.Get(StrategyProperty.UpdateStopLossAt, await data.Get("movePercent", 0));
+            var movePercent = await data.Get(StrategyProperty.UpdateStopLossAt,0);
             if (movePercent != 0) return movePercent;
             var validStopLoss = activeTrade.GetValidStopLoss();
             if (validStopLoss == null) return activeTrade.BuyPrice;
@@ -49,8 +49,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         public async Task DetectClose(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade,
             BaseStrategy strategy)
         {
-            var moveProfit = await GetMoveProfit(activeTrade, data);
-            if (currentTrade.Close > moveProfit)
+            var updateStopLossAt = await GetUpdateStopLossAt(activeTrade, data);
+            if (currentTrade.Close > updateStopLossAt)
             {
                 var oldStopLoss = activeTrade.GetValidStopLoss().OrderPrice;
                 var newLossAmount = currentTrade.Close * _secondStopRisk;
@@ -64,7 +64,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             else
             {
                 data.StrategyInstance.Status =
-                    $"Waiting for price above {moveProfit} or stop loss {activeTrade.GetValidStopLoss()?.OrderPrice}]";
+                    $"Waiting for price above {updateStopLossAt} or stop loss {activeTrade.GetValidStopLoss()?.OrderPrice}]";
             }
         }
 

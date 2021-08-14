@@ -22,7 +22,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public RSiMslStrategy()
         {
-            _closeSignal = new RaiseStopLossOutCloseSignal(0.96m, 1.05m);
+            _closeSignal = new RaiseManualStopLossCloseSignal(0.96m, 1.05m);
             _buySignal = 30;
             _buy200rocsma = 0.5m;
         }

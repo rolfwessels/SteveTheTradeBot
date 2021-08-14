@@ -195,8 +195,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // arrange
             Setup();
             var from = DateTime.Parse("2021/08/10 10:13:52", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-            //var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-            var to = DateTime.UtcNow;
+            var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
+            
             var expected = 1;
             await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
