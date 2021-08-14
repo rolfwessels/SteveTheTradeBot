@@ -54,25 +54,23 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         private async Task<decimal?> MoveProfit(StrategyContext data, decimal? setValue = null)
         {
-            var key = "MoveProfit";
             if (setValue == null)
             {
                 var moveProfitPercent = data.LatestQuote().Close * _moveProfitPercent;
-                return await data.Get(key, moveProfitPercent);
+                return await data.Get(StrategyProperty.UpdateStopLossAt, await data.Get("MoveProfit", moveProfitPercent));
             }
-            await data.Set(key, setValue.Value);
+            await data.Set(StrategyProperty.UpdateStopLossAt, setValue.Value);
             return setValue;
         }
 
         protected async Task<decimal?> StopLoss(StrategyContext data, decimal? setValue = null)
         {
-            var key = "StopLoss";
             if (setValue == null)
             {
                 var moveProfitPercent = data.LatestQuote().Close * _initialStopRisk;
-                return await data.Get(key, moveProfitPercent);
+                return await data.Get(StrategyProperty.StopLoss, moveProfitPercent);
             }
-            await data.Set(key, setValue.Value);
+            await data.Set(StrategyProperty.StopLoss, setValue.Value);
             return setValue;
         }
 

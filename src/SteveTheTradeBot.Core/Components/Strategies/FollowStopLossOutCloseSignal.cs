@@ -15,7 +15,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly decimal _moveProfitPercent;
         private readonly decimal _secondStopRisk;
 
-        public FollowStopLossOutCloseSignal(decimal initialStopRisk, decimal moveProfitPercent)
+        public FollowStopLossOutCloseSignal(decimal initialStopRisk = 0.96m, decimal moveProfitPercent = 1.05m)
         {
             _initialStopRisk = initialStopRisk;
             _secondStopRisk = initialStopRisk;
@@ -25,7 +25,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         
         private async Task<decimal> GetMoveProfit(StrategyTrade activeTrade, StrategyContext data)
         {
-            var movePercent = await data.Get("movePercent", 0);
+            var movePercent = await data.Get(StrategyProperty.UpdateStopLossAt, await data.Get("movePercent", 0));
             if (movePercent != 0) return movePercent;
             var validStopLoss = activeTrade.GetValidStopLoss();
             if (validStopLoss == null) return activeTrade.BuyPrice;
@@ -39,9 +39,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         public async Task<decimal> Initialize(StrategyContext data, decimal boughtAtPrice, BaseStrategy strategy)
         {
             var lossAmount = boughtAtPrice * _initialStopRisk;
-            await data.Set("currentStopLoss", lossAmount);
-            await data.Set("movePercent", boughtAtPrice * _moveProfitPercent);
-
+            await data.Set(StrategyProperty.StopLoss, lossAmount);
+            await data.Set(StrategyProperty.UpdateStopLossAt, boughtAtPrice * _moveProfitPercent);
             await strategy.SetStopLoss(data, lossAmount);
             await data.Messenger.Send(new PostSlackMessage() { Message = $"{data.StrategyInstance.Name} set stop loss to {lossAmount}." });
             return lossAmount;
@@ -55,8 +54,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 var oldStopLoss = activeTrade.GetValidStopLoss().OrderPrice;
                 var newLossAmount = currentTrade.Close * _secondStopRisk;
-                await data.Set("movePercent", currentTrade.Close * _moveProfitPercent);
-                await data.Set("currentStopLoss", newLossAmount);
+                await data.Set(StrategyProperty.UpdateStopLossAt, currentTrade.Close * _moveProfitPercent);
+                await data.Set(StrategyProperty.StopLoss, newLossAmount);
                 await strategy.SetStopLoss(data, newLossAmount);
                 data.StrategyInstance.Status = $"Update stop loss to {newLossAmount} by {TradeUtils.MovementPercent(newLossAmount, oldStopLoss)}%";
                 await data.Messenger.Send(

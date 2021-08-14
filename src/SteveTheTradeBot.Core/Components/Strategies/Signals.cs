@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using AutoMapper.Internal;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -27,17 +27,27 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public static class Macd
         {
-            public static List<TradeQuote> GetCrossed(IEnumerable<TradeQuote> takeLast)
+            public static List<TradeQuote> GetCrossedMacdOverSignal(IEnumerable<TradeQuote> takeLast)
+            {
+                return GetCrossed(takeLast, MacdValue, MacdSignal);
+            }
+            
+            public static List<TradeQuote> GetCrossedSignalOverMacd(IEnumerable<TradeQuote> takeLast)
+            {
+                return GetCrossed(takeLast, MacdSignal, MacdValue);
+            }
+
+            private static List<TradeQuote> GetCrossed(IEnumerable<TradeQuote> takeLast, string value, string overSignal)
             {
                 var tradeQuotes = takeLast.ToList();
                 var result = new List<TradeQuote>();
                 for (int i = 1; i < tradeQuotes.Count(); i++)
                 {
                     var prev = tradeQuotes[i - 1];
-                    var current = tradeQuotes[i ];
-                    if (prev.Metric.GetOrDefault(MacdValue) <= prev.Metric.GetOrDefault(MacdSignal))
+                    var current = tradeQuotes[i];
+                    if (prev.Metric.GetOrDefault(value) <= prev.Metric.GetOrDefault(overSignal))
                     {
-                        if (current.Metric.GetOrDefault(MacdValue) > current.Metric.GetOrDefault(MacdSignal))
+                        if (current.Metric.GetOrDefault(value) > current.Metric.GetOrDefault(overSignal))
                         {
                             result.Add(current);
                         }
@@ -45,6 +55,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 }
                 return result;
             }
+
 
             public static bool IsCrossedBelowZero(IEnumerable<TradeQuote> crossed)
             {
@@ -60,6 +71,47 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
         }
 
-        
+
+        public static decimal GetPullBack(IReadOnlyCollection<TradeQuote> dataByMinute, decimal boughtAtPrice =-1, decimal minRisk = 0.01m,
+            decimal maxRisk = 0.02m)
+        {
+            if (boughtAtPrice == -1) boughtAtPrice = dataByMinute.Last().Close;
+            var highest = dataByMinute.Select((x, i) => new {i, x}).OrderByDescending(x => x.x.High).First();
+            var lowest = dataByMinute.Skip(highest.i).OrderBy(x => x.Low).First();
+            var leastAmountOfRisk = (1m - minRisk) * boughtAtPrice;
+            var maxAmountOfRisk = (1m - maxRisk) * boughtAtPrice;
+            var stopLost = Math.Min(leastAmountOfRisk, Math.Max(lowest.Low, maxAmountOfRisk));
+            return stopLost;
+        }
+
+        public static bool IsPositiveTrend(IEnumerable<TradeQuote> values)
+        {
+            decimal lastValue = -1;
+            foreach (var value in values)
+            {
+                if (lastValue != -1 && value.Close <= lastValue)
+                {
+                    return false;
+                }
+
+                lastValue = value.Close;
+                
+            }
+
+            return true;
+        }
+
+        public static class Rsi
+        {
+            public static bool HasBuySignal(IEnumerable<TradeQuote> tradeQuotes, in int buySignal)
+            {
+                return MinRsi(tradeQuotes) <= buySignal;
+            }
+
+            public static decimal? MinRsi(IEnumerable<TradeQuote> tradeQuotes)
+            {
+                return tradeQuotes.Min(x => x.Metric.GetOrDefault("rsi14"));
+            }
+        }
     }
 }

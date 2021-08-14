@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -187,18 +188,31 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
+        [Test]
+        [Timeout(240000)]
+        public async Task Compare_MacdStrategy_ToRealTrade()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021/08/10 10:13:52", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal).AddDays(-5);
+            var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
+            //var to = DateTime.UtcNow;
+            var expected = 1;
+            await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
 
-        // [Test]
-        // [Timeout(240000)]
-        // public async Task Compare_RSiConfirmStrategy_ToRealTrade()
-        // {
-        //     // arrange
-        //     Setup();
-        //     var from = DateTime.Parse("2021/08/10 10:13:52", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-        //     var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-        //     var expected = 51;
-        //     await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
-        // }
+        [Test]
+        [Timeout(240000)]
+        public async Task Compare_RSiConfirmStrategy_ToRealTrade()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021/08/10 10:13:52", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
+            var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
+            //var to = DateTime.UtcNow;
+            var expected = 1;
+            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
 
 
         [Test]

@@ -23,7 +23,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public MacdStrategy()
         {
-            _closeSignal = new DynamicStopLossAndProfitCloseSignal();
+            //_closeSignal = new FollowStopLossOutCloseSignal(1 - 0.02m, 1 + 0.02m);
+            _closeSignal = new MacdCloseSignal();
         }
 
         public override async Task DataReceived(StrategyContext data)
@@ -34,13 +35,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
            if (activeTrade == null) 
             {
                 var tradeQuotes = data.ByMinute.TakeLast(4).ToArray();
-                var crossed = Signals.Macd.GetCrossed(tradeQuotes);
+                var crossed = Signals.Macd.GetCrossedMacdOverSignal(tradeQuotes);
                 var isCrossedBelowZero = Signals.Macd.IsCrossedBelowZero(crossed);
                 var isUpTrend = crossed.Any() && Signals.Ema.IsUpTrend(tradeQuotes.Last());
                 var shouldBuy = crossed.Any() && isCrossedBelowZero && isUpTrend;
                 if (shouldBuy)
                 {
-                    //PrintDebug(currentTrade, crossed);
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
                     var resetStops = await _closeSignal.Initialize(data, currentTrade.Close,this);
                     data.StrategyInstance.Status = $"{strategyTrade.ToString(data.StrategyInstance)}. Set stop loss at {resetStops}]";

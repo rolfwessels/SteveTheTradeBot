@@ -1,28 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using FluentAssertions;
 using NUnit.Framework;
-using Skender.Stock.Indicators;
-using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
-using SteveTheTradeBot.Core.Framework.MessageUtil;
-using SteveTheTradeBot.Core.Tests.Components.BackTesting;
-using SteveTheTradeBot.Core.Tests.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 {
-    public class DynamicStopLossAndProfitCloseSignalTests
+    public class DynamicStopLossAndProfitCloseSignalTests : SignalCloseTestBase
     {
         private DynamicStopLossAndProfitCloseSignal _sut;
-        private StrategyContext _strategyContext;
-        private FakeBroker _fakeBroker;
 
         [Test]
         public async Task Initialize_GivenLowerThenHighThenLow_ShouldPickLastLow()
@@ -31,7 +23,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000, 1100, 1230, 1200, 1100 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1120, fakeStrategy);
             // assert
@@ -48,11 +40,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000, 1100, 1230, 1200, 1100 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1120, fakeStrategy);
             // assert
-            var stopOrders = await _strategyContext.Get("Risk", 0m);
+            var stopOrders = await _strategyContext.Get(StrategyProperty.Risk, 0m);
             stopOrders.Should().Be(0.01818m);
         }
 
@@ -63,7 +55,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] {  1100, 1230, 1000, 1200, 1100 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] {  1100m, 1230, 1000, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1010, fakeStrategy);
             // assert
@@ -79,7 +71,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1100, 1230, 1000, 1200, 1100 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1100m, 1230m, 1000m, 1200m, 1100m }));
             // action
             await _sut.Initialize(_strategyContext, 1150, fakeStrategy);
             // assert
@@ -94,7 +86,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1170, 1170 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1170m, 1170m }));
             // action
             await _sut.Initialize(_strategyContext, 1150, fakeStrategy);
             // assert
@@ -109,12 +101,12 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] {1150}));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] {1150m}));
             await _sut.Initialize(_strategyContext, 1150, fakeStrategy);
             // action
             await _sut.DetectClose(
                 _strategyContext, 
-                BuildOrders(new[] {1150}).Last(), 
+                BuildOrders(new[] {1150m}).Last(), 
                 _strategyContext.ActiveTrade(),
                 fakeStrategy);
             // assert
@@ -128,13 +120,13 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var risk = await _strategyContext.Get("Risk", 0);
             risk.Should().Be(0.0101m);
-            var nextStopLoss = await _strategyContext.Get("NextStopLoss", 0);
+            var nextStopLoss = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0);
             nextStopLoss.Should().Be(1010.10m);
-            var currentTrade = BuildOrders(new[] { 1011 }).Last();
+            var currentTrade = BuildOrders(new[] { 1011m }).Last();
             // action
             await _sut.DetectClose(
                 _strategyContext,
@@ -153,11 +145,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150 }));
+            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var exitAt = await _strategyContext.Get("ExitAt", 0);
             exitAt.Should().Be(1030.30m);
-            var currentTrade = BuildOrders(new[] { (1031) }).Last();
+            var currentTrade = BuildOrders(new[] { (1031m) }).Last();
             // action
             await _sut.DetectClose(
                 _strategyContext,
@@ -170,30 +162,11 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             simpleOrderRequests.First().Side.Should().Be(Side.Sell);
         }
 
-        #region Private Methods
+        #region Overrides of SignalCloseTestBase
 
-        private IEnumerable<TradeQuote> BuildOrders(int[] values)
+        protected override void Setup()
         {
-            return values.Select((value, index) => new TradeQuote
-            {
-                Feed = "valr",
-                PeriodSize = PeriodSize.FiveMinutes,
-                Date = DateTime.Now.AddDays(-values.Length + index),
-                Open = value,
-                High = value,
-                Low = value,
-                Close = value,
-                Volume = index,
-                CurrencyPair = CurrencyPair.ETHZAR
-            });
-        }
-
-        private void Setup()
-        {
-            var forBackTest = StrategyInstance.ForBackTest("abc",CurrencyPair.XRPZAR,100);
-            var dynamicGraphs = new DynamicGraphsTests.FakeGraph();
-            _fakeBroker = new FakeBroker(new Messenger());
-            _strategyContext = new StrategyContext(dynamicGraphs, forBackTest,_fakeBroker, new Messenger(),new ParameterStore(TestTradePersistenceFactory.InMemoryDb));
+            base.Setup();
             _sut = new DynamicStopLossAndProfitCloseSignal();
         }
 

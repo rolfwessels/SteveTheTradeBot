@@ -32,6 +32,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public IBrokerApi Broker { get; }
         public IMessenger Messenger { get; }
+        
 
         public Task Set(string key, string value)
         {
