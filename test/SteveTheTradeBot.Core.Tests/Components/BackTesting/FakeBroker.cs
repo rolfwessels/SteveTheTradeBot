@@ -57,7 +57,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             {
                 var findByDate = await _tradeHistoryStore.FindByDate(currencyPair,requestRequestDate,
                     requestRequestDate.Add(TimeSpan.FromMinutes(5)), skip: 0, take: 1);
-                price = findByDate.Select(x => x.Price).Last();
+                price = findByDate.Select(x => x.Price).First();
             }
 
             return price;

@@ -14,12 +14,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         protected decimal _initialStopRisk;
         protected decimal _moveProfitPercent;
 
-        public RaiseStopLossOutCloseSignal(decimal initialStopRisk, decimal moveProfitPercent)
+        public RaiseStopLossOutCloseSignal(decimal initialStopRisk= 0.96m, decimal moveProfitPercent = 1.05m)
         {
             _initialStopRisk = initialStopRisk;
             _moveProfitPercent = moveProfitPercent;
         }
-
+        
         public async Task<decimal> Initialize(StrategyContext data, decimal boughtAtPrice,
             BaseStrategy strategy)
         {
@@ -28,9 +28,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public async Task DetectClose(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade, BaseStrategy strategy)
         {
-            var moveProfit = await MoveProfit(data);
+            var updateStopLossAt = await UpdateStopLossAt(data);
             var stopLoss = await StopLoss(data);
-            if (currentTrade.Close > moveProfit)
+            if (currentTrade.Close > updateStopLossAt)
             {
                 var oldStopLoss = stopLoss;
                 var newStopLoss = await ResetStops(data, currentTrade.Close);
@@ -48,11 +48,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
             else
             {
-                data.StrategyInstance.Status = $"Waiting for price above {moveProfit} or stop loss {stopLoss}";
+                data.StrategyInstance.Status = $"Waiting for price above {updateStopLossAt} or stop loss {stopLoss}";
             }
         }
 
-        private async Task<decimal?> MoveProfit(StrategyContext data, decimal? setValue = null)
+        private async Task<decimal?> UpdateStopLossAt(StrategyContext data, decimal? setValue = null)
         {
             if (setValue == null)
             {
@@ -78,7 +78,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             var initialStopRisk = currentTradeClose * _initialStopRisk;
             await StopLoss(data, initialStopRisk);
-            await MoveProfit(data, currentTradeClose * _moveProfitPercent);
+            await UpdateStopLossAt(data, currentTradeClose * _moveProfitPercent);
             return initialStopRisk;
         }
     }

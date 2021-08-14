@@ -62,9 +62,9 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         // public decimal CalmarRatio { get; set; }
         // public decimal RiskRewardRatio { get; set; }
 
-        public static StrategyInstance ForBackTest(string strategy, string pair, int amount = 1000)
+        public static StrategyInstance ForBackTest(string strategy, string pair, int amount = 1000, PeriodSize size = PeriodSize.FiveMinutes)
         {
-            var instance = From( strategy,  pair, amount, PeriodSize.FiveMinutes);
+            var instance = From( strategy,  pair, amount, size);
             instance.IsBackTest = true;
             instance.Reference += "_backtest";
             return instance;

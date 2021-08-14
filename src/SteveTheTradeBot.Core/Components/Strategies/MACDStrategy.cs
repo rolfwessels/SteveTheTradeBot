@@ -23,8 +23,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public MacdStrategy()
         {
-            //_closeSignal = new FollowStopLossOutCloseSignal(1 - 0.02m, 1 + 0.02m);
-            _closeSignal = new MacdCloseSignal();
+            _closeSignal = new RaiseStopLossOutCloseSignal(0.98m, 1.02m);
         }
 
         public override async Task DataReceived(StrategyContext data)

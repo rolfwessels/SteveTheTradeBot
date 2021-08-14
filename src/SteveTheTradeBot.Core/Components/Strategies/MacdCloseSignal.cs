@@ -32,6 +32,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 var isMacdSignalCrossingBack = Signals.Macd.GetCrossedSignalOverMacd(data.ByMinute.TakeLast(2)).Any();
                 var isUpTrend = Signals.Ema.IsUpTrend(data.ByMinute.Last());
+                
                 if (isMacdSignalCrossingBack && !isUpTrend)
                 {
                     await strategy.Sell(data, activeTrade);
