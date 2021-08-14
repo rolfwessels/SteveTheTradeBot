@@ -188,18 +188,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
-        [Test]
-        [Timeout(240000)]
-        public async Task Compare_MacdStrategy_ToRealTrade()
-        {
-            // arrange
-            Setup();
-            var from = DateTime.Parse("2021/08/10 10:13:52", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-            var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-            
-            var expected = 1;
-            await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
-        }
 
         [Test]
         [Timeout(240000)]
@@ -266,7 +254,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 85; // 209
+            var expected = 470; // currently says 1953.354 but I think that is BS
             await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
