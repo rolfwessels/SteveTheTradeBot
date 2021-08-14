@@ -21,11 +21,11 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [x] Logging & monitoring
 - [x] Slack
 - [x] Deploy to staging
-- [?] Fix slack - better error logging
+- [x] Fix slack - better error logging
 - [ ] Add a daily status report to slack
-- [ ] Add slack response to report
+- [x] Add slack response to report
 - [x] Add command to add all bots
-- [ ] All broker to be set from command line
+- [x] All broker to be set from command line
 - [x] Add some machine learning with net ml
 - [ ] Integrate a broker (Valr for now)
 - [ ] More back test stats
@@ -33,8 +33,10 @@ Steve is a crypto trading bot. Well he is trying to be!
 - [ ] Prometheus & Slack counters
 - [ ] Add UI
 - [ ] Deploy to AWS or Digital Ocean
+- [ ] Move to having central quotes db (maybe kafka)
 - [ ] Move to using only OpenId
 - [ ] Move away from postgress
+
 
 ## Getting started with dev
 
