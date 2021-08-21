@@ -1,13 +1,14 @@
 <Query Kind="Program">
   <Connection>
-    <ID>a366774d-8d24-465f-a121-d2144bef0089</ID>
+    <ID>59553889-9cb7-45f9-a747-6a218e67e869</ID>
     <NamingServiceVersion>2</NamingServiceVersion>
     <Persist>true</Persist>
     <Driver Assembly="(internal)" PublicKeyToken="no-strong-name">LINQPad.Drivers.EFCore.DynamicDriver</Driver>
     <Server>192.168.1.250</Server>
-    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAABfJWr5G1GsTK2MSO61f/U5lj5E3VC0+FKcn4G3WsQJdwAAAAAOgAAAAAIAACAAAADAuSEP2ohkFxjpIIDrhUJxPkX+1FkYDoeujkjMPXns0SAAAADL2MhnaJjj+jQ9pu6wGxZbxsEA9tzItxtMjImUNA25DEAAAABJ/TnKZ/k8iH9E8YQhK8U8Ai8s6szMuM1vpnoW4mbLIE6jCIR/YJeLabgQxgzp/9WxSZEOaeEMqRKjUjm1cYvm</Password>
-    <UserName>postgres</UserName>
-    <Database>steve_the_trade_bot_staging</Database>
+    <Database>steve_the_trade_bot_prod</Database>
+    <UserName>sttb_prod</UserName>
+    <SqlSecurity>true</SqlSecurity>
+    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAAAtP4ZBCQIDPzDo2a5crzLdOk6849tdqjT+pXPc1GrBeAAAAAAOgAAAAAIAACAAAAAgQfg49zfj1DEoRDgdZZegKXOfP5Gciaq+Hxn6J6qOWSAAAABCZiZjCRBS1q6p28rH3Z7p4KXrDohziTx4ZSaxhMDTWkAAAAB/K+FUYvfBwvYysKWJh4cnAJqFk6pXmflg2CxYinI0wh3lbwZ7k4fIugQLjFaODym/ZmP6wz8IQuMP1lL+tCSO</Password>
     <IsProduction>true</IsProduction>
     <DriverData>
       <PreserveNumeric1>True</PreserveNumeric1>
@@ -49,10 +50,13 @@ void Main()
 		x.LastDate,
 		x.PercentOfProfitableTrades,
 		x.AverageTradesPerMonth,
+		StopLoss =  x.StrategyProperties.Where(x=>x.Key == "StopLoss").Select(x=> Decimal.Parse(x.Value)).FirstOrDefault(),
+		UpdateStopLossAt =  x.StrategyProperties.Where(x=>x.Key == "UpdateStopLossAt").Select(x=> Decimal.Parse(x.Value)).FirstOrDefault(),
 		RunningFor = (DateTime.Now.ToLocalTime() - x.CreateDate.ToLocalTime()).Days + " days",
 		LastRunAgo = (DateTime.Now.ToLocalTime() - x.LastDate.ToLocalTime()).Humanize(),
 		BoughtInAt = x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault(),
 		CurrentTradeProfit = x.TotalActiveTrades == 1 ? MovementPercent(x.LastClose, x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault()) : 0,
+		BuyPrice = x.TotalActiveTrades == 1 ? x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault() : 0,
 		x.Status,
 		x.Id
 	})
@@ -65,7 +69,22 @@ void Main()
 	Values = strategies.Sum(x=>x.Value),
 	Profit = strategies.Average(x=>x.PercentProfit)
 	}.Dump();
-	var summary = strategies.Select(x => new {x.Reference,x.PercentMarketProfit,x.PercentProfit,x.RunningFor, x.TotalActiveTrades , x.TotalNumberOfTrades , x.LargestLoss,x.LargestProfit, x.AverageTradesPerMonth,x.PercentOfProfitableTrades, x.CurrentTradeProfit});
+	var summary = strategies.Select(x => new {
+		x.Reference,
+		x.PercentMarketProfit,
+		x.PercentProfit,
+		x.RunningFor, 
+		x.TotalActiveTrades , 
+		x.TotalNumberOfTrades ,
+		x.LargestLoss,
+		x.LargestProfit, 
+		x.AverageTradesPerMonth,
+		x.PercentOfProfitableTrades, 
+		x.CurrentTradeProfit,
+		GarenteeProfit = x.TotalActiveTrades > 0 ? MovementPercent(x.StopLoss,x.BuyPrice) :0 ,
+		PercentToStopLoss = x.TotalActiveTrades > 0 ? MovementPercent(x.StopLoss,x.LastClose) :0 ,
+		PercentToUpdateStopLossAt = x.TotalActiveTrades > 0 ?MovementPercent(x.UpdateStopLossAt,x.LastClose):0
+		});
 	summary.OrderByDescending(x=>x.PercentProfit).Take(5).Dump("Best performers");
 	summary.OrderBy(x=>x.PercentProfit).Take(5).Dump("Worst performers");
 	strategies.Dump("strategies");
