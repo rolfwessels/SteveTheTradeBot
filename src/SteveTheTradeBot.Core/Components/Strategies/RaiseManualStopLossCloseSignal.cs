@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Framework.Slack;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -34,9 +35,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 var oldStopLoss = stopLoss;
                 var newStopLoss = await ResetStops(data, currentTrade.Close);
-                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} by {TradeUtils.MovementPercent(newStopLoss, oldStopLoss.GetValueOrDefault())}%";
-                await data.Messenger.Send(
-                    $"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:");
+                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} that means guaranteed profit of {TradeUtils.MovementPercent(newStopLoss, activeTrade.BuyValue)}%";
+                await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:"));
             }
             else if (currentTrade.Close <= stopLoss)
             {

@@ -78,7 +78,10 @@ namespace SteveTheTradeBot.Api
                     AddEmi(currentBatch, values);
                     AddRoc(currentBatch, values);
                     AddRsi(currentBatch, values);
-                    var keyValuePairs = values.Where(x=>x.Key.ToUniversalTime() >= startDate.Add(periodSize.ToTimeSpan()*-1)).ToList();
+                    var keyValuePairs = values
+                        .Where(x=>x.Key.ToUniversalTime() >= startDate.Add(periodSize.ToTimeSpan()*-1))
+                        .ForAll(x=> RoundValues(x.Value))
+                        .ToList();
                     var updateFeed = await _store.UpdateFeed(keyValuePairs, feed, currencyPair, periodSize);
                     await _parameterStore.Set(key, keyValuePairs.Last().Key);
                     startDate = batch.Last().Date;
@@ -89,6 +92,14 @@ namespace SteveTheTradeBot.Api
             catch (ArgumentOutOfRangeException e)
             {
                 _log.Warning($"PopulateOtherMetrics:Populate {key} {e.Message}");
+            }
+        }
+
+        private static void RoundValues(Dictionary<string, decimal?> dictionary)
+        {
+            foreach (var pair in dictionary)
+            {
+                dictionary[pair.Key] = pair.Value.HasValue ? Math.Round(pair.Value.Value, 5) : pair.Value;
             }
         }
 

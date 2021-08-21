@@ -15,7 +15,7 @@ namespace SteveTheTradeBot.Core
         {
         }
 
-        #region singletoncd 
+        #region singleton
 
         public static Settings Instance => _instance.Value;
 

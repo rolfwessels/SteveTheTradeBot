@@ -42,7 +42,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             await data.Set(StrategyProperty.StopLoss, lossAmount);
             await data.Set(StrategyProperty.UpdateStopLossAt, boughtAtPrice * _moveProfitPercent);
             await strategy.SetStopLoss(data, lossAmount);
-            await data.Messenger.Send(new PostSlackMessage() { Message = $"{data.StrategyInstance.Name} set stop loss to {lossAmount}." });
+            await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} set stop loss to {lossAmount}."));
             return lossAmount;
         }
 
@@ -53,13 +53,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             if (currentTrade.Close > updateStopLossAt)
             {
                 var oldStopLoss = activeTrade.GetValidStopLoss().OrderPrice;
-                var newLossAmount = currentTrade.Close * _secondStopRisk;
+                var newStopLoss = currentTrade.Close * _secondStopRisk;
                 await data.Set(StrategyProperty.UpdateStopLossAt, currentTrade.Close * _moveProfitPercent);
-                await data.Set(StrategyProperty.StopLoss, newLossAmount);
-                await strategy.SetStopLoss(data, newLossAmount);
-                data.StrategyInstance.Status = $"Update stop loss to {newLossAmount} by {TradeUtils.MovementPercent(newLossAmount, oldStopLoss)}%";
-                await data.Messenger.Send(
-                    $"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:");
+                await data.Set(StrategyProperty.StopLoss, newStopLoss);
+                await strategy.SetStopLoss(data, newStopLoss);
+                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} that means guaranteed profit of {TradeUtils.MovementPercent(newStopLoss, activeTrade.BuyValue)}%";
+                await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:"));
             }
             else
             {

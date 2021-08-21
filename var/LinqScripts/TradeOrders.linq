@@ -28,8 +28,9 @@
 void Main()
 {
 	//RemoveStrategy("8220e8f153be4abdaf66c35957b5e257");
+	Kuling();
 	CheckRun();
-	var strategies = Strategies.Where(x => !x.IsBackTest)
+	var strategies = Strategies.Where(x => !x.IsBackTest && x.IsActive)
 	.ToList()
 	.Select(x => new
 	{
@@ -50,13 +51,13 @@ void Main()
 		x.LastDate,
 		x.PercentOfProfitableTrades,
 		x.AverageTradesPerMonth,
-		StopLoss =  x.StrategyProperties.Where(x=>x.Key == "StopLoss").Select(x=> Decimal.Parse(x.Value)).FirstOrDefault(),
-		UpdateStopLossAt =  x.StrategyProperties.Where(x=>x.Key == "UpdateStopLossAt").Select(x=> Decimal.Parse(x.Value)).FirstOrDefault(),
-		RunningFor = (DateTime.Now.ToLocalTime() - x.CreateDate.ToLocalTime()).Days + " days",
+		x.StrategyProperties,
+		UpdateStopLossAt = x.StrategyProperties.Where(x => x.Key == "UpdateStopLossAt" ).Select(x => Decimal.Parse(x.Value)).FirstOrDefault(),
+		StopLoss = x.StrategyProperties.Where(x => x.Key == "StopLoss" ).Select(x => Decimal.Parse(x.Value)).FirstOrDefault(),
+		RunningFor = Math.Round((DateTime.Now.ToLocalTime() - x.CreateDate.ToLocalTime()).TotalDays) + " days",
 		LastRunAgo = (DateTime.Now.ToLocalTime() - x.LastDate.ToLocalTime()).Humanize(),
 		BoughtInAt = x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault(),
 		CurrentTradeProfit = x.TotalActiveTrades == 1 ? MovementPercent(x.LastClose, x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault()) : 0,
-		BuyPrice = x.TotalActiveTrades == 1 ? x.Trades.Where(x => x.IsActive).Select(x => x.BuyPrice).FirstOrDefault() : 0,
 		x.Status,
 		x.Id
 	})
@@ -64,43 +65,77 @@ void Main()
 	.ToList()
 	//.Dump("strategies")
 	;
-	new { 
-	Investment = strategies.Sum(x=>x.InvestmentAmount),
-	Values = strategies.Sum(x=>x.Value),
-	Profit = strategies.Average(x=>x.PercentProfit)
+	new
+	{
+		Investment = strategies.Sum(x => x.InvestmentAmount),
+		Values = strategies.Sum(x => x.Value),
+		Profit = strategies.Average(x => x.PercentProfit)
 	}.Dump();
-	var summary = strategies.Select(x => new {
+	var summary = strategies.Select(x => new
+	{
 		x.Reference,
 		x.PercentMarketProfit,
 		x.PercentProfit,
-		x.RunningFor, 
-		x.TotalActiveTrades , 
-		x.TotalNumberOfTrades ,
+		x.RunningFor,
+		x.TotalActiveTrades,
+		x.TotalNumberOfTrades,
 		x.LargestLoss,
-		x.LargestProfit, 
+		x.LargestProfit,
 		x.AverageTradesPerMonth,
-		x.PercentOfProfitableTrades, 
+		x.PercentOfProfitableTrades,
 		x.CurrentTradeProfit,
-		GarenteeProfit = x.TotalActiveTrades > 0 ? MovementPercent(x.StopLoss,x.BuyPrice) :0 ,
-		PercentToStopLoss = x.TotalActiveTrades > 0 ? MovementPercent(x.StopLoss,x.LastClose) :0 ,
-		PercentToUpdateStopLossAt = x.TotalActiveTrades > 0 ?MovementPercent(x.UpdateStopLossAt,x.LastClose):0
-		});
-	summary.OrderByDescending(x=>x.PercentProfit).Take(5).Dump("Best performers");
-	summary.OrderBy(x=>x.PercentProfit).Take(5).Dump("Worst performers");
+		GarenteeTradeProfit = x.BoughtInAt > 0? MovementPercent(x.StopLoss, x.BoughtInAt):0,
+		PercentTillStopLossUpdate = MovementPercent(x.UpdateStopLossAt, x.LastClose),
+		PercentTillStopLoss = MovementPercent(x.StopLoss, x.LastClose)
+	});
+	summary.OrderByDescending(x => x.PercentProfit).Take(10).Dump("Best performers");
+	summary.OrderBy(x => x.PercentProfit).Take(10).Dump("Worst performers");
 	strategies.Dump("strategies");
-	var trades = Trades.Where(x=>strategies.Select(r=>r.Id).Contains(x.StrategyInstanceId)).ToList().Dump("Trades");
-	TradeOrders.Where(x=>trades.Select(r=>r.Id).Contains(x.StrategyTradeId)).Dump("TradeOrders");
+	var trades = Trades.Where(x => strategies.Select(r => r.Id).Contains(x.StrategyInstanceId)).ToList().Dump("Trades");
+	TradeOrders.Where(x => trades.Select(r => r.Id).Contains(x.StrategyTradeId)).Dump("TradeOrders");
 }
 
-public void RemoveStrategy(string id)
+void Kuling()
 {
-	var strategies = Strategies.Where(x => x.Id == id).ToList();
+	var strats =  Strategies.Where(x=>x.IsActive && x.UpdateDate - x.CreateDate > TimeSpan.FromDays(5))
+			.Where(x=>x.Trades.Count == 0 ||  (x.PercentProfit < -10))
+			.ToList();
+	if (strats.Any()) {
+		strats.Dump("De-Activate?");
+		DeActivateStrategies(strats.Select(x=>x.Id).ToArray());
+	}
+	
+}
+
+
+public void DeActivateStrategies(string[] id)
+{
+	var strategies = Strategies.Where(x => id.Contains(x.Id)).ToList();
+	
+	$"Found {strategies.Count} stategies would you like to deactivate them".Dump("Confirm by typing yes!");
+	var result = Util.ReadLine();
+	if (result.ToLower() == "yes!")
+	{
+		foreach (var st in strategies)
+		{
+			st.IsActive = false;
+		}
+		strategies.ForEach(e=>e.IsActive = false);
+		var updated = SaveChanges();
+		updated.Dump($"deactivated {updated}");
+	}
+}
+
+public void RemoveStrategies(string[] id)
+{
+	var strategies = Strategies.Where(x => id.Contains(x.Id)).ToList();
 	//strategies = Strategies.Where(x => x.IsBackTest).ToList();
 	var trades = Trades.Where(x => strategies.Select(r => r.Id).Contains(x.StrategyInstanceId)).ToList();
 	var tradeOrders = TradeOrders.Where(x => trades.Select(r => r.Id).Contains(x.StrategyTradeId)).ToList();
 	$"Found {strategies.Count} stategy with {trades.Count} trades and {tradeOrders.Count} trade orders".Dump("Confirm by typing yes!");
 	var result = Util.ReadLine();
-	if (result.ToLower() == "yes!") {
+	if (result.ToLower() == "yes!")
+	{
 		TradeOrders.RemoveRange(tradeOrders);
 		Trades.RemoveRange(trades);
 		Strategies.RemoveRange(strategies);
@@ -108,8 +143,10 @@ public void RemoveStrategy(string id)
 		updated.Dump("Removed");
 	}
 }
+
 // You can define other methods, fields, classes and namespaces here
-public void CheckRun() {
+public void CheckRun()
+{
 
 	var candles = TradeQuotes.Where(x => x.Feed == "valr" && x.CurrencyPair == "BTCZAR" && x.PeriodSize == 11 && x.Date > DateTime.Now.AddHours(-2))
 						.OrderByDescending(x => x.Date);
@@ -136,7 +173,8 @@ public static decimal MovementPercent(decimal currentValue, decimal fromValue, i
 	return Math.Round((currentValue - fromValue) / fromValue * 100, decimals);
 }
 
-public T CastIt<T>(object value) {
+public T CastIt<T>(object value)
+{
 	var x = JsonSerializer.Serialize(value);
 	return JsonSerializer.Deserialize<T>(x);
 }
