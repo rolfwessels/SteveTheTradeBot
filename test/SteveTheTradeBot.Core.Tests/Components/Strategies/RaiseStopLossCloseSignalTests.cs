@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using FluentAssertions;
 using NUnit.Framework;
+using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
-using StrategyProperty = SteveTheTradeBot.Core.Components.Storage.StrategyProperty;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 {
-    public class RaiseManualStopLossCloseSignalTests : SignalCloseTestBase
+    public class RaiseStopLossCloseSignalTests : SignalCloseTestBase
     {
-        private RaiseManualStopLossCloseSignal _sut;
+        private RaiseStopLossCloseSignal _sut;
         private readonly RSiStrategy _rSiStrategy = new RSiStrategy();
 
         #region Setup/Teardown
@@ -22,7 +22,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         protected override void Setup()
         {
             base.Setup();
-            _sut = new RaiseManualStopLossCloseSignal(0.99m,1.02m);
+            _sut = new RaiseStopLossCloseSignal(0.99m, 1.02m);
         }
 
         #endregion
@@ -37,6 +37,41 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // assert
             var stopLoss = await _strategyContext.Get(StrategyProperty.StopLoss, 0m);
             stopLoss.Should().Be(990m);
+        }
+
+
+        [Test]
+        public async Task Initialize_GivenGivenContext_ShouldSetStopLossRecord()
+        {
+            // arrange
+            Setup();
+            var boughtAtPrice = 1000;
+            var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
+            _strategyContext.ByMinute.AddRange(BuildOrders(995));
+            // action
+            await _sut.Initialize(_strategyContext, 1000, _rSiStrategy);
+            // assert
+            var stopLoss = _strategyContext.StrategyInstance.ActiveTrade().GetValidStopLoss();
+            _strategyContext.StrategyInstance.Print();
+            stopLoss.OrderPrice.Should().Be(990m);
+            stopLoss.StopPrice.Should().BeApproximately(991m,0.1m);
+        }
+
+        [Test]
+        public async Task Initialize_GivenGivenContext_ShouldSetStopLossRecordOnApi()
+        {
+            // arrange
+            Setup();
+            var boughtAtPrice = 1000;
+            var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
+            _strategyContext.ByMinute.AddRange(BuildOrders(995));
+            // action
+            await _sut.Initialize(_strategyContext, 1000, _rSiStrategy);
+            // assert
+            var stopLoss = _fakeBroker.Requests.OfType<StopLimitOrderRequest>().First();
+            _strategyContext.StrategyInstance.Print();
+            stopLoss.Price.Should().Be(990m);
+            stopLoss.StopPrice.Should().Be(991m);
         }
 
 
@@ -115,36 +150,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             _strategyContext.StrategyInstance.Status.Should().Be("Update stop loss to 1009.8000 that means guaranteed profit of 0.980%");
         }
 
-        [Test]
-        public async Task DetectClose_GivenValueUnderStopLoss_ShouldSetStatus()
-        {
-            // arrange
-            Setup();
-            var boughtAtPrice = 1000;
-            var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(990m));
-            await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
-            // action
-            await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
-            // assert
-            _strategyContext.StrategyInstance.Status.Should().Be("Sold 0.1XRP at R100100 for R9999.99 (Fee R10.01)");
-        }
-
-        [Test]
-        public async Task DetectClose_GivenValueUnderStopLoss_ShouldSell()
-        {
-            // arrange
-            Setup();
-            var boughtAtPrice = 1000;
-            var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(990m));
-            await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
-            // action
-            await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
-            // assert
-            var simpleOrderRequest = _fakeBroker.Requests.OfType<SimpleOrderRequest>().First();
-            simpleOrderRequest.PayAmount.Should().Be(0.1m);
-            simpleOrderRequest.PayInCurrency.Should().Be(CurrencyCodes.XRP);
-        }
+        
     }
 }
