@@ -140,6 +140,47 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
+        public void Fast_RSiConfirmTrendStrategy_OverPeriods()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+
+            var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
+                BuildBackTestResult(@from, to, t => new RSiConfirmTrendStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+
+            var table = strategyInstances.Select(x => new
+            {
+                x.Pair,
+                x.PeriodSize,
+                x.PercentMarketProfit,
+                x.PercentProfit,
+                x.AverageTradesPerMonth,
+                x.PercentOfProfitableTrades
+            }).ToTable();
+            Console.Out.WriteLine(table);
+            // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╦═══════════════════════════╗  
+            // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║ PercentOfProfitableTrades ║  
+            // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╬═══════════════════════════╣  
+            // ║ BTCZAR ║ OneMinute      ║ 37.812              ║ 59.484        ║ 19.287                ║ 55.56                     ║  
+            // ║ BTCZAR ║ FiveMinutes    ║ 37.258              ║ 58.406        ║ 13.929                ║ 61.54                     ║  
+            // ║ BTCZAR ║ FifteenMinutes ║ 38.032              ║ 46.956        ║ 10.714                ║ 50.0                      ║  
+            // ║ BTCZAR ║ ThirtyMinutes  ║ 37.503              ║ 16.342        ║ 7.5                   ║ 57.14                     ║  
+            // ║ BTCZAR ║ OneHour        ║ 37.019              ║ -1.512        ║ 5.357                 ║ 40.0                      ║  
+            // ║ BTCZAR ║ Day            ║ 33.584              ║ 0             ║ 0                     ║ 0                         ║  
+            // ║ ETHZAR ║ OneMinute      ║ 8.204               ║ 53.198        ║ 35.364                ║ 54.55                     ║  
+            // ║ ETHZAR ║ FiveMinutes    ║ 8.199               ║ 69.468        ║ 22.5                  ║ 52.38                     ║  
+            // ║ ETHZAR ║ FifteenMinutes ║ 7.767               ║ 21.204        ║ 20.357                ║ 42.11                     ║  
+            // ║ ETHZAR ║ ThirtyMinutes  ║ 7.323               ║ 22.946        ║ 13.929                ║ 46.15                     ║  
+            // ║ ETHZAR ║ OneHour        ║ 7.305               ║ 39.474        ║ 9.643                 ║ 55.56                     ║  
+            // ║ ETHZAR ║ Day            ║ 3.296               ║ 0             ║ 0                     ║ 0                         ║  
+            // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╩═══════════════════════════╝  
+
+        }
+
+        [Test]
+        [Timeout(240000)]
         [Ignore("cant get it lower")]
         public async Task Fast_RSiStrategy()
         {
@@ -173,6 +214,19 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
             var expected = 51;
             await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+
+        [Test]
+        [Timeout(240000)]
+        public async Task Fast_RSiConfirmTrendStrategy()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2021-02-01T00:00:00");
+            var to = from.AddMonths(1);
+            var expected = 39;
+            await Test(@from, to, expected, t => new RSiConfirmTrendStrategy(), CurrencyPair.ETHZAR, PeriodSize.FifteenMinutes);
         }
 
 
@@ -311,7 +365,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var picker = new StrategyPicker().Add(strategy.Name, () => strategy);
 
 
-            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, currencyPair, 500, size);
+            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, currencyPair, 1000, size);
             strategyInstance.Reference += $"{fromDate:yyMM}-{to:yyMM}";
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
             await strategyInstanceStore.Add(strategyInstance);

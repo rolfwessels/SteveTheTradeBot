@@ -1,11 +1,8 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
-using SteveTheTradeBot.Core.Framework.Slack;
-using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -26,7 +23,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             await base.DetectClose(data, currentTrade, activeTrade, strategy);
             var updateStopLossAt = await data.Get(StrategyProperty.StopLoss, 0);
-            if (currentTrade.Close <= updateStopLossAt.Dump("updateStopLossAt"))
+            if (currentTrade.Close <= updateStopLossAt)
             {
                 _log.Information(
                     $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} ");

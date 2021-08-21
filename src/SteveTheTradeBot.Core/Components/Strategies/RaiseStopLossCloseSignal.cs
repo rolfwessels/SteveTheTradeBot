@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Framework.Slack;
@@ -13,12 +14,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
     {
         private readonly decimal _initialStopRisk;
         private readonly decimal _moveProfitPercent;
-        private readonly decimal _secondStopRisk;
 
         public RaiseStopLossCloseSignal(decimal initialStopRisk = 0.96m, decimal moveProfitPercent = 1.05m)
         {
             _initialStopRisk = initialStopRisk;
-            _secondStopRisk = initialStopRisk;
             _moveProfitPercent = moveProfitPercent;
         }
 
@@ -28,9 +27,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             var lossAmount = boughtAtPrice * _initialStopRisk;
             await data.Set(StrategyProperty.UpdateStopLossAt, boughtAtPrice * _moveProfitPercent);
-            await data.Set(StrategyProperty.StopLoss, lossAmount);
-            await SetTheStopLoss(data, strategy, lossAmount);
-            await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} set stop loss to {lossAmount}."));
+            await SetStopLossAndMessages(data, strategy, lossAmount, boughtAtPrice);
             return lossAmount;
         }
 
@@ -45,12 +42,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var updateStopLossAt = await GetUpdateStopLossAt(activeTrade, data);
             if (currentTrade.Close >= updateStopLossAt)
             {
-                var newStopLoss = currentTrade.Close * _secondStopRisk;
-                await data.Set(StrategyProperty.UpdateStopLossAt, currentTrade.Close * _moveProfitPercent);
-                await data.Set(StrategyProperty.StopLoss, newStopLoss);
-                await strategy.SetStopLoss(data, newStopLoss);
-                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} that means guaranteed profit of {TradeUtils.MovementPercent(newStopLoss, activeTrade.BuyPrice)}%";
-                await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:"));
+                await UpdateStopLoss(data, currentTrade, activeTrade, strategy);
             }
             else
             {
@@ -59,10 +51,33 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             }
         }
 
-        private static async Task<decimal> GetStopLoss(StrategyTrade activeTrade, StrategyContext data)
+        public virtual async Task UpdateStopLoss(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade,
+            BaseStrategy strategy)
+        {
+            await data.Set(StrategyProperty.UpdateStopLossAt, currentTrade.Close * _moveProfitPercent);
+            var newStopLoss = currentTrade.Close * _initialStopRisk;
+            await SetStopLossAndMessages(data, strategy, newStopLoss, activeTrade.BuyPrice);
+        }
+
+        protected async Task SetStopLossAndMessages(StrategyContext data, BaseStrategy strategy,
+            decimal newStopLoss, decimal buyPrice)
+        {
+            await data.Set(StrategyProperty.StopLoss, newStopLoss);
+            await SetTheStopLoss(data, strategy, newStopLoss);
+            var movementPercent = TradeUtils.MovementPercent(newStopLoss, buyPrice);
+            data.StrategyInstance.Status = movementPercent > 0
+                ? $"Update stop loss to {newStopLoss} that means guaranteed profit of {movementPercent}%"
+                : $"Set stop loss to {newStopLoss} that means risk of {Math.Abs(movementPercent)}%";
+            var icon = movementPercent>0? ":chart_with_upwards_trend:":"";
+
+           // data.StrategyInstance.Status.Dump("");
+            await data.Messenger.Send(PostSlackMessage.From(
+                $"{data.StrategyInstance.Name} {data.StrategyInstance.Status} {icon}"));
+        }
+
+        protected static async Task<decimal> GetStopLoss(StrategyTrade activeTrade, StrategyContext data)
         {
             return await data.Get(StrategyProperty.StopLoss, activeTrade.GetValidStopLoss()?.OrderPrice??0);
-            
         }
 
         #endregion
