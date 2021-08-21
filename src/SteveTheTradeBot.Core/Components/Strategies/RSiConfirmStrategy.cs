@@ -13,19 +13,22 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RSiConfirmStrategy : RaiseStopLossOutStrategyBase
+    public class RSiConfirmStrategy : BaseStrategy
     {
         public const string Desc = nameof(RSiConfirmStrategy);
+        public override string Name => Desc;
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly int _buySignal;
         private readonly int _quotesToCheckRsi;
         private readonly int _positiveTrendOverQuotes;
+        private ICloseSignal _closeSignal;
 
 
-        public RSiConfirmStrategy() : base(0.96m, 1.05m)
+        public RSiConfirmStrategy() 
         {
+            _closeSignal = new RaiseManualStopLossCloseSignal(0.96m, 1.05m);
             _buySignal = 30;
             _quotesToCheckRsi = 10;
             _positiveTrendOverQuotes = 3;
@@ -35,56 +38,34 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             var currentTrade = data.ByMinute.Last();
             var activeTrade = data.ActiveTrade();
+
+            var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi+ _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
+            var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
+            var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes,_buySignal);
             
-            var hasRecentlyHitOverSold = data.ByMinute.TakeLast(_quotesToCheckRsi+ _positiveTrendOverQuotes).Take(_quotesToCheckRsi).Min(x => x.Metric.GetOrDefault("rsi14"));
-            
-            var isPositiveTrend = IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
+            var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
             if (activeTrade == null)
             {
 
-                if (hasRecentlyHitOverSold <= _buySignal && isPositiveTrend)
+                if (hasBuySignal && isPositiveTrend)
                 {
                     _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
-                    var resetStops = await ResetStops(data, currentTrade.Close);
+                    var resetStops = await _closeSignal.Initialize(data, currentTrade.Close, this);
                     data.StrategyInstance.Status =
                         $"Bought! [{strategyTrade.BuyPrice} and set stop loss at {resetStops}]";
                 }
                 else
                 {
                     data.StrategyInstance.Status =
-                        $"Waiting to buy ![wait for min rsi {hasRecentlyHitOverSold} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.ByMinute.TakeLast(_positiveTrendOverQuotes).Select(x=>x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
+                        $"Waiting to buy ![wait for min rsi {minRsi} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.ByMinute.TakeLast(_positiveTrendOverQuotes).Select(x=>x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
                 }
             }
             else
             {
-                await FollowClosingStrategy(data, currentTrade, activeTrade);
+                await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
             }
         }
-
-     
-        private bool IsPositiveTrend(IEnumerable<TradeQuote> values)
-        {
-            decimal lastValue = -1;
-            foreach (var value in values)
-            {
-                if (lastValue != -1 && value.Close <= lastValue)
-                {
-                    return false;
-                }
-
-                lastValue = value.Close;
-                
-            }
-
-            return true;
-        }
-
-
-
-        public override string Name => Desc;
-
-       
     }
 }

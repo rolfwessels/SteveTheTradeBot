@@ -32,5 +32,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
                 CurrencyPair = currencyPair
             };
         }
+
+       
     }
 }

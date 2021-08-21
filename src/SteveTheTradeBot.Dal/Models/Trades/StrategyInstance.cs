@@ -62,18 +62,19 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         // public decimal CalmarRatio { get; set; }
         // public decimal RiskRewardRatio { get; set; }
 
-        public static StrategyInstance ForBackTest(string strategy, string pair)
+        public static StrategyInstance ForBackTest(string strategy, string pair, int amount = 1000, PeriodSize size = PeriodSize.FiveMinutes)
         {
-            var instance = From( strategy,  pair, 1000, PeriodSize.FiveMinutes);
+            var instance = From( strategy,  pair, amount, size);
             instance.IsBackTest = true;
             instance.Reference += "_backtest";
             return instance;
         }
 
 
-        public StrategyTrade AddTrade( DateTime date, in decimal price, decimal quantity, decimal randValue)
+        public StrategyTrade AddTrade(DateTime date, in decimal price, decimal quantity, decimal randValue = -1)
         {
-            var addTrade = new StrategyTrade(date, price, quantity, randValue);
+            if (randValue == -1) randValue = quantity * price;
+            var addTrade = new StrategyTrade(date, price, quantity, randValue) {FeeCurrency = Pair.QuoteCurrency()};
             Trades.Add(addTrade);
             return addTrade;
         }

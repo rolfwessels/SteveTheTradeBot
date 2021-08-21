@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
-using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
@@ -59,7 +57,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             {
                 var findByDate = await _tradeHistoryStore.FindByDate(currencyPair,requestRequestDate,
                     requestRequestDate.Add(TimeSpan.FromMinutes(5)), skip: 0, take: 1);
-                price = findByDate.Select(x => x.Price).Last();
+                price = findByDate.Select(x => x.Price).First();
             }
 
             return price;

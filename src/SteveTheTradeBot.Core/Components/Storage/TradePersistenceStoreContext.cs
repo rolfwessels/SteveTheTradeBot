@@ -22,6 +22,7 @@ namespace SteveTheTradeBot.Core.Components.Storage
         }
 
         public DbSet<TradeOrder> TradeOrders { get; set; }
+        public DbSet<StrategyInstance.Properties> StrategyProperties { get; set; }
         public DbSet<StrategyTrade> Trades { get; set; }
         public DbSet<StrategyInstance> Strategies { get; set; }
         public DbSet<HistoricalTrade> HistoricalTrades { get; set; }

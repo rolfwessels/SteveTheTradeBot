@@ -8,77 +8,76 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public abstract class RaiseStopLossOutStrategyBase : BaseStrategy
+    public class RaiseManualStopLossCloseSignal : ICloseSignal
     {
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         protected decimal _initialStopRisk;
         protected decimal _moveProfitPercent;
 
-        protected RaiseStopLossOutStrategyBase(decimal initialStopRisk, decimal moveProfitPercent)
+        public RaiseManualStopLossCloseSignal(decimal initialStopRisk= 0.96m, decimal moveProfitPercent = 1.05m)
         {
             _initialStopRisk = initialStopRisk;
             _moveProfitPercent = moveProfitPercent;
         }
-
-        protected async Task<decimal> SetFirstStopLossFromPrice(StrategyContext data, decimal strategyTradeBuyPrice)
+        
+        public async Task<decimal> Initialize(StrategyContext data, decimal boughtAtPrice,
+            BaseStrategy strategy)
         {
-            return await ResetStops(data, strategyTradeBuyPrice);
+            return await ResetStops(data, boughtAtPrice);
         }
 
-        protected async Task FollowClosingStrategy(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade)
+        public async Task DetectClose(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade, BaseStrategy strategy)
         {
-            if (currentTrade.Close > await MoveProfit(data))
+            var updateStopLossAt = await UpdateStopLossAt(data);
+            var stopLoss = await StopLoss(data);
+            if (currentTrade.Close > updateStopLossAt)
             {
-                var oldStopLoss = await StopLoss(data);
+                var oldStopLoss = stopLoss;
                 var newStopLoss = await ResetStops(data, currentTrade.Close);
                 data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} by {TradeUtils.MovementPercent(newStopLoss, oldStopLoss.GetValueOrDefault())}%";
                 await data.Messenger.Send(
                     $"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:");
             }
-            else if (currentTrade.Close <= await StopLoss(data))
+            else if (currentTrade.Close <= stopLoss)
             {
                 _log.Information(
                     $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} ");
-
-                await Sell(data, activeTrade);
-                data.StrategyInstance.Status = $"Sold! {activeTrade.SellPrice} at profit {activeTrade.Profit}";
+                await strategy.Sell(data, activeTrade);
+                data.StrategyInstance.Status = $"Sold! {activeTrade}";
             }
             else
             {
-                data.StrategyInstance.Status = $"Waiting for price above {MoveProfit(data)} or stop loss {StopLoss(data)}";
+                data.StrategyInstance.Status = $"Waiting for price above {updateStopLossAt} or stop loss {stopLoss}";
             }
         }
 
-        private async Task<decimal?> MoveProfit(StrategyContext data, decimal? setValue = null)
+        private async Task<decimal?> UpdateStopLossAt(StrategyContext data, decimal? setValue = null)
         {
-            var key = "MoveProfit";
             if (setValue == null)
             {
                 var moveProfitPercent = data.LatestQuote().Close * _moveProfitPercent;
-                return await data.Get(key, moveProfitPercent);
+                return await data.Get(StrategyProperty.UpdateStopLossAt, moveProfitPercent);
             }
-            await data.Set(key, setValue.Value);
+            await data.Set(StrategyProperty.UpdateStopLossAt, setValue.Value);
             return setValue;
         }
 
         protected async Task<decimal?> StopLoss(StrategyContext data, decimal? setValue = null)
         {
-            var key = "StopLoss";
             if (setValue == null)
             {
                 var moveProfitPercent = data.LatestQuote().Close * _initialStopRisk;
-                return await data.Get(key, moveProfitPercent);
+                return await data.Get(StrategyProperty.StopLoss, moveProfitPercent);
             }
-            await data.Set(key, setValue.Value);
+            await data.Set(StrategyProperty.StopLoss, setValue.Value);
             return setValue;
         }
 
         protected async Task<decimal> ResetStops(StrategyContext data, decimal currentTradeClose)
         {
-            var initialStopRisk = currentTradeClose * _initialStopRisk;
-            await StopLoss(data, initialStopRisk);
-            await MoveProfit(data, currentTradeClose * _moveProfitPercent);
-            return initialStopRisk;
+            await StopLoss(data, currentTradeClose * _initialStopRisk);
+            await UpdateStopLossAt(data, currentTradeClose * _moveProfitPercent);
+            return currentTradeClose * _initialStopRisk;
         }
     }
 }

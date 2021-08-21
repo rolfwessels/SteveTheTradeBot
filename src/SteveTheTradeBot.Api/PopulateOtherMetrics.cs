@@ -9,6 +9,7 @@ using GreenDonut;
 using Serilog;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.Storage;
+using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Utils;
@@ -98,9 +99,9 @@ namespace SteveTheTradeBot.Api
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("supertrend-lower", rsiResult.LowerBand);
-                orAdd.Add("supertrend-upper", rsiResult.UpperBand);
-                orAdd.Add("supertrend", rsiResult.SuperTrend);
+                orAdd.Add(Signals.SuperTrendLower, rsiResult.LowerBand);
+                orAdd.Add(Signals.SuperTrendUpper, rsiResult.UpperBand);
+                orAdd.Add(Signals.Supertrend, rsiResult.SuperTrend);
             }
         }
 
@@ -111,7 +112,7 @@ namespace SteveTheTradeBot.Api
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("rsi14", rsiResult.Rsi);
+                orAdd.Add(Signals.Rsi14, rsiResult.Rsi);
             }
         }
 
@@ -123,8 +124,8 @@ namespace SteveTheTradeBot.Api
             foreach (var rsiResult in roc)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("roc100", rsiResult.Roc);
-                orAdd.Add("roc100-sma", rsiResult.RocSma);
+                orAdd.Add(Signals.Roc100, rsiResult.Roc);
+                orAdd.Add(Signals.Roc100sma, rsiResult.RocSma);
             }
 
             if (tradeFeedQuotes.Count < 202) return;
@@ -141,8 +142,8 @@ namespace SteveTheTradeBot.Api
             foreach (var rsiResult in roc)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("roc200", rsiResult.Roc);
-                orAdd.Add("roc200-sma", rsiResult.RocSma);
+                orAdd.Add(Signals.Roc200, rsiResult.Roc);
+                orAdd.Add(Signals.Roc200sma, rsiResult.RocSma);
             }
         }
 
@@ -153,9 +154,9 @@ namespace SteveTheTradeBot.Api
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("macd-signal", rsiResult.Signal);
-                orAdd.Add("macd-histogram", rsiResult.Histogram);
-                orAdd.Add("macd", rsiResult.Macd);
+                orAdd.Add(Signals.MacdSignal, rsiResult.Signal);
+                orAdd.Add(Signals.MacdHistogram, rsiResult.Histogram);
+                orAdd.Add(Signals.MacdValue, rsiResult.Macd);
             }
         }
         private static void AddEmi(List<TradeQuote> tradeFeedQuotes, IDictionary<DateTime, Dictionary<string, decimal?>> values)
@@ -165,14 +166,14 @@ namespace SteveTheTradeBot.Api
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("ema100", rsiResult.Ema);
+                orAdd.Add(Signals.Ema100, rsiResult.Ema);
             }
             if (tradeFeedQuotes.Count < 400) return;
             rsiResults = tradeFeedQuotes.GetEma(200);
             foreach (var rsiResult in rsiResults)
             {
                 var orAdd = values.GetOrAdd(rsiResult.Date, () => new Dictionary<string, decimal?>());
-                orAdd.Add("ema200", rsiResult.Ema);
+                orAdd.Add(Signals.Ema200, rsiResult.Ema);
             }
         }
 
