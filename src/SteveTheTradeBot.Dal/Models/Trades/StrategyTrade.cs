@@ -84,7 +84,8 @@ namespace SteveTheTradeBot.Dal.Models.Trades
         {
             if (IsActive) 
                 return $"Bought {Amount.From(BuyQuantity, forBackTest.Pair.BaseCurrency())} at {Amount.From(BuyPrice, forBackTest.Pair.QuoteCurrency())} for {Amount.From(BuyValue, forBackTest.Pair.QuoteCurrency())} (Fee {Amount.From(FeeAmount,FeeCurrency)})";
-            return "";
+
+            return $"Sold {Amount.From(BuyQuantity, forBackTest.Pair.BaseCurrency())} at {Amount.From(SellPrice, forBackTest.Pair.QuoteCurrency())} for {Amount.From(SellValue, forBackTest.Pair.QuoteCurrency())} (Fee {Amount.From(FeeAmount, FeeCurrency)})";
         }
     }
 }

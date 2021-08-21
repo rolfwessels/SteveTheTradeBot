@@ -31,11 +31,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             var updateStopLossAt = await UpdateStopLossAt(data);
             var stopLoss = await StopLoss(data);
-            if (currentTrade.Close > updateStopLossAt)
+            if (currentTrade.Close >= updateStopLossAt)
             {
                 var oldStopLoss = stopLoss;
                 var newStopLoss = await ResetStops(data, currentTrade.Close);
-                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} that means guaranteed profit of {TradeUtils.MovementPercent(newStopLoss, activeTrade.BuyValue)}%";
+                data.StrategyInstance.Status = $"Update stop loss to {newStopLoss} that means guaranteed profit of {TradeUtils.MovementPercent(newStopLoss, activeTrade.BuyPrice)}%";
                 await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} {data.StrategyInstance.Status} :chart_with_upwards_trend:"));
             }
             else if (currentTrade.Close <= stopLoss)
@@ -43,7 +43,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 _log.Information(
                     $"{currentTrade.Date.ToLocalTime()} Send signal to sell at {currentTrade.Close} - {activeTrade.BuyPrice} = {currentTrade.Close - activeTrade.BuyPrice} ");
                 await strategy.Sell(data, activeTrade);
-                data.StrategyInstance.Status = $"Sold! {activeTrade}";
+                data.StrategyInstance.Status = $"{activeTrade.ToString(data.StrategyInstance)}";
             }
             else
             {
@@ -55,8 +55,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             if (setValue == null)
             {
-                var moveProfitPercent = data.LatestQuote().Close * _moveProfitPercent;
-                return await data.Get(StrategyProperty.UpdateStopLossAt, moveProfitPercent);
+                return await data.Get(StrategyProperty.UpdateStopLossAt, 0);
             }
             await data.Set(StrategyProperty.UpdateStopLossAt, setValue.Value);
             return setValue;
@@ -66,8 +65,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         {
             if (setValue == null)
             {
-                var moveProfitPercent = data.LatestQuote().Close * _initialStopRisk;
-                return await data.Get(StrategyProperty.StopLoss, moveProfitPercent);
+                return await data.Get(StrategyProperty.StopLoss, 0);
             }
             await data.Set(StrategyProperty.StopLoss, setValue.Value);
             return setValue;

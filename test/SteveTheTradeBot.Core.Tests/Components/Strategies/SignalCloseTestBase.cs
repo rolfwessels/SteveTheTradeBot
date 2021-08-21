@@ -16,7 +16,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
         protected StrategyContext _strategyContext;
         protected FakeBroker _fakeBroker;
 
-        protected IEnumerable<TradeQuote> BuildOrders(decimal[] values)
+        protected IEnumerable<TradeQuote> BuildOrders(params decimal[] values)
         {
             return values.Select((value, index) => new TradeQuote
             {

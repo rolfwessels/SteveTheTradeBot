@@ -41,9 +41,14 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var lossAmount = boughtAtPrice * _initialStopRisk;
             await data.Set(StrategyProperty.StopLoss, lossAmount);
             await data.Set(StrategyProperty.UpdateStopLossAt, boughtAtPrice * _moveProfitPercent);
+            await SetStopLoss(data, strategy, lossAmount);
+            return lossAmount;
+        }
+
+        private static async Task SetStopLoss(StrategyContext data, BaseStrategy strategy, decimal lossAmount)
+        {
             await strategy.SetStopLoss(data, lossAmount);
             await data.Messenger.Send(PostSlackMessage.From($"{data.StrategyInstance.Name} set stop loss to {lossAmount}."));
-            return lossAmount;
         }
 
         public async Task DetectClose(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade,
