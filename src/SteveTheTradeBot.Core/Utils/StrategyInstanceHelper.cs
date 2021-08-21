@@ -8,6 +8,8 @@ namespace SteveTheTradeBot.Core.Utils
 {
     public static class StrategyInstanceHelper
     {
+        
+
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         public static void Recalculate(this StrategyInstance strategyInstance)
         {
