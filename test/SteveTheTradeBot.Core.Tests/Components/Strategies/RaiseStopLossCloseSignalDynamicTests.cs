@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
+using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 {
@@ -121,6 +124,54 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             _strategyContext.StrategyInstance.Status.Should().Be("Update stop loss to 1009.8000 that means guaranteed profit of 0.980%");
         }
 
+        [Test]
+        public async Task DetectClose_GivenLinearGrowth_ShouldSetStopLossAtIntervals()
+        {
+            // arrange
+            Setup();
+            var boughtAtPrice = 1000;
+            var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
+            _strategyContext.ByMinute.AddRange(BuildOrders(1000));
+            await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
+            var result = new Dictionary<decimal, decimal>();
+            var expected = new Dictionary<decimal, decimal> {
+                {1000m, 990.00m},
+                {1010m, 999.90m},
+                {1015m, 999.90m},
+                {1020m, 999.90m},
+                {1050.00m, 1016.82m},
+                {1065.00m, 1018.69380000M},
+                {1087m, 1032.65M},
+                {1110m, 1054.50m},
+                {1210m, 1149.50m},
+                {1510m, 1434.50m},
+                {2000m, 1900.00m},
+            };
+            // action
+            foreach (var values in expected)
+            {
+                _strategyContext.ByMinute.AddRange(BuildOrders(values.Key));
+                await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
+                var stopLoss = await _strategyContext.Get(StrategyProperty.StopLoss, 0m);
+                var updateAt = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0m);
+                result.Add(values.Key, stopLoss);
+
+            }
+
+            // assert
+            Console.Out.WriteLine(result.Select(x => new {
+                    CurrentPrice = x.Key,
+                    StopLoss = x.Value,
+                    Profit = TradeUtils.MovementPercent(x.Key, boughtAtPrice),
+                    Risk = TradeUtils.MovementPercent(x.Value, boughtAtPrice),
+                    Diff = TradeUtils.MovementPercent(x.Value, x.Key) 
+                }
+
+            ).ToTable());
+            result.Should().BeEquivalentTo(expected);
+            
+
+        }
     }
 
     

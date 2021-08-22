@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -6,9 +7,7 @@ using NUnit.Framework;
 using SteveTheTradeBot.Core.Components.Broker.Models;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Components.Strategies;
-using SteveTheTradeBot.Core.Components.ThirdParty.Valr;
 using SteveTheTradeBot.Core.Utils;
-using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Tests.Components.Strategies
 {
@@ -150,6 +149,42 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             _strategyContext.StrategyInstance.Status.Should().Be("Update stop loss to 1009.8000 that means guaranteed profit of 0.980%");
         }
 
-        
+
+        [Test]
+        public async Task DetectClose_GivenLinearGrowth_ShouldSetStopLossAtIntervals()
+        {
+            // arrange
+            Setup();
+            var boughtAtPrice = 1000;
+            var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
+            _strategyContext.ByMinute.AddRange(BuildOrders(1000));
+            await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
+            var result = new Dictionary<decimal, decimal>();
+            var expected = new Dictionary<decimal,decimal> { 
+                {1010m, 990.00m},
+                {1015m, 990.00m},
+                {1020m, 1009.80m},
+                {1050.00m, 1039.50m},
+                {1065.00m, 1039.50m},
+                {1087m, 1076.13m},
+                {1110m, 1098.90m},
+            };
+            // action
+            foreach (var values in expected)
+            {
+                _strategyContext.ByMinute.AddRange(BuildOrders(values.Key));
+                await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
+                var stopLoss = await _strategyContext.Get(StrategyProperty.StopLoss, 0m);
+                var updateAt = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0m);
+                Console.Out.WriteLine("updateAt:"+ updateAt);
+                result.Add(values.Key,stopLoss);
+                
+            }
+
+            // assert
+            result.Should().BeEquivalentTo(expected);
+
+        }
+
     }
 }

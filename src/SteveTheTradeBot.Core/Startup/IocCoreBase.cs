@@ -142,6 +142,7 @@ namespace SteveTheTradeBot.Core.Startup
                 .Add(RSiMslStrategy.Desc, () => new RSiMslStrategy())
                 .Add(RSiConfirmStrategy.Desc, () => new RSiConfirmStrategy())
                 .Add(TestBuySellStrategy.Desc, () => new TestBuySellStrategy())
+                .Add(RSiConfirmTrendStrategy.Desc, () => new RSiConfirmTrendStrategy())
                 .Add(MacdStrategy.Desc, () => new MacdStrategy())
             ).As<StrategyPicker>();
 
