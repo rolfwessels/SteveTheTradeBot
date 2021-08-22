@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper.Internal;
+using Bumbershoot.Utilities.Helpers;
+using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -68,6 +71,13 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             public static bool IsUpTrend(TradeQuote last)
             {
                 return last.Metric.GetOrDefault(Ema200) < last.Close;
+            }
+
+            public static bool IsPositiveTrend(IList<TradeQuote> quotes, PeriodSize periodSize)
+            {
+                var periods = (int) (periodSize.ToObserverPeriod().TotalMinutes / periodSize.ToTimeSpan().TotalMinutes);
+                var tradeQuote = quotes.TakeLast(periods+1).First();
+                return quotes.Last().Metric.GetOrDefault(Ema200) > tradeQuote.Metric.GetOrDefault(Ema200);
             }
         }
 

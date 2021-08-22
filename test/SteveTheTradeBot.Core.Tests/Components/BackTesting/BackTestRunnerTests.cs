@@ -224,7 +224,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 39;
+            var expected = 39; // failing unless we take the trend part
             await Test(@from, to, expected, t => new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FifteenMinutes);
         }
 
@@ -237,7 +237,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 13;
+            var expected = 13; // failing unless we take the trend part
             await Test(@from, to, expected, t => new RSiConfirmTrendStrategy(), CurrencyPair.ETHZAR, PeriodSize.FiveMinutes);
         }
 
