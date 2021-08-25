@@ -97,9 +97,9 @@ namespace SteveTheTradeBot.Api
 
         private static void RoundValues(Dictionary<string, decimal?> dictionary)
         {
-            foreach (var pair in dictionary)
+            foreach (var pair in dictionary.Keys.ToArray())
             {
-                dictionary[pair.Key] = pair.Value.HasValue ? Math.Round(pair.Value.Value, 5) : pair.Value;
+                dictionary[pair] = dictionary[pair].HasValue ? Math.Round(dictionary[pair].Value, 5) : dictionary[pair];
             }
         }
 

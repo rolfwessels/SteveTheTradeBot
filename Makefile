@@ -87,7 +87,11 @@ version:
 	@echo "${GREEN}Setting version number $(version) ${NC}"
 	@echo '{ "version": "${version}" }' > src/version.json
 
-publish: 
+clean-all-tags: 
+	@docker images --filter='reference=${dockerhub}' --format='{{.Repository}}:{{.Tag}}' | xargs --no-run-if-empty docker rmi
+	@docker images --filter='reference=${dockerhub}' --format='{{.Repository}}:{{.Tag}}'
+
+publish: clean-all-tags
 	@echo  "${GREEN}Publish branch $(current-branch) to $(docker-tags) to version $(version) as user ${DOCKER_USER}${NC}"
 	@docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 	@echo  "${GREEN}Building $(docker-tags)${NC}"

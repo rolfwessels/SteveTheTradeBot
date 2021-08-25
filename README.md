@@ -2,6 +2,7 @@
 
 [![BuildStatus](https://github.com/rolfwessels/SteveTheTradeBot/actions/workflows/github-action.yml/badge.svg)](https://github.com/rolfwessels/SteveTheTradeBot/actions)
 [![Dockerhub Status](https://img.shields.io/badge/dockerhub-ok-blue.svg)](https://hub.docker.com/r/rolfwessels/steve-the-trade-bot/)
+[![Dockerhub Version](https://img.shields.io/docker/v/rolfwessels/steve-the-trade-bot?sort=semver)](https://hub.docker.com/r/rolfwessels/steve-the-trade-bot/tags)
 
 Steve is a crypto trading bot. Well he is trying to be!
 

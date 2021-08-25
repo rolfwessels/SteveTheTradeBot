@@ -18,7 +18,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly int _buySignal;
         private readonly int _quotesToCheckRsi;
         private readonly int _positiveTrendOverQuotes;
-        private ICloseSignal _closeSignal;
+        private readonly ICloseSignal _closeSignal;
 
 
         public RSiConfirmStrategy() 
@@ -37,11 +37,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi+ _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
             var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
             var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes,_buySignal);
-            
             var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
             if (activeTrade == null)
             {
-
                 if (hasBuySignal && isPositiveTrend)
                 {
                     _log.Information(
