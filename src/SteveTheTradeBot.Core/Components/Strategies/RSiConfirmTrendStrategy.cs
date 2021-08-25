@@ -19,7 +19,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly int _buySignal;
         private readonly int _quotesToCheckRsi;
         private readonly int _positiveTrendOverQuotes;
-        private ICloseSignal _closeSignal;
+        private readonly ICloseSignal _closeSignal;
 
 
         public RSiConfirmTrendStrategy()

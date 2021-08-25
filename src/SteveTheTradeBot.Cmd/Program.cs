@@ -51,6 +51,7 @@ namespace SteveTheTradeBot.Cmd
                     conf.AddCommand<StrategyCommand.All>("add-all")
                         .WithDescription("Add all strategies, periods.")
                         .WithExample(new[] { "strategy", "add-all" });
+
                 });
 
                 config.AddBranch("data", conf =>

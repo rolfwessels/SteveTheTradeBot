@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Dal.Models.Trades;

@@ -2,10 +2,8 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
-using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {

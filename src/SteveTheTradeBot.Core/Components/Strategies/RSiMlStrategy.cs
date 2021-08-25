@@ -35,12 +35,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.ByMinute.Last();
             var activeTrade = data.ActiveTrade();
             
-            var hasRecentlyHitOverSold = data.ByMinute.TakeLast(_quotesToCheckRsi).Take(_quotesToCheckRsi).Min(x => x.Metric.GetOrDefault("rsi14"));
+            var hasRecentlyHitOverSold = Signals.Rsi.HasBuySignal(data.ByMinute.TakeLast(_quotesToCheckRsi), _buySignal);
             var predictedGrowth = _consumeModel.Predict(currentTrade.ToModelInput()).Score;
             if (activeTrade == null)
             {
 
-                if (hasRecentlyHitOverSold <= _buySignal && predictedGrowth > 1)
+                if (hasRecentlyHitOverSold && predictedGrowth > 1)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasRecentlyHitOverSold}");

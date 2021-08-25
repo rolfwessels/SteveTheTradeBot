@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Utils
 {
@@ -65,5 +67,11 @@ namespace SteveTheTradeBot.Core.Utils
                 yield return list;
             }
         }
+
+        public static IEnumerable<T> OrEmpty<T>(this List<T> argTrades)
+        {
+            if (argTrades == null) return new T[0];
+            return argTrades;
+    }
     }
 }

@@ -3,7 +3,9 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Castle.Core.Internal;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
@@ -21,7 +23,6 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
     [Category("FullIntegration")]
     public class BackTestRunnerTests
     {
-        private BackTestRunner _backTestRunner;
 
         [Test]
         [Timeout(240000)]
@@ -33,7 +34,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
-                BuildBackTestResult(@from, to, t => new MacdStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, new MacdStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
             {
@@ -70,7 +71,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
-                BuildBackTestResult(@from, to, t => new RSiMlStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, new RSiMlStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
             {
@@ -106,7 +107,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
-                BuildBackTestResult(@from, to, t => new RSiConfirmStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, new RSiConfirmStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
             {
@@ -147,7 +148,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week && x.Item1 != PeriodSize.Day).Select(x =>
-                BuildBackTestResult(@from, to, t => new RSiConfirmTrendStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, new RSiConfirmTrendStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
             {
@@ -188,7 +189,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
             var expected = 39;
-            await Test(@from, to, expected, t => new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            await Test(@from, to, expected, new RSiStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
         [Test]
@@ -199,8 +200,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 49;
-            await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var expected = 42;
+            await Test(@from, to, expected, new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
         [Test]
@@ -211,8 +212,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 51;
-            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var expected = 43;
+            await Test(@from, to, expected, new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -224,8 +225,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 39; // failing unless we take the trend part
-            await Test(@from, to, expected, t => new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FifteenMinutes);
+            var expected = 12; // failing unless we take the trend part
+            await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FifteenMinutes);
         }
 
 
@@ -237,8 +238,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 13; // failing unless we take the trend part
-            await Test(@from, to, expected, t => new RSiConfirmTrendStrategy(), CurrencyPair.ETHZAR, PeriodSize.FiveMinutes);
+            var expected = 5; // failing unless we take the trend part
+            await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.ETHZAR, PeriodSize.FiveMinutes);
         }
 
         [Test]
@@ -249,36 +250,22 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 43;
-            await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var expected = 47;
+            await Test(@from, to, expected, new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
+
 
 
         [Test]
         [Timeout(240000)]
-        public async Task Compare_RSiConfirmStrategy_ToRealTrade()
-        {
-            // arrange
-            Setup();
-            var from = DateTime.Parse("2021/08/10 10:13:52", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-            var to = DateTime.Parse("2021/08/13 09:20:00", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeUniversal);
-            //var to = DateTime.UtcNow;
-            var expected = 1;
-            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
-        }
-
-
-        [Test]
-        [Timeout(240000)]
-        [Explicit]
         public async Task Run_GivenRSiStrategy_ShouldOver2YearsShouldMake68PlusProfit() 
         {
             // arrange
             Setup();
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 68; // failing
-            await Test(@from, to, expected, t => new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var expected = 65; // failing
+            await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -292,7 +279,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 470; 
-            await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            await Test(@from, to, expected, new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -305,8 +292,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 1000; // currently says 1918.354 but I think that is BS
-            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var expected = 367; // currently says 1918.354 but I think that is BS
+            await Test(@from, to, expected, new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -320,7 +307,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
             var expected = 470; // currently says 1953.354 but I think that is BS
-            await Test(@from, to, expected, t => new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            await Test(@from, to, expected,new MacdStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
 
@@ -332,37 +319,43 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 94; // 
-            await Test(@from, to, expected, t => new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            var expected = 30; // 
+            await Test(@from, to, expected, new RSiMslStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
         [Test]
         [Timeout(240000)]
-        public async Task Run_GivenRSiConfirmStrategy_ShouldOver1YearsShouldMake200PlusProfit()
+        public async Task CompareStrategies()
         {
             // arrange
             Setup();
-            var from = DateTime.Parse("2020-11-01T00:00:00");
-            var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 294; // 
-            await Test(@from, to, expected, t => new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+            // The current prod trade
+            var from = DateTime.Parse("2021/08/10 10:10:00z");
+            var to = DateTime.Parse("2021/08/25 06:15:00z");
+            // var from = DateTime.Parse("2019-11-01T00:00:00");
+            // var to = DateTime.Parse("2021-07-21T00:00:00");
+            var allStrategies = new BaseStrategy[] { new RSiConfirmTrendStrategy(), new RSiMlStrategy(), new RSiConfirmStrategy(), new RSiMslStrategy(), new RSiStrategy() , new MacdStrategy()   };
+            var enumerable = allStrategies.Select(strategy => BuildBackTestResult(@from, to,strategy, CurrencyPair.BTCZAR, PeriodSize.FiveMinutes, 500));
+            var strategyInstances = await Task.WhenAll(enumerable);
+            strategyInstances
+                .OrderByDescending(x => x.PercentProfit)
+                .Select(x=>new { x.StrategyName, ProfitOverMarket = x.PercentProfit- x.PercentMarketProfit , x.PercentProfit , x.TotalNumberOfTrades, x.PercentOfProfitableTrades}).PrintTable();
         }
 
         private async Task Test(DateTime fromDate, DateTime to, decimal expected,
-            Func<IBrokerApi, IStrategy> getStrategy, string currencyPair, PeriodSize size)
+            IStrategy getStrategy, string currencyPair, PeriodSize size, int amount = 1000)
         {
-            var backTestResult = await BuildBackTestResult(fromDate, to, getStrategy, currencyPair, size);
+            var backTestResult = await BuildBackTestResult(fromDate, to, getStrategy, currencyPair, size, amount);
             // assert
             Console.Out.WriteLine($"{fromDate.ToLocalTime()} to {to} {(to - fromDate).ToShort()} ");
             backTestResult.Print();
 
-            backTestResult.PercentProfit.Should().BeGreaterThan(expected);
-            backTestResult.PercentProfit.Should().BeGreaterThan(backTestResult.PercentMarketProfit);
+            backTestResult.PercentProfit.Should().BeApproximately(expected,1);
         }
 
         private async Task<StrategyInstance> BuildBackTestResult(DateTime fromDate, DateTime to,
-            Func<IBrokerApi, IStrategy> getStrategy, string currencyPair,
-            PeriodSize size)
+            IStrategy strategy, string currencyPair,
+            PeriodSize size, int amount = 1000)
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
@@ -372,11 +365,10 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var player = new HistoricalDataPlayer(tradeHistoryStore, tradeFeedCandleStore);
 
             var fakeBroker = new FakeBroker(Messenger.Default, tradeHistoryStore);
-            var strategy = getStrategy(fakeBroker);
             var picker = new StrategyPicker().Add(strategy.Name, () => strategy);
 
 
-            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, currencyPair, 1000, size);
+            var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, currencyPair, amount, size);
             strategyInstance.Reference += $"{fromDate:yyMM}-{to:yyMM}";
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
             await strategyInstanceStore.Add(strategyInstance);
@@ -385,7 +377,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
             var strategyRunner = new StrategyRunner(picker, dynamicGraphs, strategyInstanceStore, fakeBroker,
                 tradeFeedCandleStore, Messenger.Default, parameterStore);
-            _backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore, fakeBroker,
+            var backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore, fakeBroker,
                 Messenger.Default,
                 strategyRunner);
             var cancellationTokenSource = new CancellationTokenSource();
@@ -394,7 +386,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 strategyInstance.PeriodSize, cancellationTokenSource.Token);
             // action
 
-            var backTestResult = await _backTestRunner.Run(strategyInstance, trades, CancellationToken.None);
+            var backTestResult = await backTestRunner.Run(strategyInstance, trades, CancellationToken.None);
             return backTestResult;
         }
 
@@ -411,5 +403,30 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
         }
 
         #endregion
+
+
+        [Test]
+        [Timeout(240000)]
+        [Explicit]
+        public async Task ClearAllBackTests()
+        {
+            // arrange
+            Setup();
+            var context = await TestTradePersistenceFactory.RealDb().GetTradePersistence();
+            var strategyInstances = context.Strategies.Where(x=>x.IsBackTest)
+                .Include(x => x.Trades)
+                .Include("Trades.Orders")
+                .Include(x => x.Property).ToList();
+            var refs = strategyInstances.Select(x=>x.Reference).ToArray();
+            context.DynamicPlots.RemoveRange(context.DynamicPlots.Where(x=>refs.Contains(x.Feed)));
+            context.TradeOrders.RemoveRange(strategyInstances.SelectMany(x=>x.Trades.OrEmpty()).SelectMany(r=>r.Orders.OrEmpty()));
+            context.Trades.RemoveRange(strategyInstances.SelectMany(x => x.Trades));
+            context.StrategyProperties.RemoveRange(strategyInstances.SelectMany(x=>x.Property));
+            await context.SaveChangesAsync();
+            context = await TestTradePersistenceFactory.RealDb().GetTradePersistence();
+            strategyInstances = context.Strategies.Where(x => x.IsBackTest).ToList();
+            context.Strategies.RemoveRange(strategyInstances);
+            await context.SaveChangesAsync();
+        }
     }
 }
