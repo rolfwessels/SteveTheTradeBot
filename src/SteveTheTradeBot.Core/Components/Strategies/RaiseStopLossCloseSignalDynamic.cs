@@ -8,7 +8,7 @@ using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RaiseStopLossCloseSignalDynamic : RaiseStopLossCloseSignal
+    public class RaiseStopLossCloseSignalDynamic : RaiseStopLossCloseSignal, ICloseSignal
     {
         private readonly decimal _maxRiskPercent;
         private readonly decimal _updateAtIntervalPercent;
@@ -23,6 +23,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             _maxRange = maxRange;
             _initialTakeProfit = (_maxRiskPercent * 1.5m);
         }
+
+        string ICloseSignal.Name => $"{this.GetType().Name}[{_maxRiskPercent},{_updateAtIntervalPercent},{_maxRange}]";
 
         #region Overrides of RaiseStopLossCloseSignal
 

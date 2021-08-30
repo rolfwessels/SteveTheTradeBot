@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoMapper.Internal;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Framework.Mappers;
@@ -11,9 +10,9 @@ using SteveTheTradeBot.ML.Model;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RSiMlStrategy : BaseStrategy
+    public class RSiPlusDecisionTreeStrategy : BaseStrategy
     {
-        public const string Desc = nameof(RSiMlStrategy);
+        public const string Desc = nameof(RSiPlusDecisionTreeStrategy);
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly int _buySignal;
@@ -22,12 +21,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly ICloseSignal _closeSignal;
 
 
-        public RSiMlStrategy() 
+        public RSiPlusDecisionTreeStrategy() : this(new RaiseStopLossCloseSignalDynamic(0.04m))
         {
-            _closeSignal = new RaiseManualStopLossCloseSignal(0.96m, 1.05m);
+        }
+
+        public RSiPlusDecisionTreeStrategy(ICloseSignal closeSignal)
+        {
+            _closeSignal = closeSignal;
             _buySignal = 30;
             _quotesToCheckRsi = 10;
-            _consumeModel = new ConsumeModel(@"C:\temp\MLModel.zip");
+            _consumeModel = new ConsumeModel(Settings.Instance.DecisionTreeStrategyData);
         }
 
         public override async Task DataReceived(StrategyContext data)

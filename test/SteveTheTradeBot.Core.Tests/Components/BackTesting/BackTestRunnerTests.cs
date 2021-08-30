@@ -71,7 +71,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = from.AddMonths(1);
 
             var strategyInstances = ValrFeeds.AllWithPeriods().Where(x => x.Item1 != PeriodSize.Week).Select(x =>
-                BuildBackTestResult(@from, to, new RSiMlStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
+                BuildBackTestResult(@from, to, new RSiPlusDecisionTreeStrategy(), x.Item2.CurrencyPair, x.Item1).Result);
 
             var table = strategyInstances.Select(x => new
             {
@@ -325,6 +325,18 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
+        public async Task Run_GivenRSiPlusDecisionTreeStrategy_ShouldOver1YearsShouldMake200PlusProfit()
+        {
+            // arrange
+            Setup();
+            var from = DateTime.Parse("2020-11-01T00:00:00");
+            var to = DateTime.Parse("2021-07-21T00:00:00");
+            var expected = 30; // 
+            await Test(@from, to, expected, new RSiPlusDecisionTreeStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
+        }
+
+        [Test]
+        [Timeout(240000)]
         public async Task CompareStrategies()
         {
             // arrange
@@ -334,12 +346,70 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             var to = DateTime.Parse("2021/08/25 06:15:00z");
             // var from = DateTime.Parse("2019-11-01T00:00:00");
             // var to = DateTime.Parse("2021-07-21T00:00:00");
-            var allStrategies = new BaseStrategy[] { new RSiConfirmTrendStrategy(), new RSiMlStrategy(), new RSiConfirmStrategy(), new RSiMslStrategy(), new RSiStrategy() , new MacdStrategy()   };
+            var allStrategies = new BaseStrategy[] { new RSiConfirmTrendStrategy(), new RSiPlusDecisionTreeStrategy(), new RSiConfirmStrategy(), new RSiMslStrategy(), new RSiStrategy() , new MacdStrategy()   };
             var enumerable = allStrategies.Select(strategy => BuildBackTestResult(@from, to,strategy, CurrencyPair.BTCZAR, PeriodSize.FiveMinutes, 500));
             var strategyInstances = await Task.WhenAll(enumerable);
             strategyInstances
                 .OrderByDescending(x => x.PercentProfit)
                 .Select(x=>new { x.StrategyName, ProfitOverMarket = x.PercentProfit- x.PercentMarketProfit , x.PercentProfit , x.TotalNumberOfTrades, x.PercentOfProfitableTrades}).PrintTable();
+        }
+
+        [Test]
+        [Timeout(240000)]
+        public async Task CompareCloseStrategies()
+        {
+            // arrange
+            Setup();
+            // The current prod trade
+            var from = DateTime.Parse("2021/08/10 10:10:00z");
+            var to = DateTime.Parse("2021/08/25 06:15:00z");
+            // var from = DateTime.Parse("2019-11-01T00:00:00");
+            // var to = DateTime.Parse("2021-07-21T00:00:00");
+
+// ╔═════════════════════════════════════════════════╦═════════════════════════════╦══════════════════╦═══════════════╦═════════════════════╦═══════════════════════════╗
+// ║ Name                                            ║ StrategyName                ║ ProfitOverMarket ║ PercentProfit ║ TotalNumberOfTrades ║ PercentOfProfitableTrades ║
+// ╠═════════════════════════════════════════════════╬═════════════════════════════╬══════════════════╬═══════════════╬═════════════════════╬═══════════════════════════╣
+// ║ RaiseManualStopLossCloseSignal                  ║ RSiPlusDecisionTreeStrategy ║ 733.773          ║ 939.884       ║ 159                 ║ 46.54                     ║
+// ║ RaiseStopLossCloseSignal                        ║ RSiPlusDecisionTreeStrategy ║ -126.751         ║ 79.360        ║ 181                 ║ 43.65                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.04,0.01,0.05] ║ RSiPlusDecisionTreeStrategy ║ -151.847         ║ 54.264        ║ 265                 ║ 35.85                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.03,0.01,0.05] ║ RSiPlusDecisionTreeStrategy ║ -197.567         ║ 8.544         ║ 341                 ║ 37.83                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.02,0.01,0.05] ║ RSiPlusDecisionTreeStrategy ║ -268.603         ║ -62.492       ║ 453                 ║ 36.64                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.02,0.01,0.05] ║ RSiPlusDecisionTreeStrategy ║ -268.603         ║ -62.492       ║ 453                 ║ 36.64                     ║
+// ║ MacdCloseSignal                                 ║ RSiPlusDecisionTreeStrategy ║ -290.295         ║ -84.184       ║ 627                 ║ 25.20                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.06] ║ RSiPlusDecisionTreeStrategy ║ -298.389         ║ -92.278       ║ 662                 ║ 33.23                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.07] ║ RSiPlusDecisionTreeStrategy ║ -298.469         ║ -92.358       ║ 646                 ║ 33.28                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.09] ║ RSiPlusDecisionTreeStrategy ║ -298.641         ║ -92.530       ║ 595                 ║ 31.93                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.05] ║ RSiPlusDecisionTreeStrategy ║ -298.749         ║ -92.638       ║ 690                 ║ 33.19                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.08] ║ RSiPlusDecisionTreeStrategy ║ -299.265         ║ -93.154       ║ 617                 ║ 32.41                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.03] ║ RSiPlusDecisionTreeStrategy ║ -299.783         ║ -93.672       ║ 737                 ║ 33.51                     ║
+// ║ RaiseStopLossCloseSignalDynamic[0.01,0.01,0.04] ║ RSiPlusDecisionTreeStrategy ║ -299.955         ║ -93.844       ║ 719                 ║ 33.24                     ║
+// ║ DynamicStopLossAndProfitCloseSignal             ║ RSiPlusDecisionTreeStrategy ║ -302.813         ║ -96.702       ║ 610                 ║ 27.87                     ║
+// ╚═════════════════════════════════════════════════╩═════════════════════════════╩══════════════════╩═══════════════╩═════════════════════╩═══════════════════════════╝
+
+            var allStrategies = new Func<ICloseSignal, BaseStrategy>[] { cs=> new RSiPlusDecisionTreeStrategy(cs) };
+            var allCloseSignals = new ICloseSignal[] { new RaiseStopLossCloseSignal(),new RaiseManualStopLossCloseSignal(), new MacdCloseSignal(), new DynamicStopLossAndProfitCloseSignal(), 
+                new RaiseStopLossCloseSignalDynamic(), 
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.05m),
+                new RaiseStopLossCloseSignalDynamic(0.02m, 0.01m, 0.05m),
+                new RaiseStopLossCloseSignalDynamic(0.03m, 0.01m, 0.05m),
+                new RaiseStopLossCloseSignalDynamic(0.04m, 0.01m, 0.05m),
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.03m),
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.04m),
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.06m),
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.07m),
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.08m),
+                new RaiseStopLossCloseSignalDynamic(0.01m, 0.01m, 0.09m)
+
+            };
+            var enumerable = allStrategies
+                .SelectMany(strategy => allCloseSignals.Select((cs,i) => new { br = BuildBackTestResult(@from, to, strategy(cs), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes, 500, cs.Name+"i"+i) , cs = cs}) )
+                .ToList();
+            await Task.WhenAll(enumerable.Select(x=>x.br));
+            enumerable
+                .OrderByDescending(x => x.br.Result.PercentProfit)
+                .Select(x => new { 
+                    x.cs.Name,
+                    x.br.Result.StrategyName, ProfitOverMarket = x.br.Result.PercentProfit - x.br.Result.PercentMarketProfit, x.br.Result.PercentProfit, x.br.Result.TotalNumberOfTrades, x.br.Result.PercentOfProfitableTrades }).PrintTable();
         }
 
         private async Task Test(DateTime fromDate, DateTime to, decimal expected,
@@ -355,7 +425,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         private async Task<StrategyInstance> BuildBackTestResult(DateTime fromDate, DateTime to,
             IStrategy strategy, string currencyPair,
-            PeriodSize size, int amount = 1000)
+            PeriodSize size, int amount = 1000 , string closeSignalName = null)
         {
             var factory = TestTradePersistenceFactory.RealDb();
             var tradeHistoryStore = new TradeHistoryStore(factory);
@@ -369,7 +439,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
 
             var strategyInstance = StrategyInstance.ForBackTest(strategy.Name, currencyPair, amount, size);
-            strategyInstance.Reference += $"{fromDate:yyMM}-{to:yyMM}";
+            strategyInstance.Reference += closeSignalName+$"{fromDate:yyMM}-{to:yyMM}";
             await strategyInstanceStore.RemoveByReference(strategyInstance.Reference);
             await strategyInstanceStore.Add(strategyInstance);
 

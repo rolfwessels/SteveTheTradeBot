@@ -44,6 +44,7 @@ void Main()
 		x.PercentProfit,
 		x.TotalActiveTrades,
 		x.TotalNumberOfTrades,
+		x.FirstStart,
 		x.LastClose,
 		x.LargestLoss,
 		x.LargestProfit,
@@ -82,6 +83,7 @@ void Main()
 		x.AverageTradesPerMonth,
 		x.PercentOfProfitableTrades,
 		x.CurrentTradeProfit,
+		
 		GarenteeTradeProfit = x.BoughtInAt > 0? MovementPercent(x.StopLoss, x.BoughtInAt):0,
 		PercentTillStopLossUpdate = MovementPercent(x.UpdateStopLossAt, x.LastClose),
 		PercentTillStopLoss = MovementPercent(x.StopLoss, x.LastClose)
@@ -96,7 +98,7 @@ void Main()
 void Kuling()
 {
 	var strats =  Strategies.Where(x=>x.IsActive && x.UpdateDate - x.CreateDate > TimeSpan.FromDays(20))
-			.Where(x=>x.Trades.Count == 0 ||  (x.PercentProfit < -10))
+			.Where(x=>x.Trades.Count == 0 ||  (x.PercentProfit < -30))
 			.ToList();
 	if (strats.Any()) {
 		strats.Dump("De-Activate?");

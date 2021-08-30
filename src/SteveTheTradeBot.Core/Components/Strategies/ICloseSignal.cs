@@ -8,5 +8,6 @@ namespace SteveTheTradeBot.Core.Components.Strategies
     {
         Task<decimal> Initialize(StrategyContext data, decimal boughtAtPrice, BaseStrategy strategy);
         Task DetectClose(StrategyContext data, TradeQuote currentTrade, StrategyTrade activeTrade, BaseStrategy strategy);
+        virtual string  Name => GetType().Name;
     }
 }

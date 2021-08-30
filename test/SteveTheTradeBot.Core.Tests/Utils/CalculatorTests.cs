@@ -15,8 +15,7 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             // assert
             result.Should().Be(3.48m);
         }
-
-
+        
         [Test]
         public void SharpeRatioForYear_GivenSampleValues_ShouldCalculateSharpRatio()
         {
@@ -36,5 +35,18 @@ namespace SteveTheTradeBot.Core.Tests.Utils
             // assert
             result.Should().Be(0.49m);
         }
+
+
+        [Test]
+        public void SharpeRatioMonths_GivenSampleValues_ShouldCalculateSharpRatio()
+        {
+
+            // action
+            var result = Calculator.SharpeRatioOverPeriods(new[] { 1.64m, 5.85m, 9.22m, 3.51m, -0.88m, 1.07m, 13.03m, 9.4m, 10.49m, -5.08m }, 12, 5m);
+            // assert
+            result.Should().Be(2.56m);
+        }
+
+        
     }
 }
