@@ -331,7 +331,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2020-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 30; // 
+            var expected = 8; // 
             await Test(@from, to, expected, new RSiPlusDecisionTreeStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 

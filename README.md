@@ -132,3 +132,4 @@ docker-compose exec api bash
 ## Helpful Links
 
 - Timescaledb <https://docs.timescale.com/timescaledb/latest/how-to-guides/install-timescaledb/self-hosted/docker/installation-docker/#docker-hub>
+- Sharp ratio cals <https://www.educba.com/sharpe-ratio-formula/>
