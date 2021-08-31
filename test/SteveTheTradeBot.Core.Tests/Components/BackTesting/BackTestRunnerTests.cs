@@ -343,7 +343,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             // The current prod trade
             var from = DateTime.Parse("2021/08/10 10:10:00z");
-            var to = DateTime.Parse("2021/08/25 06:15:00z");
+            var to = DateTime.Now;
             // var from = DateTime.Parse("2019-11-01T00:00:00");
             // var to = DateTime.Parse("2021-07-21T00:00:00");
             var allStrategies = new BaseStrategy[] { new RSiConfirmTrendStrategy(), new RSiPlusDecisionTreeStrategy(), new RSiConfirmStrategy(), new RSiMslStrategy(), new RSiStrategy() , new MacdStrategy()   };
@@ -447,8 +447,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
             var strategyRunner = new StrategyRunner(picker, dynamicGraphs, strategyInstanceStore, fakeBroker,
                 tradeFeedCandleStore, Messenger.Default, parameterStore);
-            var backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore, fakeBroker,
-                Messenger.Default,
+            var backTestRunner = new BackTestRunner(dynamicGraphs, picker, strategyInstanceStore,
                 strategyRunner);
             var cancellationTokenSource = new CancellationTokenSource();
 

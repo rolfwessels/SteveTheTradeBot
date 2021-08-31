@@ -87,5 +87,7 @@ namespace SteveTheTradeBot.Dal.Models.Trades
 
             return $"Sold {Amount.From(BuyQuantity, forBackTest.Pair.BaseCurrency())} at {Amount.From(SellPrice, forBackTest.Pair.QuoteCurrency())} for {Amount.From(SellValue, forBackTest.Pair.QuoteCurrency())} (Fee {Amount.From(FeeAmount, FeeCurrency)})";
         }
+
+        public decimal TheReturn => SellPrice / BuyPrice;
     }
 }

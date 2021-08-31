@@ -53,10 +53,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
             }
         }
-
-      
-
-
+        
         public override string Name => Desc;
       
     }

@@ -6,9 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using SteveTheTradeBot.Core.Components.Strategies;
-using SteveTheTradeBot.Core.Components.Broker;
 using SteveTheTradeBot.Core.Components.Storage;
-using SteveTheTradeBot.Core.Framework.MessageUtil;
 using SteveTheTradeBot.Core.Tools;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -17,22 +15,16 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
     public class BackTestRunner
     {
-        private readonly QuoteBuilder _quoteBuilder;
         private readonly DynamicGraphs _dynamicGraphs;
         private readonly StrategyPicker _picker;
         private readonly StrategyInstanceStore _strategyInstanceStore;
-        private readonly IBrokerApi _broker;
-        private readonly IMessenger _messenger;
         private readonly StrategyRunner _strategyRunner;
 
-        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore, IBrokerApi broker, IMessenger messenger, StrategyRunner strategyRunner)
+        public BackTestRunner(DynamicGraphs dynamicGraphs, StrategyPicker picker , StrategyInstanceStore strategyInstanceStore, StrategyRunner strategyRunner)
         {
-            _quoteBuilder = new QuoteBuilder();
             _dynamicGraphs = dynamicGraphs;
             _picker = picker;
             _strategyInstanceStore = strategyInstanceStore;
-            _broker = broker;
-            _messenger = messenger;
             _strategyRunner = strategyRunner;
         }
 
