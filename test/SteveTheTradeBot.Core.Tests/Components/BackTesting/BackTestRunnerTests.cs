@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Castle.Core.Internal;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
@@ -145,22 +143,20 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 x.PercentOfProfitableTrades
             }).ToTable();
             Console.Out.WriteLine(table);
-        // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╦═══════════════════════════╗                    
-        // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║ PercentOfProfitableTrades ║                    
-        // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╬═══════════════════════════╣                    
-        // ║ BTCZAR ║ OneMinute      ║ 37.812              ║ 34.597        ║ 27.859                ║ 34.62                     ║                    
-        // ║ BTCZAR ║ FiveMinutes    ║ 37.258              ║ 31.921        ║ 15                    ║ 50.0                      ║                    
-        // ║ BTCZAR ║ FifteenMinutes ║ 38.032              ║ 10.783        ║ 10.714                ║ 40.0                      ║                    
-        // ║ BTCZAR ║ ThirtyMinutes  ║ 37.503              ║ -0.451        ║ 3.214                 ║ 33.33                     ║                    
-        // ║ BTCZAR ║ OneHour        ║ 37.019              ║ 1.345         ║ 0                     ║ 100                       ║                    
-        // ║ BTCZAR ║ Day            ║ 33.584              ║ 0             ║ 0                     ║ 0                         ║                    
-        // ║ ETHZAR ║ OneMinute      ║ 8.204               ║ -1.428        ║ 47.152                ║ 22.73                     ║                    
-        // ║ ETHZAR ║ FiveMinutes    ║ 8.199               ║ 3.562         ║ 20.357                ║ 57.89                     ║                    
-        // ║ ETHZAR ║ FifteenMinutes ║ 7.767               ║ -0.899        ║ 7.5                   ║ 14.29                     ║                    
-        // ║ ETHZAR ║ ThirtyMinutes  ║ 7.323               ║ -1.332        ║ 0                     ║ 0                         ║                    
-        // ║ ETHZAR ║ OneHour        ║ 7.305               ║ -1.487        ║ 4.286                 ║ 25.00                     ║                    
-        // ║ ETHZAR ║ Day            ║ 3.296               ║ 0             ║ 0                     ║ 0                         ║                    
-        // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╩═══════════════════════════╝  
+            // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╦═══════════════════════════╗                    
+            // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║ PercentOfProfitableTrades ║                    
+            // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╬═══════════════════════════╣                    
+            // ║ BTCZAR ║ OneMinute      ║ 37.812              ║ 12.238        ║ 13.929                ║ 38.46                     ║                    
+            // ║ BTCZAR ║ FiveMinutes    ║ 37.258              ║ 27.576        ║ 6.429                 ║ 50.0                      ║                    
+            // ║ BTCZAR ║ FifteenMinutes ║ 38.032              ║ 36.054        ║ 3.214                 ║ 66.67                     ║                    
+            // ║ BTCZAR ║ ThirtyMinutes  ║ 37.503              ║ 21.411        ║ 2.143                 ║ 50.0                      ║                    
+            // ║ BTCZAR ║ OneHour        ║ 37.019              ║ -2.981        ║ 0                     ║ 0                         ║                    
+            // ║ ETHZAR ║ OneMinute      ║ 8.204               ║ -2.348        ║ 21.433                ║ 40.0                      ║                    
+            // ║ ETHZAR ║ FiveMinutes    ║ 8.199               ║ -0.485        ║ 10.714                ║ 40.0                      ║                    
+            // ║ ETHZAR ║ FifteenMinutes ║ 7.767               ║ 5.511         ║ 5.357                 ║ 40.0                      ║                    
+            // ║ ETHZAR ║ ThirtyMinutes  ║ 7.323               ║ 8.098         ║ 2.143                 ║ 50.0                      ║                    
+            // ║ ETHZAR ║ OneHour        ║ 7.305               ║ 24.096        ║ 2.143                 ║ 100                       ║                    
+            // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╩═══════════════════════════╝ 
 
         }
 
@@ -197,7 +193,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 43;
+            var expected = 47;
             await Test(@from, to, expected, new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
@@ -210,7 +206,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 12; // failing unless we take the trend part
+            var expected = 36; // failing unless we take the trend part
             await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FifteenMinutes);
         }
 
@@ -223,7 +219,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 5; // failing unless we take the trend part
+            var expected = 0; // failing unless we take the trend part
             await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.ETHZAR, PeriodSize.FiveMinutes);
         }
 
@@ -277,7 +273,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 367; // currently says 1918.354 but I think that is BS
+            var expected = 453; // currently says 1918.354 but I think that is BS
             await Test(@from, to, expected, new RSiConfirmStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 

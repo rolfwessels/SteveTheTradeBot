@@ -24,9 +24,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public RSiConfirmTrendStrategy()
         {
-            _closeSignal = new RaiseStopLossCloseSignalDynamic(0.02m, 0.01m, 0.07m);
+            //_closeSignal = new RaiseStopLossCloseSignalDynamic(0.02m, 0.01m, 0.07m);
+            _closeSignal = new RaiseManualStopLossCloseSignal();
             _buySignal = 30;
-            _quotesToCheckRsi = 10;
+            _quotesToCheckRsi = 20; 
             _positiveTrendOverQuotes = 3;
         }
 
@@ -41,11 +42,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
                 var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
-                var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
+                var isPositiveTrend =  Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
                 var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
-                var isPositiveTrendOverAll = Signals.Ema.IsPositiveTrend(data.ByMinute, data.StrategyInstance.PeriodSize);
-
-                if (hasBuySignal && isPositiveTrend && ( isUpTrend || isPositiveTrendOverAll ))
+              
+                if (hasBuySignal && isUpTrend)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");
