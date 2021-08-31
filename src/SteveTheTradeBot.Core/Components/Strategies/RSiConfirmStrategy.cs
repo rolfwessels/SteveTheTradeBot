@@ -34,15 +34,15 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public override async Task DataReceived(StrategyContext data)
         {
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
 
             if (activeTrade == null)
             {
-                var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
+                var tradeQuotes = data.Quotes.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
                 var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
-                var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
+                var isPositiveTrend = Signals.IsPositiveTrend(data.Quotes.TakeLast(_positiveTrendOverQuotes));
                 
                 var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
                     
@@ -58,7 +58,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 else
                 {
                     data.StrategyInstance.Status =
-                        $"Waiting to buy ![wait for min rsi {minRsi} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.ByMinute.TakeLast(_positiveTrendOverQuotes).Select(x=>x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
+                        $"Waiting to buy ![wait for min rsi {minRsi} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.Quotes.TakeLast(_positiveTrendOverQuotes).Select(x=>x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
                 }
             }
             else

@@ -131,8 +131,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             if (timeSpan == default) {
                 timeSpan = 2 * data.StrategyInstance.PeriodSize.ToObserverPeriod();
             }
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             return lastTrade == null || currentTrade.Date.Add(-timeSpan) > lastTrade.EndDate;
+        }
+
+        public static bool IsBullishMarket(StrategyContext data, int overDays = 30, int bullishMarker = 10)
+        {
+            var latestQuote = data.LatestQuote();
+            var fromPeriod = data.DayQuotes.First(x=>x.Date > latestQuote.Date.Date.Add(-TimeSpan.FromDays(overDays)));
+            var isBullishMarket = TradeUtils.MovementPercent(latestQuote.Close, fromPeriod.Close) >= bullishMarker;
+            return isBullishMarket;
         }
     }
 }

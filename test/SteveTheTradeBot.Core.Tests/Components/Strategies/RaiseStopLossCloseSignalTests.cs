@@ -46,7 +46,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(995));
+            _strategyContext.Quotes.AddRange(BuildOrders(995));
             // action
             await _sut.Initialize(_strategyContext, 1000, _rSiStrategy);
             // assert
@@ -63,7 +63,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(995));
+            _strategyContext.Quotes.AddRange(BuildOrders(995));
             // action
             await _sut.Initialize(_strategyContext, 1000, _rSiStrategy);
             // assert
@@ -93,7 +93,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(995));
+            _strategyContext.Quotes.AddRange(BuildOrders(995));
             await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
             // action
             await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
@@ -108,7 +108,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(1020.00m));
+            _strategyContext.Quotes.AddRange(BuildOrders(1020.00m));
             await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
             // action
             await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
@@ -125,7 +125,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(1020.00m));
+            _strategyContext.Quotes.AddRange(BuildOrders(1020.00m));
             await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
             // action
             await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
@@ -141,7 +141,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(1020.00m));
+            _strategyContext.Quotes.AddRange(BuildOrders(1020.00m));
             await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
             // action
             await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
@@ -157,7 +157,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var boughtAtPrice = 1000;
             var (addTrade, tradeOrder) = _strategyContext.StrategyInstance.AddBuyTradeOrder(100, boughtAtPrice, DateTime.Now);
-            _strategyContext.ByMinute.AddRange(BuildOrders(1000));
+            _strategyContext.Quotes.AddRange(BuildOrders(1000));
             await _sut.Initialize(_strategyContext, boughtAtPrice, _rSiStrategy);
             var result = new Dictionary<decimal, decimal>();
             var expected = new Dictionary<decimal,decimal> { 
@@ -172,7 +172,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             // action
             foreach (var values in expected)
             {
-                _strategyContext.ByMinute.AddRange(BuildOrders(values.Key));
+                _strategyContext.Quotes.AddRange(BuildOrders(values.Key));
                 await _sut.DetectClose(_strategyContext, _strategyContext.LatestQuote(), addTrade, _rSiStrategy);
                 var stopLoss = await _strategyContext.Get(StrategyProperty.StopLoss, 0m);
                 var updateAt = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0m);

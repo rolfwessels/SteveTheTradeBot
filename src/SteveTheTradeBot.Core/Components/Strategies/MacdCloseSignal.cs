@@ -30,8 +30,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var useMacd = await data.Get(_useMacd, false);
             if (useMacd)
             {
-                var isMacdSignalCrossingBack = Signals.Macd.GetCrossedSignalOverMacd(data.ByMinute.TakeLast(2)).Any();
-                var isUpTrend = Signals.Ema.IsUpTrend(data.ByMinute.Last());
+                var isMacdSignalCrossingBack = Signals.Macd.GetCrossedSignalOverMacd(data.Quotes.TakeLast(2)).Any();
+                var isUpTrend = Signals.Ema.IsUpTrend(data.Quotes.Last());
                 
                 if (isMacdSignalCrossingBack && !isUpTrend)
                 {

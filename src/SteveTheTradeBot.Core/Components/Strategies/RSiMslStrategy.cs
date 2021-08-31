@@ -27,7 +27,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public override async Task DataReceived(StrategyContext data)
         {
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
             var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");

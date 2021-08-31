@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
+using Bumbershoot.Utilities.Helpers;
 using SteveTheTradeBot.Core.Components.Strategies;
 using SteveTheTradeBot.Core.Components.Storage;
-using SteveTheTradeBot.Core.Tools;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.BackTesting
@@ -29,20 +26,34 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
         }
 
         public async Task<StrategyInstance> Run(StrategyInstance instance,
-            IEnumerable<TradeQuote> enumerable, 
+            IEnumerable<TradeQuote> periodQuotes, 
+            List<TradeQuote> dayQuotes, 
             CancellationToken cancellationToken)
-        {
-            
+        {   
             await _dynamicGraphs.Clear(instance.Reference);
             var strategy = _picker.Get(instance.StrategyName);
+            var dayQuoteIndex = 0;
             return await _strategyInstanceStore.EnsureUpdate(instance.Id, async si => {
                 var context = await _strategyRunner.PopulateStrategyContext(si, DateTime.UtcNow);
-                context.ByMinute.Clear();
+                context.Quotes.Clear();
                 
-                foreach (var trade in enumerable)
+                foreach (var trade in periodQuotes)
                 {
                     if (cancellationToken.IsCancellationRequested) break;
-                    context.ByMinute.Push(trade);
+                    context.Quotes.Push(trade);
+                    var dayQuote = dayQuotes[dayQuoteIndex];
+                    
+                    while (dayQuote.Date.AddDays(1) <= trade.Date)
+                    {
+                        context.DayQuotes.Push(dayQuote);
+                        var i = ++dayQuoteIndex;
+                        if (i >= 0 && dayQuotes.Count > i) dayQuote = dayQuotes[i];
+                        else break;
+                    }
+
+                   
+                    
+
                     await _strategyRunner.Process(si, context, strategy);
                 }
                 await strategy.SellAll(context);

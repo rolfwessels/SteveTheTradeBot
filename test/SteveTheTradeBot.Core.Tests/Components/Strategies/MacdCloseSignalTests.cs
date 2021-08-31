@@ -24,7 +24,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1120, fakeStrategy);
             // assert
@@ -40,7 +40,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var stopLoss = await _strategyContext.Get(StrategyProperty.StopLoss,0m);
             var currentTrade = BuildOrders(new[] { stopLoss }).Last();
@@ -62,7 +62,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var updateStopLossAt = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0m);
             
@@ -82,7 +82,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var firstUpdateStopLoss = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0m);
             await DetectCloseAt(firstUpdateStopLoss + 1, fakeStrategy);
@@ -100,7 +100,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var firstUpdateStopLoss = await _strategyContext.Get(StrategyProperty.UpdateStopLossAt, 0m);
             await DetectCloseAt(firstUpdateStopLoss + 1, fakeStrategy);
@@ -110,9 +110,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .With((x, i) => x.Metric.Add(Signals.MacdValue, 0 - i))
                 .With((x, i) => x.Metric.Add(Signals.MacdSignal, 0))
                 .Build().Dump("d");
-            _strategyContext.ByMinute.AddRange(tradeQuotes);
+            _strategyContext.Quotes.AddRange(tradeQuotes);
             // action
-            await _sut.DetectClose(_strategyContext, _strategyContext.ByMinute.Last(), _strategyContext.ActiveTrade(), fakeStrategy);
+            await _sut.DetectClose(_strategyContext, _strategyContext.Quotes.Last(), _strategyContext.ActiveTrade(), fakeStrategy);
             // assert
             var simpleOrderRequests = _fakeBroker.Requests.OfType<SimpleOrderRequest>().ToArray();
             simpleOrderRequests.Should().HaveCount(1);

@@ -1,10 +1,7 @@
-﻿using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Serilog;
-using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -34,19 +31,20 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public override async Task DataReceived(StrategyContext data)
         {
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
 
            
             if (activeTrade == null)
             {
-                var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
+                var tradeQuotes = data.Quotes.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
                 var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
-                
                 var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
                 var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
-                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod)
+                var isBullishMarket = Signals.IsBullishMarket(data);
+
+                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod && isBullishMarket)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");

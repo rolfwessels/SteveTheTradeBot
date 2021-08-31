@@ -41,7 +41,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .All().With((x, r) => x.Date = _requestDate.AddDays(-1 * r))
                 .Build();
 
-            _data.ByMinute.AddRange(tradeFeedQuotes);
+            _data.Quotes.AddRange(tradeFeedQuotes);
             _fakeStrategy = new FakeStrategy();
         }
 
@@ -473,7 +473,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .With(x => x.Close = close)
                 .With(x => x.Date = dateTime)
                 .Build();
-            _data.ByMinute.Add(tradeFeedCandle);
+            _data.Quotes.Add(tradeFeedCandle);
             return tradeFeedCandle;
         }
     }

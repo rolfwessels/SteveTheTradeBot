@@ -35,10 +35,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public override async Task DataReceived(StrategyContext data)
         {
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
             
-            var hasRecentlyHitOverSold = Signals.Rsi.HasBuySignal(data.ByMinute.TakeLast(_quotesToCheckRsi), _buySignal);
+            var hasRecentlyHitOverSold = Signals.Rsi.HasBuySignal(data.Quotes.TakeLast(_quotesToCheckRsi), _buySignal);
             var predictedGrowth = _consumeModel.Predict(currentTrade.ToModelInput()).Score;
             if (activeTrade == null)
             {

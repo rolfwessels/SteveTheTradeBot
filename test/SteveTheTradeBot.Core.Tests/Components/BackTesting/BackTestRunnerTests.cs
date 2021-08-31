@@ -206,7 +206,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2021-02-01T00:00:00");
             var to = from.AddMonths(1);
-            var expected = 34; // failing unless we take the trend part
+            var expected = 9; // failing unless we take the trend part
             await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
@@ -245,7 +245,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             var from = DateTime.Parse("2019-11-01T00:00:00");
             var to = DateTime.Parse("2021-07-21T00:00:00");
-            var expected = 0; // failing
+            var expected = 105; // failing
             await Test(@from, to, expected, new RSiConfirmTrendStrategy(), CurrencyPair.BTCZAR, PeriodSize.FiveMinutes);
         }
 
@@ -334,6 +334,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 .OrderByDescending(x => x.PercentProfit)
                 .Select(x=>new { x.StrategyName, ProfitOverMarket = x.PercentProfit- x.PercentMarketProfit , x.PercentProfit , x.TotalNumberOfTrades, x.PercentOfProfitableTrades}).PrintTable();
             strategyInstances.First(x => x.StrategyName == "RSiConfirmTrendStrategy").Print();
+            strategyInstances.Where(x => x.PercentProfit > 2).Select(x => x.StrategyName).Should()
+                .Contain(new[] {"RSiConfirmTrendStrategy", "RSiConfirmStrategy"});
         }
 
         [Test]
@@ -433,11 +435,13 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 strategyRunner);
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var trades = player.ReadHistoricalData(currencyPair, fromDate.ToUniversalTime(), to.ToUniversalTime(),
+            var periodQuotes = player.ReadHistoricalData(currencyPair, fromDate.ToUniversalTime(), to.ToUniversalTime(),
                 strategyInstance.PeriodSize, cancellationTokenSource.Token);
+            var dayQuotes = player.ReadHistoricalData(currencyPair, fromDate.ToUniversalTime().AddDays(-30), to.ToUniversalTime(),
+                PeriodSize.Day, cancellationTokenSource.Token);
             // action
 
-            var backTestResult = await backTestRunner.Run(strategyInstance, trades, CancellationToken.None);
+            var backTestResult = await backTestRunner.Run(strategyInstance, periodQuotes, dayQuotes.ToList(), CancellationToken.None);
             return backTestResult;
         }
 
