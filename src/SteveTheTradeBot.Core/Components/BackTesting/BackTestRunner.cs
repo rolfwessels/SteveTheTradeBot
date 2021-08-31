@@ -36,7 +36,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             return await _strategyInstanceStore.EnsureUpdate(instance.Id, async si => {
                 var context = await _strategyRunner.PopulateStrategyContext(si, DateTime.UtcNow);
                 context.Quotes.Clear();
-                
+                context.DayQuotes.Clear();
                 foreach (var trade in periodQuotes)
                 {
                     if (cancellationToken.IsCancellationRequested) break;

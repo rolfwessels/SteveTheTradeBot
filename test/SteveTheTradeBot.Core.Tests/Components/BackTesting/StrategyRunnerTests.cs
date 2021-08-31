@@ -242,6 +242,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             _strategyInstanceStore.Add(forBackTest).Wait();
             _mockITradeHistoryStore.Setup(mc => mc.FindRecent(PeriodSize.FiveMinutes, beforeDate.ToUniversalTime(), 500, CurrencyPair.BTCZAR, forBackTest.Feed))
                 .ReturnsAsync(tradeFeedQuotes);
+            _mockITradeHistoryStore.Setup(mc => mc.FindRecent(PeriodSize.Day, beforeDate.ToUniversalTime(), It.IsAny<int>(), CurrencyPair.BTCZAR, forBackTest.Feed))
+                .ReturnsAsync(tradeFeedQuotes);
         }
 
         #endregion
