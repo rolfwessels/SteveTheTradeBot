@@ -51,9 +51,6 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
                         else break;
                     }
 
-                   
-                    
-
                     await _strategyRunner.Process(si, context, strategy);
                 }
                 await strategy.SellAll(context);
