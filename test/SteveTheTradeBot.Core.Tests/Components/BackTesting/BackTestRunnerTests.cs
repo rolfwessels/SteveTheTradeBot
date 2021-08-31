@@ -79,22 +79,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 x.PercentOfProfitableTrades
             }).ToTable();
             Console.Out.WriteLine(table);
-            //
-            // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╦═══════════════════════════╗  
-            // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║ PercentOfProfitableTrades ║  
-            // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╬═══════════════════════════╣  
-            // ║ BTCZAR ║ OneMinute      ║ 37.812              ║ 39.668        ║ 19.287                ║ 61.11                     ║  
-            // ║ BTCZAR ║ FiveMinutes    ║ 37.258              ║ 64.164        ║ 11.786                ║ 72.73                     ║  
-            // ║ BTCZAR ║ FifteenMinutes ║ 38.032              ║ 47.894        ║ 9.643                 ║ 77.78                     ║  
-            // ║ BTCZAR ║ ThirtyMinutes  ║ 37.503              ║ 14.860        ║ 10.714                ║ 50.0                      ║  
-            // ║ BTCZAR ║ OneHour        ║ 37.019              ║ 6.354         ║ 4.286                 ║ 75.00                     ║  
-            // ║ BTCZAR ║ Day            ║ 33.584              ║ 0             ║ 0                     ║ 0                         ║  
-            // ║ ETHZAR ║ OneMinute      ║ 8.204               ║ 17.420        ║ 36.436                ║ 47.06                     ║  
-            // ║ ETHZAR ║ FiveMinutes    ║ 8.199               ║ 28.156        ║ 22.5                  ║ 47.62                     ║  
-            // ║ ETHZAR ║ FifteenMinutes ║ 7.767               ║ 5.212         ║ 19.286                ║ 33.33                     ║  
-            // ║ ETHZAR ║ ThirtyMinutes  ║ 7.323               ║ 17.038        ║ 17.143                ║ 31.25                     ║  
-            // ║ ETHZAR ║ OneHour        ║ 7.305               ║ 39.866        ║ 13.929                ║ 53.85                     ║  
-            // ║ ETHZAR ║ Day            ║ 3.296               ║ 0             ║ 0                     ║ 0                         ║  
+
         }
 
         [Test]
@@ -119,22 +104,22 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 x.PercentOfProfitableTrades
             }).ToTable();
             Console.Out.WriteLine(table);
-            // ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╦═══════════════════════════╗  
-            // ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║ PercentOfProfitableTrades ║  
-            // ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╬═══════════════════════════╣  
-            // ║ BTCZAR ║ OneMinute      ║ 37.812              ║ 59.484        ║ 19.287                ║ 55.56                     ║  
-            // ║ BTCZAR ║ FiveMinutes    ║ 37.258              ║ 58.406        ║ 13.929                ║ 61.54                     ║  
-            // ║ BTCZAR ║ FifteenMinutes ║ 38.032              ║ 46.956        ║ 10.714                ║ 50.0                      ║  
-            // ║ BTCZAR ║ ThirtyMinutes  ║ 37.503              ║ 16.342        ║ 7.5                   ║ 57.14                     ║  
-            // ║ BTCZAR ║ OneHour        ║ 37.019              ║ -1.512        ║ 5.357                 ║ 40.0                      ║  
-            // ║ BTCZAR ║ Day            ║ 33.584              ║ 0             ║ 0                     ║ 0                         ║  
-            // ║ ETHZAR ║ OneMinute      ║ 8.204               ║ 53.198        ║ 35.364                ║ 54.55                     ║  
-            // ║ ETHZAR ║ FiveMinutes    ║ 8.199               ║ 69.468        ║ 22.5                  ║ 52.38                     ║  
-            // ║ ETHZAR ║ FifteenMinutes ║ 7.767               ║ 21.204        ║ 20.357                ║ 42.11                     ║  
-            // ║ ETHZAR ║ ThirtyMinutes  ║ 7.323               ║ 22.946        ║ 13.929                ║ 46.15                     ║  
-            // ║ ETHZAR ║ OneHour        ║ 7.305               ║ 39.474        ║ 9.643                 ║ 55.56                     ║  
-            // ║ ETHZAR ║ Day            ║ 3.296               ║ 0             ║ 0                     ║ 0                         ║  
-            // ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╩═══════════════════════════╝  
+// ╔════════╦════════════════╦═════════════════════╦═══════════════╦═══════════════════════╦═══════════════════════════╗                    
+// ║ Pair   ║ PeriodSize     ║ PercentMarketProfit ║ PercentProfit ║ AverageTradesPerMonth ║ PercentOfProfitableTrades ║                    
+// ╠════════╬════════════════╬═════════════════════╬═══════════════╬═══════════════════════╬═══════════════════════════╣                    
+// ║ BTCZAR ║ OneMinute      ║ 37.812              ║ 38.150        ║ 15.001                ║ 50.0                      ║                    
+// ║ BTCZAR ║ FiveMinutes    ║ 37.258              ║ 47.954        ║ 9.643                 ║ 44.44                     ║                    
+// ║ BTCZAR ║ FifteenMinutes ║ 38.032              ║ 30.058        ║ 7.5                   ║ 57.14                     ║                    
+// ║ BTCZAR ║ ThirtyMinutes  ║ 37.503              ║ 15.285        ║ 4.286                 ║ 50.0                      ║                    
+// ║ BTCZAR ║ OneHour        ║ 37.019              ║ -2.688        ║ 4.286                 ║ 50.0                      ║                    
+// ║ BTCZAR ║ Day            ║ 33.584              ║ 0             ║ 0                     ║ 0                         ║                    
+// ║ ETHZAR ║ OneMinute      ║ 8.204               ║ 29.668        ║ 23.576                ║ 63.64                     ║                    
+// ║ ETHZAR ║ FiveMinutes    ║ 8.199               ║ 77.844        ║ 16.071                ║ 66.67                     ║                    
+// ║ ETHZAR ║ FifteenMinutes ║ 7.767               ║ -1.735        ║ 3.214                 ║ 33.33                     ║                    
+// ║ ETHZAR ║ ThirtyMinutes  ║ 7.323               ║ 8.183         ║ 7.5                   ║ 42.86                     ║                    
+// ║ ETHZAR ║ OneHour        ║ 7.305               ║ 25.994        ║ 6.429                 ║ 50.0                      ║                    
+// ║ ETHZAR ║ Day            ║ 3.296               ║ 0             ║ 0                     ║ 0                         ║                    
+// ╚════════╩════════════════╩═════════════════════╩═══════════════╩═══════════════════════╩═══════════════════════════╝                    
 
         }
 
@@ -352,6 +337,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             strategyInstances
                 .OrderByDescending(x => x.PercentProfit)
                 .Select(x=>new { x.StrategyName, ProfitOverMarket = x.PercentProfit- x.PercentMarketProfit , x.PercentProfit , x.TotalNumberOfTrades, x.PercentOfProfitableTrades}).PrintTable();
+            strategyInstances.First(x => x.StrategyName == "RSiConfirmStrategy").Print();
         }
 
         [Test]

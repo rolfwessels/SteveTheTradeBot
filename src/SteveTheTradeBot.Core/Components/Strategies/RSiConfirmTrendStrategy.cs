@@ -43,7 +43,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
                 var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
                 var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
-                var isPositiveTrendOverAll = Signals.Ema.IsPositiveTrend(data.ByMinute, PeriodSize.FiveMinutes);
+                var isPositiveTrendOverAll = Signals.Ema.IsPositiveTrend(data.ByMinute, data.StrategyInstance.PeriodSize);
 
                 if (hasBuySignal && isPositiveTrend && ( isUpTrend || isPositiveTrendOverAll ))
                 {

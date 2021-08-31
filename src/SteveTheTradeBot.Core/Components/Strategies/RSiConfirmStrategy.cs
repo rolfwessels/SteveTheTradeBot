@@ -1,10 +1,12 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
+using SteveTheTradeBot.Core.Utils;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
@@ -34,13 +36,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.ByMinute.Last();
             var activeTrade = data.ActiveTrade();
 
-            var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi+ _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
-            var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
-            var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes,_buySignal);
-            var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
             if (activeTrade == null)
             {
-                if (hasBuySignal && isPositiveTrend)
+                var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
+                var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
+                var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
+                var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
+                var lastTrade = data.StrategyInstance.Trades.LastOrDefault();
+                var isOutOfCoolDownPeriod = lastTrade == null || currentTrade.Date.Add(-GetCoolDownPeriod(data)) > lastTrade.EndDate;
+                    
+                if (hasBuySignal && isPositiveTrend && isOutOfCoolDownPeriod)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");
@@ -59,6 +64,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
             }
+        }
+
+        private static TimeSpan GetCoolDownPeriod(StrategyContext data)
+        {
+            return 2 * data.StrategyInstance.PeriodSize.ToObserverPeriod();
         }
     }
 }
