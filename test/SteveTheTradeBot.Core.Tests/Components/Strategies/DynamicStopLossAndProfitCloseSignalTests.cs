@@ -23,7 +23,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1120, fakeStrategy);
             // assert
@@ -40,7 +40,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1000m, 1100, 1230, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1120, fakeStrategy);
             // assert
@@ -55,7 +55,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] {  1100m, 1230, 1000, 1200, 1100 }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] {  1100m, 1230, 1000, 1200, 1100 }));
             // action
             await _sut.Initialize(_strategyContext, 1010, fakeStrategy);
             // assert
@@ -71,7 +71,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1100m, 1230m, 1000m, 1200m, 1100m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1100m, 1230m, 1000m, 1200m, 1100m }));
             // action
             await _sut.Initialize(_strategyContext, 1150, fakeStrategy);
             // assert
@@ -86,7 +86,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1170m, 1170m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1170m, 1170m }));
             // action
             await _sut.Initialize(_strategyContext, 1150, fakeStrategy);
             // assert
@@ -101,7 +101,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] {1150m}));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] {1150m}));
             await _sut.Initialize(_strategyContext, 1150, fakeStrategy);
             // action
             await _sut.DetectClose(
@@ -120,7 +120,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var risk = await _strategyContext.Get("Risk", 0);
             risk.Should().Be(0.0101m);
@@ -145,7 +145,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             Setup();
             var fakeStrategy = new FakeStrategy();
             _strategyContext.StrategyInstance.AddTrade(DateTime.Now, 1000, 1);
-            _strategyContext.ByMinute.AddRange(BuildOrders(new[] { 1150m }));
+            _strategyContext.Quotes.AddRange(BuildOrders(new[] { 1150m }));
             await _sut.Initialize(_strategyContext, 1000, fakeStrategy);
             var exitAt = await _strategyContext.Get("ExitAt", 0);
             exitAt.Should().Be(1030.30m);

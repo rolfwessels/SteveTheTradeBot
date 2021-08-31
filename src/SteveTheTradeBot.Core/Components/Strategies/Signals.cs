@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper.Internal;
+using Bumbershoot.Utilities.Helpers;
+using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Components.BackTesting;
+using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
@@ -69,6 +73,13 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 return last.Metric.GetOrDefault(Ema200) < last.Close;
             }
+
+            public static bool IsPositiveTrend(IList<TradeQuote> quotes, PeriodSize periodSize)
+            {
+                var periods = (int) (periodSize.ToObserverPeriod().TotalMinutes / periodSize.ToTimeSpan().TotalMinutes);
+                var tradeQuote = quotes.TakeLast(periods+1).First();
+                return quotes.Last().Metric.GetOrDefault(Ema200) > tradeQuote.Metric.GetOrDefault(Ema200);
+            }
         }
 
 
@@ -112,6 +123,24 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 return tradeQuotes.Min(x => x.Metric.GetOrDefault("rsi14"));
             }
+        }
+
+        public static bool IsOutOfCoolDownPeriod(StrategyContext data, TimeSpan timeSpan = default)
+        {
+            var lastTrade = data.StrategyInstance.Trades.LastOrDefault();
+            if (timeSpan == default) {
+                timeSpan = 2 * data.StrategyInstance.PeriodSize.ToObserverPeriod();
+            }
+            var currentTrade = data.Quotes.Last();
+            return lastTrade == null || currentTrade.Date.Add(-timeSpan) > lastTrade.EndDate;
+        }
+
+        public static bool IsBullishMarket(StrategyContext data, int overDays = 30, int bullishMarker = 10)
+        {
+            var latestQuote = data.LatestQuote();
+            var fromPeriod = data.DayQuotes.First(x=>x.Date > latestQuote.Date.Date.Add(-TimeSpan.FromDays(overDays)));
+            var isBullishMarket = TradeUtils.MovementPercent(latestQuote.Close, fromPeriod.Close) >= bullishMarker;
+            return isBullishMarket;
         }
     }
 }

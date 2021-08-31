@@ -28,12 +28,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public override async Task DataReceived(StrategyContext data)
         {
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
 
            if (activeTrade == null) 
             {
-                var tradeQuotes = data.ByMinute.TakeLast(4).ToArray();
+                var tradeQuotes = data.Quotes.TakeLast(4).ToArray();
                 var crossed = Signals.Macd.GetCrossedMacdOverSignal(tradeQuotes);
                 var isCrossedBelowZero = Signals.Macd.IsCrossedBelowZero(crossed);
                 var isUpTrend = crossed.Any() && Signals.Ema.IsUpTrend(tradeQuotes.Last());

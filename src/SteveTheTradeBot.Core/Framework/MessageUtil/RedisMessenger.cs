@@ -11,8 +11,7 @@ using StackExchange.Redis;
 namespace SteveTheTradeBot.Core.Framework.MessageUtil
 {
     public class RedisMessenger : IMessenger
-    {
-        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
+    {   
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<WeakReference, object>> _dictionary =
             new ConcurrentDictionary<Type, ConcurrentDictionary<WeakReference, object>>();
@@ -51,7 +50,6 @@ namespace SteveTheTradeBot.Core.Framework.MessageUtil
 
         public async Task Send<T>(T value)
         {
-            _log.Debug($"RedisMessenger:Send {typeof(T).Name}:{Serialize(value)}");
             await _sub.Value.PublishAsync(typeof(T).Name, Serialize(value));
         }
 
@@ -69,7 +67,6 @@ namespace SteveTheTradeBot.Core.Framework.MessageUtil
                         void Action(RedisChannel channel, RedisValue message)
                         {
                             var deserializeObject = JsonSerializer.Deserialize(message, type);
-                            _log.Debug($"RedisMessenger:Received {deserializeObject.GetType().Name}:{message}");
                             callBackToClient(deserializeObject);
                         }
                         return (Action<RedisChannel, RedisValue>) Action;
@@ -119,7 +116,6 @@ namespace SteveTheTradeBot.Core.Framework.MessageUtil
         {
             if (typeFound.TryRemove(key, out var handler))
             {
-                _log.Debug($"RedisMessenger:Unsubscribe {type.Name}");
                 _sub.Value.Unsubscribe(type.Name, handler as Action<RedisChannel, RedisValue>);
             }
         }

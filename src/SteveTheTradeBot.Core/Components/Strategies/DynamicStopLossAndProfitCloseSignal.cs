@@ -23,7 +23,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public virtual async Task<decimal> Initialize(StrategyContext data, decimal boughtAtPrice, BaseStrategy strategy)
         {
-            var stopLost = Signals.GetPullBack(data.ByMinute, boughtAtPrice, MinRisk, MaxRisk);
+            var stopLost = Signals.GetPullBack(data.Quotes, boughtAtPrice, MinRisk, MaxRisk);
             await strategy.SetStopLoss(data, stopLost);
             var risk = TradeUtils.MovementPercent(boughtAtPrice, stopLost)/100;
             await data.Set(StrategyProperty.BoughtAtPrice, boughtAtPrice);

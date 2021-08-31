@@ -41,7 +41,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .All().With((x, r) => x.Date = _requestDate.AddDays(-1 * r))
                 .Build();
 
-            _data.ByMinute.AddRange(tradeFeedQuotes);
+            _data.Quotes.AddRange(tradeFeedQuotes);
             _fakeStrategy = new FakeStrategy();
         }
 
@@ -263,7 +263,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
             await BrokerUtils.ApplyOrderResultToStrategy(_data, _data.ActiveTrade(), validStopLoss, _fakeBroker.BuyFeePercent);
             // assert
             trade.IsActive.Should().BeFalse();
-            trade.EndDate.Should().BeCloseTo(DateTime.Now,2000);
+            trade.EndDate.Should().BeCloseTo(DateTime.Parse("2001-01-01 01:02:03"),2000);
             trade.SellValue.Should().Be(88.64m);
             trade.SellPrice.Should().BeApproximately(90000, 1m);
             trade.Profit.Should().Be(-11.360m);
@@ -473,7 +473,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.Strategies
                 .With(x => x.Close = close)
                 .With(x => x.Date = dateTime)
                 .Build();
-            _data.ByMinute.Add(tradeFeedCandle);
+            _data.Quotes.Add(tradeFeedCandle);
             return tradeFeedCandle;
         }
     }

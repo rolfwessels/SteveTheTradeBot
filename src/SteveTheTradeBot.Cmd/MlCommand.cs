@@ -20,6 +20,7 @@ using SteveTheTradeBot.Api.AppStartup;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Components.Storage;
 using SteveTheTradeBot.Core.Framework.Mappers;
+using SteveTheTradeBot.Core.Tools;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 using SteveTheTradeBot.ML.Model;
@@ -29,12 +30,13 @@ namespace SteveTheTradeBot.Cmd
 {
     public class MlCommand
     {
+        private const int Hours = 24;
         public class BuildTrainingData : AsyncCommandWithToken<BuildTrainingData.Settings>
         {
             public class Settings : BaseCommandSettings
             {
                 [CommandOption("--output")]
-                [Description(@"Csv with training data [grey][[C:\temp\btc - data.txt]][/]")]
+                [Description(@"Csv with training data [grey][[C:\temp\btc-data.txt]][/]")]
                 public string TrainOnCsv { get; set; } = @"C:\temp\btc-data.txt";
             }
 
@@ -50,7 +52,7 @@ namespace SteveTheTradeBot.Cmd
                         await using var writer = new StreamWriter(settings.TrainOnCsv);
                         var strategyStore = IocApi.Instance.Resolve<ITradeQuoteStore>();
                         var fromDate = DateTime.UtcNow.AddYears(-2);
-                        var toDate = DateTime.UtcNow.AddMonths(-4);
+                        var toDate = DateTime.UtcNow.AddMonths(-3);
                         ctx.Status($"Reading data  {fromDate} and {toDate}");
 
                         var records = strategyStore.FindAllBetween(fromDate, toDate, "valr",
@@ -63,7 +65,7 @@ namespace SteveTheTradeBot.Cmd
                         ctx.Status($"Writing to {settings.TrainOnCsv} csv file.");
 
 
-                        var future = (60 / 5) * 6; // 12 hours
+                        var future = (60 / 5) * MlCommand.Hours; // 12 hours
                         var output = records
                             .Take(records.Count - future)
                             .Select((x, i) => new
@@ -136,17 +138,20 @@ namespace SteveTheTradeBot.Cmd
                         await dynoDynamicGraphs.Clear(feedName);
                         var consumeModel = new ConsumeModel(settings.Model);
                         var counter = 0;
+                        var decimals = new Recent<decimal>(30);
                         foreach (var tradeFeedCandle in tradeFeedQuotes)
                         {
                             var modelInput = tradeFeedCandle.ToModelInput();
                             var predictionResult = consumeModel.Predict(modelInput);
                             await dynoDynamicGraphs.Plot(feedName, tradeFeedCandle.Date, "ml",
                                 (decimal) predictionResult.Score);
-                            await dynoDynamicGraphs.Plot(feedName, tradeFeedCandle.Date.AddHours(6), "value",
-                                tradeFeedCandle.Close * (100m + (decimal) predictionResult.Score) / 100);
+                            var predictedValue = tradeFeedCandle.Close * (100m + (decimal) predictionResult.Score) / 100;
+                            decimals.Push(predictedValue);
+                            await dynoDynamicGraphs.Plot(feedName, tradeFeedCandle.Date.AddHours(Hours), "value",
+                                decimals.Average());
 
                             counter++;
-                            
+                            if (token.IsCancellationRequested) return;
                             if (counter % 10000 == 0) ctx.Status($"Processing at {counter}");
                         }
                         ctx.Status($"Saving at {counter} records");
@@ -188,7 +193,6 @@ namespace SteveTheTradeBot.Cmd
                     {
                         var stopwatch = new Stopwatch();
                         stopwatch.Start();
-
 
                         ctx.Status($"[grey]Load data from [/][white]{settings.TrainOnCsv}[/]");
                         IDataView trainingDataView = _mlContext.Data.LoadFromTextFile<ModelInput>(

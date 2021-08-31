@@ -8,15 +8,12 @@ namespace SteveTheTradeBot.Core.Components.Broker
 {
     public interface IBrokerApi
     { 
-        
         Task<OrderHistorySummaryResponse> MarketOrder(SimpleOrderRequest request);
         Task<IdResponse> StopLimitOrder(StopLimitOrderRequest request);
         Task<SimpleOrderStatusResponse> Order(SimpleOrderRequest simpleOrderRequest);
         Task CancelOrder(string brokerOrderId, string pair);
         Task<bool> SyncOrderStatus(StrategyInstance instance, StrategyContext strategyContext);
     }
-
-    
 }
 
 

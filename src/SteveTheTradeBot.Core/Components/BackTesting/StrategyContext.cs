@@ -23,11 +23,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             StrategyInstance = strategyInstance;
             _parameterStore = parameterStore;
             Messenger = messenger;
-            ByMinute = new Recent<TradeQuote>(1000);
+            Quotes = new Recent<TradeQuote>(1000);
+            DayQuotes = new Recent<TradeQuote>(1000);
             Broker = broker;
         }
 
-        public Recent<TradeQuote> ByMinute { get; }
+        public Recent<TradeQuote> Quotes { get; }
+        public Recent<TradeQuote> DayQuotes { get; }
         public StrategyInstance StrategyInstance { get; }
 
         public IBrokerApi Broker { get; }
@@ -53,7 +55,7 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public TradeQuote LatestQuote()
         {
-            return ByMinute.Last();
+            return Quotes.Last();
         }
 
         public StrategyTrade ActiveTrade()

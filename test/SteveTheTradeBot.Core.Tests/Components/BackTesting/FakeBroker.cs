@@ -58,6 +58,9 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 var findByDate = await _tradeHistoryStore.FindByDate(currencyPair,requestRequestDate,
                     requestRequestDate.Add(TimeSpan.FromMinutes(5)), skip: 0, take: 1);
                 price = findByDate.Select(x => x.Price).First();
+                //used average price diff from real transactions vs fake ones
+                var adjustment = side == Side.Buy ? 0.002081283334m : -0.005518197219m;
+                price = Math.Round(price + price * adjustment);
             }
 
             return price;

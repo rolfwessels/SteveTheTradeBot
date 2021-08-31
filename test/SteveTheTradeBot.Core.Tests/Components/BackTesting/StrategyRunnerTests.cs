@@ -146,7 +146,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             // assert
             _fakeStrategy.DateRecievedValues.Should().HaveCount(1);
             _fakeStrategy.DateRecievedValues[0].StrategyInstance.Id.Should().Be(forBackTest.Id);
-            _fakeStrategy.DateRecievedValues[0].ByMinute.Should().HaveCount(100);
+            _fakeStrategy.DateRecievedValues[0].Quotes.Should().HaveCount(100);
         }
 
         [Test]
@@ -228,7 +228,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
             // action
             Action testCall = () => { _strategyRunner.Process(forBackTest, beforeDate).Wait(); };
-            testCall.Should().Throw<Exception>().WithMessage("Missing ByMinute data!");
+            testCall.Should().Throw<Exception>().WithMessage("Missing Quotes data!");
         }
 
 
@@ -241,6 +241,8 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
                 tradeFeedQuotes.ForEach(x=>x.Metric.Clear());
             _strategyInstanceStore.Add(forBackTest).Wait();
             _mockITradeHistoryStore.Setup(mc => mc.FindRecent(PeriodSize.FiveMinutes, beforeDate.ToUniversalTime(), 500, CurrencyPair.BTCZAR, forBackTest.Feed))
+                .ReturnsAsync(tradeFeedQuotes);
+            _mockITradeHistoryStore.Setup(mc => mc.FindRecent(PeriodSize.Day, beforeDate.ToUniversalTime(), It.IsAny<int>(), CurrencyPair.BTCZAR, forBackTest.Feed))
                 .ReturnsAsync(tradeFeedQuotes);
         }
 

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Utils
 {
@@ -14,6 +17,12 @@ namespace SteveTheTradeBot.Core.Utils
                 call(obj);
                 yield return obj;
             }
+        } 
+        public static IEnumerable<T> PrintTable<T>(this IEnumerable<T> values)
+        {
+            var printTable = values as T[] ?? values.ToArray();
+            Console.Out.WriteLine(printTable.ToTable());
+            return printTable;
         } 
         public static Dictionary<T, T2> AddOrReplace<T,T2>(this Dictionary<T,T2> values, Dictionary<T, T2> call)
         {
@@ -58,5 +67,11 @@ namespace SteveTheTradeBot.Core.Utils
                 yield return list;
             }
         }
+
+        public static IEnumerable<T> OrEmpty<T>(this List<T> argTrades)
+        {
+            if (argTrades == null) return new T[0];
+            return argTrades;
+    }
     }
 }

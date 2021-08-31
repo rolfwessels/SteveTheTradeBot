@@ -16,7 +16,7 @@ namespace SteveTheTradeBot.Core.Components.Broker
     {
         public static StrategyTrade ApplyCloseToActiveTrade(StrategyTrade trade, DateTime endDate, TradeOrder tradeOrder)
         {
-            trade.EndDate = tradeOrder.UpdateDate;
+            trade.EndDate = endDate;
             trade.SellValue = tradeOrder.TotalMinusFee;
             trade.SellPrice = tradeOrder.OrderPrice;
             trade.Profit = TradeUtils.MovementPercent(trade.SellValue, trade.BuyValue);

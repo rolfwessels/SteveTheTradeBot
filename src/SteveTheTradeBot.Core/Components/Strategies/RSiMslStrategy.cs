@@ -2,10 +2,8 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper.Internal;
-using Hangfire.Logging;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
@@ -29,7 +27,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public override async Task DataReceived(StrategyContext data)
         {
-            var currentTrade = data.ByMinute.Last();
+            var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
             var rsiResults = currentTrade.Metric.GetOrDefault("rsi14");
             var roc200sma = currentTrade.Metric.GetOrDefault("roc200-sma");

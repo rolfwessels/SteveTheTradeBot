@@ -75,13 +75,13 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
 
         public async Task Process(StrategyInstance instance, StrategyContext strategyContext, IStrategy strategy)
         {
-            PreRun(instance, strategyContext.ByMinute.Last());
+            PreRun(instance, strategyContext.Quotes.Last());
             var syncOrderStatus = await strategyContext.Broker.SyncOrderStatus(instance, strategyContext);
             if (!syncOrderStatus)
             {
                 await strategy.DataReceived(strategyContext);
             }
-            PostRun(instance, strategyContext.ByMinute.Last());
+            PostRun(instance, strategyContext.Quotes.Last());
         }
 
         private static bool ValidateInputDate(StrategyInstance instance, DateTime time, StrategyContext strategyContext)
@@ -139,13 +139,15 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             var strategyContext = new StrategyContext(_dynamicGraphs, strategyInstance, _broker, _messenger,_parameterStore);
             var findRecentQuotes =
                 await _tradeQuoteStore.FindRecent(strategyInstance.PeriodSize, time.ToUniversalTime(), 500, strategyInstance.Pair, strategyInstance.Feed);
-          
+            var findDayQuotes =
+                await _tradeQuoteStore.FindRecent(PeriodSize.Day, time.ToUniversalTime(), 60, strategyInstance.Pair, strategyInstance.Feed);
+
             var tradeFeedQuotes = findRecentQuotes
                     .Where(x=> x.Metric != null && x.Metric.Count > 1)
                     .OrderBy(x => x.Date);
-            strategyContext.ByMinute.AddRange(tradeFeedQuotes);
-
-            if (strategyContext.ByMinute.Count < 100) throw new Exception("Missing ByMinute data!");
+            strategyContext.Quotes.AddRange(tradeFeedQuotes);
+            strategyContext.DayQuotes.AddRange(findDayQuotes);
+            if (strategyContext.Quotes.Count < 100) throw new Exception("Missing Quotes data!");
             _log.Debug($"StrategyRunner:PopulateStrategyContext Look for trades before: {time.ToUniversalTime()} and found {strategyContext.LatestQuote().Date}!");
             return strategyContext;
         }

@@ -1,19 +1,14 @@
-﻿using System;
-using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
-using SteveTheTradeBot.Core.Utils;
-using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
-    public class RSiConfirmStrategy : BaseStrategy
+    public class RSiConfirmTrendStrategy : BaseStrategy
     {
-        public const string Desc = nameof(RSiConfirmStrategy);
+        public const string Desc = nameof(RSiConfirmTrendStrategy);
         public override string Name => Desc;
 
         private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
@@ -24,11 +19,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         private readonly ICloseSignal _closeSignal;
 
 
-        public RSiConfirmStrategy() 
+        public RSiConfirmTrendStrategy()
         {
-            _closeSignal = new RaiseManualStopLossCloseSignal(0.96m, 1.05m);
+            _closeSignal = new RaiseStopLossCloseSignalDynamic(0.04m);
             _buySignal = 30;
-            _quotesToCheckRsi = 10;
+            _quotesToCheckRsi = 20; 
             _positiveTrendOverQuotes = 3;
         }
 
@@ -37,16 +32,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             var currentTrade = data.Quotes.Last();
             var activeTrade = data.ActiveTrade();
 
+           
             if (activeTrade == null)
             {
                 var tradeQuotes = data.Quotes.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
-                var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
-                var isPositiveTrend = Signals.IsPositiveTrend(data.Quotes.TakeLast(_positiveTrendOverQuotes));
-                
+                var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
                 var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
-                    
-                if (hasBuySignal && isPositiveTrend && isOutOfCoolDownPeriod)
+                var isBullishMarket30 = Signals.IsBullishMarket(data,overDays:30);
+
+                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod && isBullishMarket30 )
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");
@@ -57,13 +52,12 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 }
                 else
                 {
-                    data.StrategyInstance.Status =
-                        $"Waiting to buy ![wait for min rsi {minRsi} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.Quotes.TakeLast(_positiveTrendOverQuotes).Select(x=>x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
+                    data.StrategyInstance.Status = "Waiting to buy!";
                 }
             }
             else
             {
-                await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
+                await _closeSignal.DetectClose(data, currentTrade, activeTrade, this);
             }
         }
     }
