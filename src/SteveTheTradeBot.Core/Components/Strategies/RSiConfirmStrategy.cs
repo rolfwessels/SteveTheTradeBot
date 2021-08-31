@@ -7,6 +7,7 @@ using Bumbershoot.Utilities.Helpers;
 using Serilog;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
+using SteveTheTradeBot.Dal.Models.Trades;
 
 namespace SteveTheTradeBot.Core.Components.Strategies
 {
@@ -42,8 +43,8 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
                 var isPositiveTrend = Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
-                var lastTrade = data.StrategyInstance.Trades.LastOrDefault();
-                var isOutOfCoolDownPeriod = lastTrade == null || currentTrade.Date.Add(-GetCoolDownPeriod(data)) > lastTrade.EndDate;
+                
+                var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
                     
                 if (hasBuySignal && isPositiveTrend && isOutOfCoolDownPeriod)
                 {
@@ -64,11 +65,6 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 await _closeSignal.DetectClose(data, currentTrade, activeTrade,this);
             }
-        }
-
-        private static TimeSpan GetCoolDownPeriod(StrategyContext data)
-        {
-            return 2 * data.StrategyInstance.PeriodSize.ToObserverPeriod();
         }
     }
 }

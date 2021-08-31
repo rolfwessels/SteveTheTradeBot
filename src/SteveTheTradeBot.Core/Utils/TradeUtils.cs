@@ -53,7 +53,7 @@ namespace SteveTheTradeBot.Core.Utils
             Console.Out.WriteLine("AverageTradesPerMonth: " + backTestResult.AverageTradesPerMonth);
             
             Console.Write(backTestResult.Trades
-                .Select(x => new {x.StartDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit , x.FeeAmount}).ToTable()
+                .Select(x => new {x.StartDate,x.EndDate, x.BuyValue, Quantity = x.BuyQuantity, x.BuyPrice, x.SellPrice , x.Profit , x.FeeAmount}).ToTable()
                 .ToString());
             Console.Write(backTestResult.Trades.SelectMany(x => x.Orders).Select(x =>
                     new {x.OrderSide, x.OrderStatusType, x.OrderType, x.PriceAtRequest, x.OrderPrice,

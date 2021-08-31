@@ -4,6 +4,7 @@ using System.Linq;
 using AutoMapper.Internal;
 using Bumbershoot.Utilities.Helpers;
 using Skender.Stock.Indicators;
+using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
 using SteveTheTradeBot.Dal.Models.Trades;
 
@@ -122,6 +123,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
             {
                 return tradeQuotes.Min(x => x.Metric.GetOrDefault("rsi14"));
             }
+        }
+
+        public static bool IsOutOfCoolDownPeriod(StrategyContext data, TimeSpan timeSpan = default)
+        {
+            var lastTrade = data.StrategyInstance.Trades.LastOrDefault();
+            if (timeSpan == default) {
+                timeSpan = 2 * data.StrategyInstance.PeriodSize.ToObserverPeriod();
+            }
+            var currentTrade = data.ByMinute.Last();
+            return lastTrade == null || currentTrade.Date.Add(-timeSpan) > lastTrade.EndDate;
         }
     }
 }

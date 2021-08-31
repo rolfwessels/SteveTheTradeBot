@@ -24,8 +24,9 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public RSiConfirmTrendStrategy()
         {
-            //_closeSignal = new RaiseStopLossCloseSignalDynamic(0.02m, 0.01m, 0.07m);
-            _closeSignal = new RaiseManualStopLossCloseSignal();
+            //_closeSignal = new RaiseStopLossCloseSignalDynamic(0.02m, 0.01m, 0.10m);
+            _closeSignal = new RaiseStopLossCloseSignalDynamic(0.04m, 0.01m, 0.05m);
+
             _buySignal = 30;
             _quotesToCheckRsi = 20; 
             _positiveTrendOverQuotes = 3;
@@ -42,10 +43,10 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var tradeQuotes = data.ByMinute.TakeLast(_quotesToCheckRsi + _positiveTrendOverQuotes).Take(_quotesToCheckRsi).ToArray();
                 var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
-                var isPositiveTrend =  Signals.IsPositiveTrend(data.ByMinute.TakeLast(_positiveTrendOverQuotes));
+                
                 var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
-              
-                if (hasBuySignal && isUpTrend)
+                var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
+                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");
@@ -56,8 +57,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 }
                 else
                 {
-                    data.StrategyInstance.Status =
-                        $"Waiting to buy ![wait for min rsi {minRsi} <= {_buySignal} in last {_quotesToCheckRsi}] [isPositiveTrend {isPositiveTrend} [{data.ByMinute.TakeLast(_positiveTrendOverQuotes).Select(x => x.Close.ToString(CultureInfo.InvariantCulture)).StringJoin()}]]";
+                    data.StrategyInstance.Status = "Waiting to buy!";
                 }
             }
             else
