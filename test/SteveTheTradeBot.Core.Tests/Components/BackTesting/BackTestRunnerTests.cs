@@ -239,6 +239,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
 
         [Test]
         [Timeout(240000)]
+        [Explicit]
         public async Task Run_GivenRSiConfirmTrendStrategy_ShouldOver2YearsShouldMake68PlusProfit() 
         {
             // arrange
