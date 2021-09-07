@@ -147,7 +147,6 @@ namespace SteveTheTradeBot.Core.Components.Strategies
         public static decimal MovementPercentOverDays(StrategyContext data, int overDays = 30)
         {
             var latestQuote = data.LatestQuote();
-            _log.Information($"---Signals:MovementPercentOverDays {data.DayQuotes.Count} {data.DayQuotes.Select(x=>x.Date.ToString(CultureInfo.InvariantCulture)).TakeLast(10).StringJoin()}");
             var fromPeriod = data.DayQuotes.First(x => x.Date > latestQuote.Date.Date.Add(-TimeSpan.FromDays(overDays)));
             var movementPercent = TradeUtils.MovementPercent(latestQuote.Close, fromPeriod.Close);
             return movementPercent;

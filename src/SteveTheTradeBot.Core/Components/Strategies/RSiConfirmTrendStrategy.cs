@@ -40,11 +40,11 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
                 var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
                 var marketOver30Days = Signals.MovementPercentOverDays(data,overDays:30);
-                var marketOver14Days = Signals.MovementPercentOverDays(data,overDays:14);
                 var marketOver7Days = Signals.MovementPercentOverDays(data,overDays: 7);
+                var marketOver1Days = Signals.MovementPercentOverDays(data,overDays: 2);
                 var signals =
-                    $"(hasBuySignal={hasBuySignal}, isUpTrend={isUpTrend}, isOutOfCoolDownPeriod={isOutOfCoolDownPeriod}, marketOver30Days={marketOver30Days} )";
-                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod && marketOver30Days > 10 )
+                    $"(hasBuySignal={hasBuySignal}, isUpTrend={isUpTrend}, isOutOfCoolDownPeriod={isOutOfCoolDownPeriod}, marketOver30Days={marketOver30Days}, marketOver7Days={marketOver7Days}, marketOver1Days={marketOver1Days} )";
+                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod && marketOver30Days > 0 && marketOver1Days > 0 && marketOver7Days > 0)
                 {
                     _log.Information(
                         $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} {signals}");
