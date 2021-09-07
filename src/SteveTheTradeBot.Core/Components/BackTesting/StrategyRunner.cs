@@ -142,11 +142,8 @@ namespace SteveTheTradeBot.Core.Components.BackTesting
             var findDayQuotes =
                 await _tradeQuoteStore.FindRecent(PeriodSize.Day, time.ToUniversalTime(), 60, strategyInstance.Pair, strategyInstance.Feed);
 
-            var tradeFeedQuotes = findRecentQuotes
-                    .Where(x=> x.Metric != null && x.Metric.Count > 1)
-                    .OrderBy(x => x.Date);
-            strategyContext.Quotes.AddRange(tradeFeedQuotes);
-            strategyContext.DayQuotes.AddRange(findDayQuotes);
+            strategyContext.Quotes.AddRange(findRecentQuotes.Where(x => x.Metric != null && x.Metric.Count > 1).OrderBy(x => x.Date));
+            strategyContext.DayQuotes.AddRange(findDayQuotes.Where(x => x.Metric != null && x.Metric.Count > 1).OrderBy(x=>x.Date));
             if (strategyContext.Quotes.Count < 100) throw new Exception("Missing Quotes data!");
             _log.Debug($"StrategyRunner:PopulateStrategyContext Look for trades before: {time.ToUniversalTime()} and found {strategyContext.LatestQuote().Date}!");
             return strategyContext;

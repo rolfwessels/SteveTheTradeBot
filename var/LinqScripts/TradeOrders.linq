@@ -1,14 +1,16 @@
 <Query Kind="Program">
   <Connection>
-    <ID>a366774d-8d24-465f-a121-d2144bef0089</ID>
+    <ID>59553889-9cb7-45f9-a747-6a218e67e869</ID>
     <NamingServiceVersion>2</NamingServiceVersion>
     <Persist>true</Persist>
     <Driver Assembly="(internal)" PublicKeyToken="no-strong-name">LINQPad.Drivers.EFCore.DynamicDriver</Driver>
     <Server>192.168.1.250</Server>
-    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAABfJWr5G1GsTK2MSO61f/U5lj5E3VC0+FKcn4G3WsQJdwAAAAAOgAAAAAIAACAAAADAuSEP2ohkFxjpIIDrhUJxPkX+1FkYDoeujkjMPXns0SAAAADL2MhnaJjj+jQ9pu6wGxZbxsEA9tzItxtMjImUNA25DEAAAABJ/TnKZ/k8iH9E8YQhK8U8Ai8s6szMuM1vpnoW4mbLIE6jCIR/YJeLabgQxgzp/9WxSZEOaeEMqRKjUjm1cYvm</Password>
-    <UserName>postgres</UserName>
-    <Database>steve_the_trade_bot_staging</Database>
+    <Database>steve_the_trade_bot_prod</Database>
+    <UserName>sttb_prod</UserName>
+    <SqlSecurity>true</SqlSecurity>
+    <Password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKvXpSbg/+E2KO5TjxpufZgAAAAACAAAAAAAQZgAAAAEAACAAAAAtP4ZBCQIDPzDo2a5crzLdOk6849tdqjT+pXPc1GrBeAAAAAAOgAAAAAIAACAAAAAgQfg49zfj1DEoRDgdZZegKXOfP5Gciaq+Hxn6J6qOWSAAAABCZiZjCRBS1q6p28rH3Z7p4KXrDohziTx4ZSaxhMDTWkAAAAB/K+FUYvfBwvYysKWJh4cnAJqFk6pXmflg2CxYinI0wh3lbwZ7k4fIugQLjFaODym/ZmP6wz8IQuMP1lL+tCSO</Password>
     <IsProduction>true</IsProduction>
+    <DisplayName>steve_the_trade_bot_prod</DisplayName>
     <DriverData>
       <PreserveNumeric1>True</PreserveNumeric1>
       <EFProvider>Npgsql.EntityFrameworkCore.PostgreSQL</EFProvider>
@@ -26,10 +28,10 @@
 
 void Main()
 {
-	//RemoveStrategy("8220e8f153be4abdaf66c35957b5e257");
+	//RemoveStrategies(Strategies.Where(x=>x.StrategyName == "RSiConfirmTrendStrategy").Select(x=>x.Id).ToArray());
 	Kuling();
 	CheckRun();
-	var strategies = Strategies.Where(x => !x.IsBackTest && x.IsActive)
+	var strategies = Strategies.Where(x => !x.IsBackTest && x.IsActive )
 	.ToList()
 	.Select(x => new
 	{
@@ -111,36 +113,51 @@ void Kuling()
 public void DeActivateStrategies(string[] id)
 {
 	var strategies = Strategies.Where(x => id.Contains(x.Id)).ToList();
-	
-	$"Found {strategies.Count} stategies would you like to deactivate them".Dump("Confirm by typing yes!");
-	var result = Util.ReadLine();
-	if (result.ToLower() == "yes!")
+	if (strategies.Any())
 	{
-		foreach (var st in strategies)
+		$"Found {strategies.Count} stategies would you like to deactivate them".Dump("Confirm by typing yes!");
+		strategies.Dump("");
+		var result = Util.ReadLine();
+		if (result.ToLower() == "yes!")
 		{
-			st.IsActive = false;
+			foreach (var st in strategies)
+			{
+				st.IsActive = false;
+			}
+			strategies.ForEach(e => e.IsActive = false);
+			var updated = SaveChanges();
+			updated.Dump($"deactivated {updated}");
 		}
-		strategies.ForEach(e=>e.IsActive = false);
-		var updated = SaveChanges();
-		updated.Dump($"deactivated {updated}");
 	}
 }
 
-public void RemoveStrategies(string[] id)
+public void RemoveStrategies(params string[] id)
 {
 	var strategies = Strategies.Where(x => id.Contains(x.Id)).ToList();
-	//strategies = Strategies.Where(x => x.IsBackTest).ToList();
-	var trades = Trades.Where(x => strategies.Select(r => r.Id).Contains(x.StrategyInstanceId)).ToList();
-	var tradeOrders = TradeOrders.Where(x => trades.Select(r => r.Id).Contains(x.StrategyTradeId)).ToList();
-	$"Found {strategies.Count} stategy with {trades.Count} trades and {tradeOrders.Count} trade orders".Dump("Confirm by typing yes!");
-	var result = Util.ReadLine();
-	if (result.ToLower() == "yes!")
+	if (strategies.Any())
 	{
-		TradeOrders.RemoveRange(tradeOrders);
-		Trades.RemoveRange(trades);
-		Strategies.RemoveRange(strategies);
-		var updated = SaveChanges();
-		updated.Dump("Removed");
+		var stratIds = strategies.Select(r => r.Id).ToArray();
+		var refs = strategies.Select(x=>x.Reference).ToArray();
+		//strategies = Strategies.Where(x => x.IsBackTest).ToList();
+		var trades = Trades.Where(x => stratIds.Contains(x.StrategyInstanceId)).ToList();
+		var tradeOrders = TradeOrders.Where(x => trades.Select(r => r.Id).Contains(x.StrategyTradeId)).ToList();
+		
+		var	plots = DynamicPlots.Where(x=>refs.Contains(x.Feed));
+		var properties = StrategyProperties.Where(x => stratIds.Contains(x.StrategyInstanceId));
+		$"Found {strategies.Count} stategy with {trades.Count} trades and {tradeOrders.Count} trade orders [{plots.Count()},{properties.Count()}]".Dump("Confirm by typing yes!");
+		strategies.Dump("");
+		var result = Util.ReadLine();
+		if (result.ToLower() == "yes!")
+		{
+			TradeOrders.RemoveRange(tradeOrders);
+			Trades.RemoveRange(trades);
+			DynamicPlots.RemoveRange(plots);
+			
+			StrategyProperties.RemoveRange(properties);
+			Strategies.RemoveRange(strategies);
+			var updated = SaveChanges();
+			updated.Dump("Removed");
+		}
 	}
 }
 

@@ -34,7 +34,7 @@ namespace SteveTheTradeBot.Core.Utils
                     TradeUtils.MovementPercent(strategyInstance.LastClose, strategyInstance.FirstClose);
                 strategyInstance.AverageTimeInMarket = TimeSpan.FromHours(strategyInstance.Trades.Where(x => !x.IsActive)
                     .Select(x => (x.EndDate ?? DateTime.Now) - x.StartDate)
-                    .Sum(x => x.TotalHours));
+                    .Average(x => x.TotalHours));
             }
             catch (Exception e)
             {
