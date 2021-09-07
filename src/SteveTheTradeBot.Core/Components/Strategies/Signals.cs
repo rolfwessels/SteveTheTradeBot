@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using AutoMapper.Internal;
 using Bumbershoot.Utilities.Helpers;
+using Serilog;
 using Skender.Stock.Indicators;
 using SteveTheTradeBot.Core.Components.BackTesting;
 using SteveTheTradeBot.Core.Utils;
@@ -12,6 +15,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 {
     public static class Signals
     {
+        private static readonly ILogger _log = Log.ForContext(MethodBase.GetCurrentMethod().DeclaringType);
         public const string Ema200 = "ema200";
         
         public const string Rsi14 = "rsi14";
@@ -137,10 +141,16 @@ namespace SteveTheTradeBot.Core.Components.Strategies
 
         public static bool IsBullishMarket(StrategyContext data, int overDays = 30, int bullishMarker = 10)
         {
+            return MovementPercentOverDays(data, overDays) >= bullishMarker;
+        }
+
+        public static decimal MovementPercentOverDays(StrategyContext data, int overDays = 30)
+        {
             var latestQuote = data.LatestQuote();
-            var fromPeriod = data.DayQuotes.First(x=>x.Date > latestQuote.Date.Date.Add(-TimeSpan.FromDays(overDays)));
-            var isBullishMarket = TradeUtils.MovementPercent(latestQuote.Close, fromPeriod.Close) >= bullishMarker;
-            return isBullishMarket;
+            _log.Information($"---Signals:MovementPercentOverDays {data.DayQuotes.Count} {data.DayQuotes.Select(x=>x.Date.ToString(CultureInfo.InvariantCulture)).TakeLast(10).StringJoin()}");
+            var fromPeriod = data.DayQuotes.First(x => x.Date > latestQuote.Date.Date.Add(-TimeSpan.FromDays(overDays)));
+            var movementPercent = TradeUtils.MovementPercent(latestQuote.Close, fromPeriod.Close);
+            return movementPercent;
         }
     }
 }

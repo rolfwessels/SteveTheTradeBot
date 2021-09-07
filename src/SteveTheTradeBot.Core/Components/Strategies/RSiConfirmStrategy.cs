@@ -43,7 +43,6 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var minRsi = Signals.Rsi.MinRsi(tradeQuotes);
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
                 var isPositiveTrend = Signals.IsPositiveTrend(data.Quotes.TakeLast(_positiveTrendOverQuotes));
-                
                 var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
                     
                 if (hasBuySignal && isPositiveTrend && isOutOfCoolDownPeriod)

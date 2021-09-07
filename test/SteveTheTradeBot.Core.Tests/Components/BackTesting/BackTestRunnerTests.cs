@@ -324,7 +324,7 @@ namespace SteveTheTradeBot.Core.Tests.Components.BackTesting
             Setup();
             // The current prod trade
             var from = DateTime.Parse("2021/08/10 10:10:00z");
-            var to = DateTime.Parse("2021/08/30 23:05:00z");
+            var to = DateTime.Parse("2021/09/07 18:00:00z");
             // var from = DateTime.Parse("2019-11-01T00:00:00");
             // var to = DateTime.Parse("2021-07-21T00:00:00");
             var allStrategies = new BaseStrategy[] { new RSiConfirmTrendStrategy(), new RSiPlusDecisionTreeStrategy(), new RSiConfirmStrategy(), new RSiMslStrategy(), new RSiStrategy() , new MacdStrategy()   };

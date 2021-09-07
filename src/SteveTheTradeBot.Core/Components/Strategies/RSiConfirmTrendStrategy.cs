@@ -39,12 +39,15 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 var hasBuySignal = Signals.Rsi.HasBuySignal(tradeQuotes, _buySignal);
                 var isUpTrend = Signals.Ema.IsUpTrend(currentTrade);
                 var isOutOfCoolDownPeriod = Signals.IsOutOfCoolDownPeriod(data);
-                var isBullishMarket30 = Signals.IsBullishMarket(data,overDays:30);
-
-                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod && isBullishMarket30 )
+                var marketOver30Days = Signals.MovementPercentOverDays(data,overDays:30);
+                var marketOver14Days = Signals.MovementPercentOverDays(data,overDays:14);
+                var marketOver7Days = Signals.MovementPercentOverDays(data,overDays: 7);
+                var signals =
+                    $"(hasBuySignal={hasBuySignal}, isUpTrend={isUpTrend}, isOutOfCoolDownPeriod={isOutOfCoolDownPeriod}, marketOver30Days={marketOver30Days} )";
+                if (hasBuySignal && isUpTrend && isOutOfCoolDownPeriod && marketOver30Days > 10 )
                 {
                     _log.Information(
-                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} Rsi:{hasBuySignal}");
+                        $"{currentTrade.Date.ToLocalTime()} Send signal to buy at {currentTrade.Close} {signals}");
                     var strategyTrade = await Buy(data, data.StrategyInstance.QuoteAmount);
                     var resetStops = await _closeSignal.Initialize(data, currentTrade.Close, this);
                     data.StrategyInstance.Status =
@@ -52,7 +55,7 @@ namespace SteveTheTradeBot.Core.Components.Strategies
                 }
                 else
                 {
-                    data.StrategyInstance.Status = "Waiting to buy!";
+                    data.StrategyInstance.Status = $"Waiting to buy {signals}.!";
                 }
             }
             else
