@@ -18,6 +18,7 @@ namespace SteveTheTradeBot.Core.Utils
                 strategyInstance.TotalFee = strategyInstance.Trades.Sum(x=>x.FeeAmount);
                 strategyInstance.TotalActiveTrades = strategyInstance.Trades.Count(x => x.IsActive);
                 strategyInstance.TotalNumberOfTrades = strategyInstance.Trades.Count;
+                var hasCompletedTrades = (strategyInstance.TotalNumberOfTrades - strategyInstance.TotalActiveTrades) > 0;
 
                 strategyInstance.AverageTradesPerMonth = strategyInstance.TotalNumberOfTrades > 1? Math.Round(strategyInstance.Trades.Count / ((strategyInstance.LastDate - strategyInstance.FirstStart).TotalDays / 30), 3):0;
                 strategyInstance.NumberOfProfitableTrades = strategyInstance.Trades.Count(x => !x.IsActive && x.IsProfit());
@@ -32,9 +33,9 @@ namespace SteveTheTradeBot.Core.Utils
                     .Select(x => x.PriceDifference()).DefaultIfEmpty().Max();
                 strategyInstance.PercentMarketProfit =
                     TradeUtils.MovementPercent(strategyInstance.LastClose, strategyInstance.FirstClose);
-                strategyInstance.AverageTimeInMarket = TimeSpan.FromHours(strategyInstance.Trades.Where(x => !x.IsActive)
+                strategyInstance.AverageTimeInMarket = hasCompletedTrades ?TimeSpan.FromHours(strategyInstance.Trades.Where(x => !x.IsActive)
                     .Select(x => (x.EndDate ?? DateTime.Now) - x.StartDate)
-                    .Average(x => x.TotalHours));
+                    .Average(x => x.TotalHours)) : TimeSpan.FromHours(0);
             }
             catch (Exception e)
             {
