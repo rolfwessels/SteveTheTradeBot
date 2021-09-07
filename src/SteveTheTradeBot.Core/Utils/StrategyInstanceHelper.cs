@@ -32,9 +32,9 @@ namespace SteveTheTradeBot.Core.Utils
                     .Select(x => x.PriceDifference()).DefaultIfEmpty().Max();
                 strategyInstance.PercentMarketProfit =
                     TradeUtils.MovementPercent(strategyInstance.LastClose, strategyInstance.FirstClose);
-                strategyInstance.AverageTimeInMarket = TimeSpan.FromHours(strategyInstance.Trades.Where(x => !x.IsActive)
+                strategyInstance.AverageTimeInMarket = (strategyInstance.TotalNumberOfTrades - strategyInstance.TotalActiveTrades) > 0 ?TimeSpan.FromHours(strategyInstance.Trades.Where(x => !x.IsActive)
                     .Select(x => (x.EndDate ?? DateTime.Now) - x.StartDate)
-                    .Average(x => x.TotalHours));
+                    .Average(x => x.TotalHours)) : TimeSpan.FromHours(0);
             }
             catch (Exception e)
             {
